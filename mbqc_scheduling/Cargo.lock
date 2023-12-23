@@ -279,6 +279,7 @@ name = "mbqc_scheduling"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bitvec",
  "clap",
  "hashbrown",
  "itertools",

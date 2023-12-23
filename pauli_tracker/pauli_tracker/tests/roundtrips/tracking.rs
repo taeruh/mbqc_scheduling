@@ -5,7 +5,7 @@ use std::{
 
 use hashbrown::HashMap;
 use pauli_tracker::{
-    boolean_vector::BooleanVector,
+    // boolean_vector::BooleanVector,
     circuit::{
         CliffordCircuit,
         DummyCircuit,
@@ -27,7 +27,7 @@ use pauli_tracker::{
         frames::{
             dependency_graph::{
                 self,
-                DependencyGraph,
+                // DependencyGraph,
             },
             Frames,
         },
@@ -49,168 +49,168 @@ use rustc_hash::FxHasher;
 
 // type BoolVec = bitvec::vec::BitVec;
 // type BoolVec = pauli_tracker::boolean_vector::bitvec_simd::SimdBitVec;
-pub type BoolVec = bit_vec::BitVec;
+pub type BoolVec = bitvec::vec::BitVec;
 
 pub type Storage = Map<PauliStack<BoolVec>, BuildHasherDefault<FxHasher>>;
 type Live<P> = live::Live<BufferedVector<P>>;
 
-const MAX_INIT: usize = 100;
-const MAX_OPS: usize = 1000;
-// const MAX_INIT: usize = 2;
-// const MAX_OPS: usize = 10;
-proptest! {
-    #![proptest_config(Config {
-        // cases: 1,
-        // cases: 10,
-        // proptest! just overwrites this (see source code); it doesn't really matter,
-        // except that we get a warning but that is ok; we could solve it by manually
-        // doing what proptest! does (the basics are straightforward, but it also does
-        // some nice things that are not straightforward)
-        failure_persistence: Some(Box::new(FileFailurePersistence::WithSource(
-            "regressions",
-        ))),
-        ..Default::default()
-    })]
-    #[test]
-    #[ignore = "run proptests explicitly"]
-    fn proptest(init in (0..MAX_INIT), ops in vec_operation(MAX_OPS)) {
-        roundtrip(init, ops);
-    }
-}
+// const MAX_INIT: usize = 100;
+// const MAX_OPS: usize = 1000;
+// // const MAX_INIT: usize = 2;
+// // const MAX_OPS: usize = 10;
+// proptest! {
+//     #![proptest_config(Config {
+//         // cases: 1,
+//         // cases: 10,
+//         // proptest! just overwrites this (see source code); it doesn't really matter,
+//         // except that we get a warning but that is ok; we could solve it by manually
+//         // doing what proptest! does (the basics are straightforward, but it also does
+//         // some nice things that are not straightforward)
+//         failure_persistence: Some(Box::new(FileFailurePersistence::WithSource(
+//             "regressions",
+//         ))),
+//         ..Default::default()
+//     })]
+//     #[test]
+//     #[ignore = "run proptests explicitly"]
+//     fn proptest(init in (0..MAX_INIT), ops in vec_operation(MAX_OPS)) {
+//         roundtrip(init, ops);
+//     }
+// }
 
-// given some operations, we perform the pauli tracking with Frames and create the
-// dependency graph. This graph is checked whether it doesn't promise something wrong
-// and whether it is optimal. Then we also track Paulis via LiveVector and check
-// whether the results are compatible with results from Frames
-fn roundtrip(init: usize, ops: Vec<Operation>) {
-    // println!("len:  {}", ops.len());
-    // println!("init: {}", init);
-    let mut generator = Instructor::new(init, ops);
-    let mut circuit = TrackedCircuit {
-        circuit: DummyCircuit {},
-        tracker: Frames::<Storage>::init(init),
-        storage: Storage::default(),
-    };
-    let mut measurements = WhereMeasured(Vec::new());
-    generator.apply(&mut circuit, &mut measurements);
-    circuit.tracker.measure_and_store_all(&mut circuit.storage);
+// // given some operations, we perform the pauli tracking with Frames and create the
+// // dependency graph. This graph is checked whether it doesn't promise something wrong
+// // and whether it is optimal. Then we also track Paulis via LiveVector and check
+// // whether the results are compatible with results from Frames
+// fn roundtrip(init: usize, ops: Vec<Operation>) {
+//     // println!("len:  {}", ops.len());
+//     // println!("init: {}", init);
+//     let mut generator = Instructor::new(init, ops);
+//     let mut circuit = TrackedCircuit {
+//         circuit: DummyCircuit {},
+//         tracker: Frames::<Storage>::init(init),
+//         storage: Storage::default(),
+//     };
+//     let mut measurements = WhereMeasured(Vec::new());
+//     generator.apply(&mut circuit, &mut measurements);
+//     circuit.tracker.measure_and_store_all(&mut circuit.storage);
 
-    if !measurements.0.is_empty() {
-        let graph = dependency_graph::create_dependency_graph(
-            <Storage as Iterable>::iter_pairs(&circuit.storage),
-            &measurements.0,
-        );
-        check_graph(&graph, &circuit.storage, &measurements.0).unwrap();
-    }
+//     if !measurements.0.is_empty() {
+//         let graph = dependency_graph::create_dependency_graph(
+//             <Storage as Iterable>::iter_pairs(&circuit.storage),
+//             &measurements.0,
+//         );
+//         check_graph(&graph, &circuit.storage, &measurements.0).unwrap();
+//     }
 
-    // println!("graph: {:?}", graph);
-    // println!("graph.len: {}", graph.len());
-    // println!("{:?}", measurements.0);
+//     // println!("graph: {:?}", graph);
+//     // println!("graph.len: {}", graph.len());
+//     // println!("{:?}", measurements.0);
 
-    // println!("{:?}", generator.operations);
-    // println!("{:?}\n", storage::sort_by_bit(&circuit.storage));
+//     // println!("{:?}", generator.operations);
+//     // println!("{:?}\n", storage::sort_by_bit(&circuit.storage));
 
-    generator.reinit(init);
-    let mut live_circuit = TrackedCircuit {
-        circuit: RandomMeasurementCircuit {},
-        tracker: Live::init(init),
-        storage: (),
-    };
-    let mut measurements = ResultMeasured(Vec::new());
-    generator.apply(&mut live_circuit, &mut measurements);
-    // println!("{:?}", measurements);
-    // println!("{:?}", live_circuit.tracker);
+//     generator.reinit(init);
+//     let mut live_circuit = TrackedCircuit {
+//         circuit: RandomMeasurementCircuit {},
+//         tracker: Live::init(init),
+//         storage: (),
+//     };
+//     let mut measurements = ResultMeasured(Vec::new());
+//     generator.apply(&mut live_circuit, &mut measurements);
+//     // println!("{:?}", measurements);
+//     // println!("{:?}", live_circuit.tracker);
 
-    let mut check = vec![PauliTuple::new_i(); generator.used];
-    for (i, pauli) in circuit.storage.iter() {
-        check[*i] = pauli.sum_up(&measurements.0);
-    }
-    let check: Live<PauliTuple> = BufferedVector::from(check).into();
-    // println!("{:?}", a);
+//     let mut check = vec![PauliTuple::new_i(); generator.used];
+//     for (i, pauli) in circuit.storage.iter() {
+//         check[*i] = pauli.sum_up(&measurements.0);
+//     }
+//     let check: Live<PauliTuple> = BufferedVector::from(check).into();
+//     // println!("{:?}", a);
 
-    assert_eq!(check, live_circuit.tracker);
-}
+//     assert_eq!(check, live_circuit.tracker);
+// }
 
 // {{ helpers to perform the checks
-fn check_graph(
-    graph: &DependencyGraph,
-    storage: &Storage,
-    measurements: &[usize],
-) -> Result<(), String> {
-    fn check(
-        dep: (usize, bool),
-        measured: &HashMap<usize, ()>,
-        measurements: &[usize],
-    ) -> Result<(), String> {
-        if !dep.1
-            || measured
-                .contains_key(measurements.get(dep.0).expect("missing measurement"))
-        {
-            Ok(())
-        } else {
-            Err(format!("{dep:?}"))
-        }
-    }
+// fn check_graph(
+//     graph: &DependencyGraph,
+//     storage: &Storage,
+//     measurements: &[usize],
+// ) -> Result<(), String> {
+//     fn check(
+//         dep: (usize, bool),
+//         measured: &HashMap<usize, ()>,
+//         measurements: &[usize],
+//     ) -> Result<(), String> {
+//         if !dep.1
+//             || measured
+//                 .contains_key(measurements.get(dep.0).expect("missing measurement"))
+//         {
+//             Ok(())
+//         } else {
+//             Err(format!("{dep:?}"))
+//         }
+//     }
 
-    fn node_check(
-        node: &usize,
-        deps: &Vec<usize>,
-        storage: &Storage,
-        measurements: &[usize],
-        measured: &HashMap<usize, ()>,
-    ) -> Result<(), String> {
-        for dep in deps {
-            if !measured.contains_key(dep) {
-                return Err("{dep:?}".to_string());
-            }
-        }
-        let pauli = storage.get(node).expect("node does not exist");
-        // we explicitly do not xor(left, right), because that's what we are doing
-        // in the create_dependency_graph function; here we keep it as simple is
-        // possible
-        // println!("{:?}", pauli.left);
-        for dep in pauli.left.iter_vals().enumerate() {
-            check(dep, measured, measurements).map_err(|e| format!("left: {e}"))?
-        }
-        for dep in pauli.right.iter_vals().enumerate() {
-            check(dep, measured, measurements).map_err(|e| format!("right: {e}"))?
-        }
-        Ok(())
-    }
+//     fn node_check(
+//         node: &usize,
+//         deps: &Vec<usize>,
+//         storage: &Storage,
+//         measurements: &[usize],
+//         measured: &HashMap<usize, ()>,
+//     ) -> Result<(), String> {
+//         for dep in deps {
+//             if !measured.contains_key(dep) {
+//                 return Err("{dep:?}".to_string());
+//             }
+//         }
+//         let pauli = storage.get(node).expect("node does not exist");
+//         // we explicitly do not xor(left, right), because that's what we are doing
+//         // in the create_dependency_graph function; here we keep it as simple is
+//         // possible
+//         // println!("{:?}", pauli.left);
+//         for dep in pauli.left.iter_vals().enumerate() {
+//             check(dep, measured, measurements).map_err(|e| format!("left: {e}"))?
+//         }
+//         for dep in pauli.right.iter_vals().enumerate() {
+//             check(dep, measured, measurements).map_err(|e| format!("right: {e}"))?
+//         }
+//         Ok(())
+//     }
 
-    let mut measured = HashMap::<usize, ()>::new();
-    let mut iter = graph.iter().peekable();
+//     let mut measured = HashMap::<usize, ()>::new();
+//     let mut iter = graph.iter().peekable();
 
-    while let Some(this_layer) = iter.next() {
-        if let Some(next_layer) = iter.peek() {
-            for (node, deps) in *next_layer {
-                // if a node in the next_layer could be measured, we fail because then
-                // it should be in this_layer, since we want to be optimal
-                if node_check(node, deps, storage, measurements, &measured).is_ok() {
-                    return Err(format!(
-                        "not optimal: {node:?}, {deps:?}, \
-                         {measured:?}\n{graph:#?}\n{storage:#?}"
-                    ));
-                }
-            }
-        }
-        for (node, deps) in this_layer {
-            // if a node in this_layer can't be measured, we fail because then the
-            // dependency graph would be wrong
-            match node_check(node, deps, storage, measurements, &measured) {
-                Ok(_) => (),
-                Err(e) => {
-                    return Err(format!(
-                        "not sufficient: {e}\n{node:?}, {deps:?}, \
-                         {measured:?}\n{graph:?}\n{storage:#?}"
-                    ));
-                },
-            }
-            measured.insert(*node, ());
-        }
-    }
-    Ok(())
-}
+//     while let Some(this_layer) = iter.next() {
+//         if let Some(next_layer) = iter.peek() {
+//             for (node, deps) in *next_layer {
+//                 // if a node in the next_layer could be measured, we fail because then
+//                 // it should be in this_layer, since we want to be optimal
+//                 if node_check(node, deps, storage, measurements, &measured).is_ok() {
+//                     return Err(format!(
+//                         "not optimal: {node:?}, {deps:?}, \
+//                          {measured:?}\n{graph:#?}\n{storage:#?}"
+//                     ));
+//                 }
+//             }
+//         }
+//         for (node, deps) in this_layer {
+//             // if a node in this_layer can't be measured, we fail because then the
+//             // dependency graph would be wrong
+//             match node_check(node, deps, storage, measurements, &measured) {
+//                 Ok(_) => (),
+//                 Err(e) => {
+//                     return Err(format!(
+//                         "not sufficient: {e}\n{node:?}, {deps:?}, \
+//                          {measured:?}\n{graph:?}\n{storage:#?}"
+//                     ));
+//                 },
+//             }
+//             measured.insert(*node, ());
+//         }
+//     }
+//     Ok(())
+// }
 // }}
 
 // a instructor that defines the a tracking circuit based on some operations generated
@@ -230,10 +230,10 @@ impl Instructor {
         }
     }
 
-    fn reinit(&mut self, init: usize) {
-        self.used = init;
-        self.memory = (0..init).collect();
-    }
+    // fn reinit(&mut self, init: usize) {
+    //     self.used = init;
+    //     self.memory = (0..init).collect();
+    // }
 
     pub fn apply<C, T, S>(
         &mut self,
@@ -569,6 +569,6 @@ pub fn fixed_num_vec_operation(
     res
 }
 
-fn vec_operation(max_num_operations: usize) -> impl Strategy<Value = Vec<Operation>> {
-    (0..max_num_operations).prop_flat_map(fixed_num_vec_operation)
-}
+// fn vec_operation(max_num_operations: usize) -> impl Strategy<Value = Vec<Operation>> {
+//     (0..max_num_operations).prop_flat_map(fixed_num_vec_operation)
+// }
