@@ -35,7 +35,11 @@ to create an additional GitHub repo for that); this can be done with [subtree me
 Initial step:
 ```
 git remote add upstream/pauli_tracker https://github.com/taeruh/pauli_tracker.git
-git fetch upstream/pauli_tracker --no-tags
+git config remote.upstream/pauli_tracker.tagopt --no-tags
+git fetch upstream/pauli_tracker
+```
+*You don't have to do the steps from here to "We pull in updates ..."*
+```
 mkdir pauli_tracker
 git read-tree --prefix=pauli_tracker/ -u upstream/pauli_tracker/main
 ```
@@ -51,7 +55,7 @@ git add --all; git commit -m "Add pauli_tracker"
 ```
 We pull in updates from upstream via
 ```
-git fetch upstream/pauli_tracker --no-tags
+git fetch upstream/pauli_tracker
 git merge -Xsubtree=pauli_tracker upstream/pauli_tracker/main --no-commit
 # fix conflicts and remove all the unneeded stuff again (cf. makefile in pauli_tracker)
 git commit
