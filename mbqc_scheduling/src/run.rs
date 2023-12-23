@@ -26,6 +26,19 @@ use pauli_tracker::{
         PauliStack,
         PauliTuple,
     },
+    tracker::frames::{
+        self,
+        dependency_graph,
+    },
+};
+use scoped_threadpool::Pool;
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
+use crate::{
+    cli,
     scheduler::{
         space::{
             Graph,
@@ -43,18 +56,7 @@ use pauli_tracker::{
         },
         Scheduler,
     },
-    tracker::frames::{
-        self,
-        dependency_graph,
-    },
 };
-use scoped_threadpool::Pool;
-use serde::{
-    Deserialize,
-    Serialize,
-};
-
-use crate::cli;
 
 type Frames = frames::Frames<Map<PauliStack<Vec<bool>>>>;
 type Gates = Vec<(String, usize)>;
@@ -286,7 +288,7 @@ fn search_single_task(
                 } else {
                     current_path.push(measure);
                 }
-            }
+            },
             Step::Backward(leaf) => {
                 if let Some(mem) = leaf {
                     best_memory[current_path.len()] = mem;
@@ -296,7 +298,7 @@ fn search_single_task(
                     results.insert(current_path.len(), (mem, current_path.clone()));
                 }
                 current_path.pop();
-            }
+            },
         }
     }
 

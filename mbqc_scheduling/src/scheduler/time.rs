@@ -13,6 +13,7 @@ introduced by quantum measurements, e.g., as in MBQC, and captured by a Pauli tr
 use std::hash::BuildHasherDefault;
 
 use hashbrown::HashMap;
+use pauli_tracker::tracker::frames::dependency_graph::DependencyGraph;
 use rustc_hash::FxHasher;
 use thiserror::Error;
 
@@ -25,7 +26,6 @@ use super::{
     },
     Partition,
 };
-use crate::tracker::frames::dependency_graph::DependencyGraph;
 
 type DepsCounters = HashMap<usize, usize, BuildHasherDefault<FxHasher>>;
 type Dependents = Vec<Vec<usize>>;
@@ -54,9 +54,9 @@ pub type Partitioner = Partition<Set>;
 /// A generator to create a scheduling path - initialization and measuring of qubits -
 /// allowed by a [DependencyGraph].
 ///
-/// The generator can be used with a [Partitioner] as generic, which allows to iterate
-/// through all possible paths, or with a [`Vec<usize>`] to choose the path manually,
-/// cf. [Focus], [FocusIterator] and [MeasurableSet].
+/// The generator can be used with a [Partitioner] as generic parameter T, which allows
+/// to iterate through all possible paths, or with a [`Vec<usize>`] to choose the path
+/// manually, cf. [Focus], [FocusIterator] and [MeasurableSet].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PathGenerator<'l, T /* Measurable */> {
     // one could also put the dependents with the bit into the partition set and in deps
@@ -367,8 +367,6 @@ pub struct NotMeasurable(pub Vec<usize>);
 mod tests {
     use std::panic;
 
-    use coverage_helper::test;
-
     use super::{
         super::tree::Step,
         *,
@@ -466,11 +464,8 @@ mod tests {
             .is_err()
         );
 
-        let map = map
-            .iter()
-            .enumerate()
-            .map(|(i, &e)| (e, i))
-            .collect::<HashMap<_, _>>();
+        let map =
+            map.iter().enumerate().map(|(i, &e)| (e, i)).collect::<HashMap<_, _>>();
 
         let mut time = PathGenerator::<Partitioner>::from_dependency_graph(
             dependency_graph,

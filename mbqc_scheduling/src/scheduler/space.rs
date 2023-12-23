@@ -261,7 +261,6 @@ pub struct AlreadyMeasured(pub usize);
 
 #[cfg(test)]
 mod tests {
-    use coverage_helper::test;
     use State::*;
 
     use super::*;

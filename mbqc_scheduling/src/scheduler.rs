@@ -3,24 +3,21 @@
 mod combinatoric;
 
 pub use combinatoric::Partition;
-use time::Partitioner;
-
-use self::{
-    space::{
-        AlreadyMeasured,
-        Graph,
-    },
-    time::{
-        MeasurableSet,
-        NotMeasurable,
-        PathGenerator,
-    },
-    tree::{
-        Focus,
-        FocusIterator,
-        Step,
-        Sweep,
-    },
+use space::{
+    AlreadyMeasured,
+    Graph,
+};
+use time::{
+    MeasurableSet,
+    NotMeasurable,
+    Partitioner,
+    PathGenerator,
+};
+use tree::{
+    Focus,
+    FocusIterator,
+    Step,
+    Sweep,
 };
 
 macro_rules! update {
@@ -31,6 +28,7 @@ macro_rules! update {
         *$bit = *update!($bit, $map);
     };
 }
+
 pub mod space;
 pub mod time;
 pub mod tree;
@@ -106,11 +104,7 @@ impl FocusIterator for Scheduler<'_, Partitioner> {
     }
 
     fn at_leaf(&self) -> Option<Self::LeafItem> {
-        self.time
-            .measurable()
-            .set()
-            .is_empty()
-            .then_some(self.space.max_memory())
+        self.time.measurable().set().is_empty().then_some(self.space.max_memory())
     }
 }
 
