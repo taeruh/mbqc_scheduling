@@ -1,8 +1,11 @@
+use std::{
+    collections::HashMap,
+    hash::BuildHasherDefault,
+};
+
 use lib::{
-    collection::{
-        Init,
-        NaiveVector,
-    },
+    collection,
+    collection::Init,
     pauli::{
         self,
         Pauli,
@@ -13,24 +16,24 @@ use pyo3::{
     PyResult,
     Python,
 };
+use rustc_hash::FxHasher;
 
 use crate::{
-    impl_helper::{
-        doc,
-        links,
-    },
+    impl_helper::links,
     pauli::PauliDense,
     Module,
 };
 
-type LiveStorage = NaiveVector<pauli::PauliDense>;
+type Map<T> = collection::Map<T, BuildHasherDefault<FxHasher>>;
+
+type Storage = Map<pauli::PauliDense>;
 impl_live!(
-    LiveStorage,
+    Storage,
     concat!(
         "`Live <",
         links::live!(),
-        ">`_\\<`NaiveVector <",
-        links::naive_vector!(),
+        ">`_\\<`Map <",
+        links::map!(),
         ">`_\\<`PauliDense <",
         links::pauli_dense!(),
         ">`_\\>\\>."
@@ -39,40 +42,37 @@ impl_live!(
 
 #[pyo3::pymethods]
 impl Live {
-    #[doc = doc::transform!()]
+    #[doc = crate::impl_helper::doc::transform!()]
     ///
     /// Returns:
-    ///     list[PauliDense]:
+    ///     dict[int, PauliDense]:
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_array(&self) -> Vec<PauliDense> {
+    fn into_py_dict(&self) -> HashMap<usize, PauliDense> {
         self.0
             .clone()
             .into_storage()
-            .0
             .into_iter()
-            .map(PauliDense)
+            .map(|(b, p)| (b, PauliDense(p)))
             .collect()
     }
 
-    #[doc = doc::transform!()]
+    #[doc = crate::impl_helper::doc::transform!()]
     ///
     /// Returns:
-    ///     list[int]:
+    ///     dict[int, int]:
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_array_recursive(&self) -> Vec<u8> {
+    fn into_py_dict_recursive(&self) -> HashMap<usize, u8> {
         self.0
             .clone()
             .into_storage()
-            .0
             .into_iter()
-            .map(|p| p.tableau_encoding())
+            .map(|(b, p)| (b, p.tableau_encoding()))
             .collect()
     }
 }
 
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
-    let _ = parent_module;
-    let module = Module::new(py, "vec", parent_module.path.clone())?;
+    let module = Module::new(py, "map", parent_module.path.clone())?;
 
     module.add_class::<Live>()?;
 

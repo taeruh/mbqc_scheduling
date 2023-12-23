@@ -1,12 +1,9 @@
-use std::{
-    collections::HashMap,
-    hash::BuildHasherDefault,
-};
-
 use bitvec::vec::BitVec;
 use lib::{
-    collection,
-    collection::Init,
+    collection::{
+        Init,
+        NaiveVector,
+    },
     pauli,
     tracker::Tracker,
 };
@@ -14,7 +11,6 @@ use pyo3::{
     PyResult,
     Python,
 };
-use rustc_hash::FxHasher;
 
 use crate::{
     impl_helper::{
@@ -25,16 +21,14 @@ use crate::{
     Module,
 };
 
-type Map<T> = collection::Map<T, BuildHasherDefault<FxHasher>>;
-
-type Storage = Map<pauli::PauliStack<BitVec>>;
+type Storage = NaiveVector<pauli::PauliStack<BitVec>>;
 impl_frames!(
     Storage,
     concat!(
         "`Frames <",
         links::frames!(),
-        ">`_\\<`Map <",
-        links::map!(),
+        ">`_\\<`NaiveVector <",
+        links::naive_vector!(),
         ">`_\\<`PauliStack <",
         links::pauli_stack!(),
         ">`_\\<`BitVec <",
@@ -48,35 +42,35 @@ impl Frames {
     #[doc = doc::transform!()]
     ///
     /// Returns:
-    ///     dict[int, PauliStack]:
+    ///     list[PauliStack]:
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_dict(&self) -> HashMap<usize, PauliStack> {
+    fn into_py_array(&self) -> Vec<PauliStack> {
         self.0
             .clone()
             .into_storage()
+            .0
             .into_iter()
-            .map(|(b, p)| (b, PauliStack(p)))
+            .map(PauliStack)
             .collect()
     }
 
     #[doc = doc::transform!()]
     ///
     /// Returns:
-    ///     dict[int, tuple[list[int], list[int]]]:
+    ///     list[tuple[list[int], list[int]]]:
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_dict_recursive(&self) -> HashMap<usize, (Vec<usize>, Vec<usize>)> {
+    fn into_py_array_recursive(&self) -> Vec<(Vec<usize>, Vec<usize>)> {
         self.0
             .clone()
             .into_storage()
+            .0
             .into_iter()
-            .map(|(b, p)| (b, (p.left.into_vec(), p.right.into_vec())))
+            .map(|p| (p.left.into_vec(), p.right.into_vec()))
             .collect()
     }
 }
-
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
-    let _ = parent_module;
-    let module = Module::new(py, "map", parent_module.path.clone())?;
+    let module = Module::new(py, "vec", parent_module.path.clone())?;
 
     module.add_class::<Frames>()?;
 
