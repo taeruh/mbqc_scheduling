@@ -14,6 +14,7 @@ const PATHS_FORMAT: &str = "paths_format";
 const NTHREADS: &str = "nthreads";
 const TASK_BOUND: &str = "task_bound";
 const SEARCH: &str = "search";
+const DEBUG: &str = "debug";
 
 fn build() -> Command {
     Command::new(env!("CARGO_PKG_NAME"))
@@ -82,6 +83,13 @@ fn build() -> Command {
                 .help("A bound on the possible number of tasks")
                 .value_parser(value_parser!(u32)),
         )
+        .arg(
+            Arg::new(DEBUG)
+                .short('d')
+                .long("debug")
+                .help("Print some information while searching ...")
+                .action(ArgAction::SetTrue),
+        )
 }
 
 pub fn parse() -> (
@@ -94,6 +102,7 @@ pub fn parse() -> (
     bool,
     u16,
     Option<u32>,
+    bool,
 ) {
     let mut args = build().get_matches();
     (
@@ -106,5 +115,6 @@ pub fn parse() -> (
         args.remove_one(SEARCH).expect("is required"),
         args.remove_one(NTHREADS).expect("has default"),
         args.remove_one::<Option<u32>>(TASK_BOUND).unwrap_or(None),
+        args.remove_one(DEBUG).expect("is required"),
     )
 }

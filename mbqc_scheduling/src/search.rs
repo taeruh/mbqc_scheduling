@@ -75,6 +75,7 @@ pub fn search(
     nthreads: u16,
     num_bits: usize,
     task_bound: i64,
+    debug: bool,
 ) -> Result<Paths> {
     let scheduler = Scheduler::<Partitioner>::new(
         PathGenerator::from_dependency_graph(deps, &mut dependency_buffer, None),
@@ -85,7 +86,7 @@ pub fn search(
         let (result, _) = search_single_task(scheduler, num_bits, None, None);
         result
     } else {
-        threaded_search(nthreads, num_bits, scheduler, task_bound)
+        threaded_search(nthreads, num_bits, scheduler, task_bound, debug)
     }?;
 
     let mut filtered_results = HashMap::new();
@@ -171,6 +172,7 @@ fn threaded_search(
     num_bits: usize,
     mut scheduler: Scheduler<Partitioner>,
     task_bound: i64,
+    debug: bool,
 ) -> Result<MappedPaths> {
     // there will be one thread which only collects the results and updates the shared
     // best_memory array, the other threads do the actual search tasks
@@ -188,9 +190,16 @@ fn threaded_search(
         sender: mpsc::Sender<(Vec<usize>, MappedPaths)>,
         measure: Option<Vec<usize>>,
         num_bits: usize,
+        debug: bool,
     ) -> Result<()> {
-        println!("start {_ntasks:?}: measure {measure:?}; best_memory {best_memory:?}");
-        let start = Instant::now();
+        let start = if debug {
+            println!(
+                "start {_ntasks:?}: measure {measure:?}; best_memory {best_memory:?}"
+            );
+            Some(Instant::now())
+        } else {
+            None
+        };
 
         let (results, new_best_memory) = search_single_task(
             scheduler,
@@ -199,11 +208,13 @@ fn threaded_search(
             Some(best_memory),
         );
 
-        println!(
-            "done {_ntasks:?}: time {:?}; results {:?}",
-            Instant::now() - start,
-            results.as_ref().unwrap()
-        );
+        if let Some(start) = start {
+            println!(
+                "done {_ntasks:?}: time {:?}; results {:?}",
+                Instant::now() - start,
+                results.as_ref().unwrap()
+            );
+        }
         sender.send((new_best_memory, results?)).expect("send failure");
         Ok(())
     }
@@ -257,6 +268,7 @@ fn threaded_search(
                     sender,
                     Some(init_measure),
                     num_bits,
+                    debug,
                 )
                 .expect("task failed");
             });
@@ -274,7 +286,7 @@ fn threaded_search(
                 .lock()
                 .expect("failed to lock best_memory for final task")
                 .to_vec();
-            task(scheduler, best_memory, -1, sender, None, num_bits)
+            task(scheduler, best_memory, -1, sender, None, num_bits, debug)
                 .expect("final task failed");
         });
         // drop(sender);

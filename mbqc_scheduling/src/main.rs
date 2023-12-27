@@ -13,6 +13,7 @@ fn main() {
         do_search,
         nthreads,
         task_bound,
+        debug,
     ) = cli::parse();
     interface::run_serialized(
         (spacial_graph, &spacial_graph_format),
@@ -20,6 +21,7 @@ fn main() {
         do_search,
         nthreads,
         task_bound,
+        debug,
         (paths, &paths_format),
     )
     .expect("path search failed: ")

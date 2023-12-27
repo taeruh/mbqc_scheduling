@@ -35,12 +35,15 @@ pub type Paths = Vec<(usize, (usize, Vec<Vec<usize>>))>;
 /// tasks).
 /// - `task_bound` is the maximum number of tasks to start in the search, cf.
 /// `nthreads`.
+/// - `debug` is a flag that determines whether to print some more or less useful
+/// information when multithreading ...
 pub fn run(
     spacial_graph: SpacialGraph,
     dependency_graph: DependencyGraph,
     do_search: bool,
     nthreads: u16,
     task_bound: Option<u32>,
+    debug: bool,
 ) -> Result<Paths> {
     let num_nodes = spacial_graph.len();
     let dependency_buffer = DependencyBuffer::new(num_nodes);
@@ -58,6 +61,7 @@ pub fn run(
             task_bound
                 .map(|b| b.try_into().expect("u32 into i64 should be possible"))
                 .unwrap_or(10000),
+            debug,
         )
     }
 }
@@ -70,6 +74,7 @@ pub fn run_serialized(
     do_search: bool,
     nthreads: u16,
     task_bound: Option<u32>,
+    debug: bool,
     paths: (impl AsRef<Path>, &str),
 ) -> Result<()> {
     let spacial_graph =
@@ -79,7 +84,14 @@ pub fn run_serialized(
     Dynamic::try_from(paths.1)?
         .write_file(
             paths.0,
-            &run(spacial_graph, dependency_graph, do_search, nthreads, task_bound)?,
+            &run(
+                spacial_graph,
+                dependency_graph,
+                do_search,
+                nthreads,
+                task_bound,
+                debug,
+            )?,
         )
         .map_err(Into::into)
 }
