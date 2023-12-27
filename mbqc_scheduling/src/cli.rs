@@ -5,7 +5,12 @@ use clap::{
     Command,
 };
 
-const CIRCUIT: &str = "circuit";
+const SPACIAL_GRAPH: &str = "spacial_graph";
+const SPACIAL_GRAPH_FORMAT: &str = "spacial_graph_format";
+const DEPENDENCY_GRAPH: &str = "dependency_graph";
+const DEPENDENCY_GRAPH_FORMAT: &str = "dependency_graph_format";
+const PATHS: &str = "paths";
+const PATHS_FORMAT: &str = "paths_format";
 const NTHREADS: &str = "nthreads";
 const TASK_BOUND: &str = "task_bound";
 const SEARCH: &str = "search";
@@ -15,20 +20,50 @@ fn build() -> Command {
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
+        .long_about("Compare the documentation of interface::run for more information.")
         .arg_required_else_help(true)
+        .arg(
+            Arg::new(SPACIAL_GRAPH)
+                .value_name("SPACIAL_GRAPH")
+                .help("The spacial_graph's file name")
+                .required(true),
+        )
+        .arg(
+            Arg::new(SPACIAL_GRAPH_FORMAT)
+                .value_name("SPACIAL_GRAPH_FORMAT")
+                .help("The spacial_graph's serialization format")
+                .required(true),
+        )
+        .arg(
+            Arg::new(DEPENDENCY_GRAPH)
+                .value_name("DEPENDENCY_GRAPH")
+                .help("The dependency_graph's file name")
+                .required(true),
+        )
+        .arg(
+            Arg::new(DEPENDENCY_GRAPH_FORMAT)
+                .value_name("DEPENDENCY_GRAPH_FORMAT")
+                .help("The dependency_graph's serialization format")
+                .required(true),
+        )
+        .arg(
+            Arg::new(PATHS)
+                .value_name("PATHS")
+                .help("The paths' file name")
+                .required(true),
+        )
+        .arg(
+            Arg::new(PATHS_FORMAT)
+                .value_name("PATHS_FORMAT")
+                .help("The paths' serialization format")
+                .required(true),
+        )
         .arg(
             Arg::new(SEARCH)
                 .short('s')
                 .long("search")
                 .help("Search for all best paths")
-                .long_help("Search for all best paths. This may take some time ...")
-                .action(ArgAction::SetTrue)
-        )
-        .arg(
-            Arg::new(CIRCUIT)
-                .value_name("CIRCUIT")
-                .help("The circuit's file name (prefix)")
-                .required(true),
+                .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new(NTHREADS)
@@ -36,15 +71,6 @@ fn build() -> Command {
                 .short('n')
                 .long("nthreads")
                 .help("The number of threads to use for the search")
-                .long_help(
-r"The number of threads to use for the search. If NTHREADS is below 3, it will not
-multithread. Otherwise it will start a threadpool, where one thread is used to manage
-shared data. The tasks for the threadpool are all the possible focused Scheduler sweeps
-after doing one initial focus, cf. source code .... The number of those task scales
-exponentially with the number of bits in the first layer of the dependency graph. Use
-the -b/--task-bound option to limit the number of these tasks (but the last task may
-    take some time because it does all remaining tasks)."
-                )
                 .default_value("1")
                 .value_parser(value_parser!(u16)),
         )
@@ -54,21 +80,31 @@ the -b/--task-bound option to limit the number of these tasks (but the last task
                 .short('b')
                 .long("task-bound")
                 .help("A bound on the possible number of tasks")
-                .long_help(
-r"A bound on the possible number of tasks. Compare the long help message for the
--n/--nthreads option."
-                )
-                .default_value("10000")
-                .value_parser(value_parser!(u32))
+                .value_parser(value_parser!(u32)),
         )
 }
 
-pub fn parse() -> (String, bool, u16, i64) {
+pub fn parse() -> (
+    String,
+    String,
+    String,
+    String,
+    String,
+    String,
+    bool,
+    u16,
+    Option<u32>,
+) {
     let mut args = build().get_matches();
     (
-        args.remove_one(CIRCUIT).expect("is boolean flag"),
+        args.remove_one(SPACIAL_GRAPH).expect("is required"),
+        args.remove_one(SPACIAL_GRAPH_FORMAT).expect("is required"),
+        args.remove_one(DEPENDENCY_GRAPH).expect("is required"),
+        args.remove_one(DEPENDENCY_GRAPH_FORMAT).expect("is required"),
+        args.remove_one(PATHS).expect("is required"),
+        args.remove_one(PATHS_FORMAT).expect("is required"),
         args.remove_one(SEARCH).expect("is required"),
         args.remove_one(NTHREADS).expect("has default"),
-        args.remove_one::<u32>(TASK_BOUND).expect("has default").into(),
+        args.remove_one::<Option<u32>>(TASK_BOUND).unwrap_or(None),
     )
 }

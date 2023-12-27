@@ -1,6 +1,6 @@
 /*!
 The [scheduler] module contains the main logic of the program. The other modules just
-use it to solve the main problem we want to solve, wrap it into a parallelized runner and expose a 
+use it to solve the main problem we want to solve, wrap it into a parallelized runner and expose a
 */
 
 macro_rules! non_semantic_default {
@@ -10,6 +10,6 @@ macro_rules! non_semantic_default {
     };
 }
 
-pub mod cli;
-pub mod run;
+pub mod interface;
 pub mod scheduler;
+pub mod search;

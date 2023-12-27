@@ -1,10 +1,14 @@
+/*!
+Search for the optimal initialization-measurement paths. This module has nothing to do
+with pauli tracking anymore, except that we take the [DependencyGraph] as input.
+*/
+
+// the logic of the path search is basically described in the documentation of the
+// schedule module; here I'm basically just multithreading it
+
 use std::{
     cmp,
     collections::HashMap,
-    ffi::OsString,
-    fs::File,
-    io::Write,
-    path::Path,
     sync::{
         mpsc,
         Arc,
@@ -13,32 +17,12 @@ use std::{
     time::Instant,
 };
 
-use anyhow::{
-    Context,
-    Result,
-};
-use pauli_tracker::{
-    collection::{
-        Iterable,
-        Map,
-    },
-    pauli::{
-        PauliStack,
-        PauliTuple,
-    },
-    tracker::frames::{
-        self,
-        dependency_graph,
-    },
-};
+use anyhow::Result;
+use pauli_tracker::tracker::frames::dependency_graph::DependencyGraph;
 use scoped_threadpool::Pool;
-use serde::{
-    Deserialize,
-    Serialize,
-};
 
 use crate::{
-    cli,
+    interface::Paths,
     scheduler::{
         space::{
             Graph,
@@ -58,157 +42,34 @@ use crate::{
     },
 };
 
-type Frames = frames::Frames<Map<PauliStack<Vec<bool>>>>;
-type Gates = Vec<(String, usize)>;
-type Measurements = Vec<(String, usize, isize)>;
 type OnePath = Vec<Vec<usize>>;
-type SparseGraph = Vec<Vec<usize>>;
-type Paths = Vec<(usize, (usize, OnePath))>;
 type MappedPaths = HashMap<usize, (usize, Vec<Vec<usize>>)>;
 
-pub fn run() {
-    let (circuit, do_search, nthreads, task_bound) = cli::parse();
-    split_search(circuit, do_search, nthreads, task_bound).expect("split_search failed")
-}
+pub fn get_time_optimal(
+    deps: DependencyGraph,
+    mut dependency_buffer: DependencyBuffer,
+    graph_buffer: GraphBuffer,
+) -> Result<Paths> {
+    let mut scheduler = Scheduler::<Vec<usize>>::new(
+        PathGenerator::from_dependency_graph(deps, &mut dependency_buffer, None),
+        Graph::new(&graph_buffer),
+    );
 
-#[derive(Deserialize)]
-struct Jabalized {
-    graph: SparseGraph,
-    local_ops: Gates,
-    input_map: Vec<usize>,
-    output_map: Vec<usize>,
-    frames_map: Vec<usize>,
-    initializer: Gates,
-    measurements: Measurements,
-}
+    let mut path = Vec::new();
+    let mut max_memory = 0;
 
-#[derive(Debug, Serialize)]
-struct Analyzed {
-    paths: Paths,
-    // the next are redundent, but it's nicer to have all in one; also, I might track
-    // these "final" results with git
-    frames: Frames,
-    frames_transposed: Vec<Vec<PauliTuple>>,
-    graph: SparseGraph,
-    local_ops: Gates,
-    input_map: Vec<usize>,
-    output_map: Vec<usize>,
-    frames_map: Vec<usize>,
-    initializer: Gates,
-    measurements: Measurements,
-}
-
-fn read(path: impl Into<OsString>) -> Result<(Frames, Jabalized)> {
-    let path: OsString = path.into();
-
-    fn push(mut path: OsString, suffix: &str) -> OsString {
-        path.push(suffix);
-        path
+    while !scheduler.time().measurable().is_empty() {
+        let measurable_set = scheduler.time().measurable().clone();
+        scheduler.focus_inplace(&measurable_set)?;
+        path.push(measurable_set);
+        max_memory = cmp::max(max_memory, scheduler.space().max_memory());
     }
 
-    Ok((
-        serde_json::from_reader(
-            File::open(push(path.clone(), "frames.json")).context("read frames")?,
-        )
-        .context("deserialize frames")?,
-        serde_json::from_reader(
-            File::open(push(path, "jabalize.json")).context("read jabalize")?,
-        )
-        .context("deserialize jabalize")?,
-    ))
+    Ok(vec![(path.len(), (max_memory, path))])
 }
 
-// the logic of the path search is basically described in paul_tracker's documentation
-// in the schedule module; here I'm basically just multithreading it
-
-fn split_search(
-    mut circuit: String,
-    do_search: bool,
-    nthreads: u16,
-    task_bound: i64,
-) -> Result<()> {
-    circuit.push('_');
-    let output = Path::new("output");
-    let file_name = output.join(circuit);
-    let (frames, jabalize) = read(file_name.clone())
-        .context(format!("failed to read input files for circuit {:?}", file_name))?;
-
-    let num_bits = frames.as_storage().len();
-
-    let frames_transposed = frames.clone().transpose_reverted(num_bits);
-
-    let dependency_buffer = DependencyBuffer::new(num_bits);
-    let graph_buffer = GraphBuffer::from_sparse(jabalize.graph.clone());
-    let deps = dependency_graph::create_dependency_graph(
-        Iterable::iter_pairs(frames.as_storage()),
-        jabalize.frames_map.as_slice(),
-    );
-    // println!("deps_graph: {:?}", deps);
-    // println!("num layers: {:?}", deps[0].len());
-
-    let paths = if !do_search {
-        let deps = deps.clone();
-        let mut dependency_buffer = dependency_buffer.clone();
-        let mut scheduler = Scheduler::<Vec<usize>>::new(
-            PathGenerator::from_dependency_graph(deps, &mut dependency_buffer, None),
-            Graph::new(&graph_buffer),
-        );
-
-        let mut path = Vec::new();
-        let mut max_memory = 0;
-
-        while !scheduler.time().measurable().is_empty() {
-            let measurable_set = scheduler.time().measurable().clone();
-            scheduler.focus_inplace(&measurable_set)?;
-            path.push(measurable_set);
-            max_memory = cmp::max(max_memory, scheduler.space().max_memory());
-        }
-
-        vec![(path.len(), (max_memory, path))]
-    } else {
-        search(
-            deps,
-            dependency_buffer,
-            graph_buffer,
-            nthreads,
-            num_bits,
-            task_bound,
-        )?
-    };
-
-    let output = Analyzed {
-        paths,
-        frames,
-        frames_transposed,
-        graph: jabalize.graph,
-        local_ops: jabalize.local_ops,
-        input_map: jabalize.input_map,
-        output_map: jabalize.output_map,
-        frames_map: jabalize.frames_map,
-        initializer: jabalize.initializer,
-        measurements: jabalize.measurements,
-    };
-
-    let mut file_name =
-        file_name.clone().into_os_string().into_string().map_err(|_| {
-            anyhow::anyhow!("failed {file_name:?} to convert file name to string")
-        })?;
-    file_name.push_str("analyzed.json");
-    std::fs::File::create(file_name)?
-        .write_all(serde_json::to_string(&output)?.as_bytes())?;
-
-    Ok(())
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct BitMapping {
-    input: Vec<usize>,
-    output: Vec<usize>,
-    frames: Vec<usize>,
-}
-
-fn search(
-    deps: Vec<Vec<(usize, Vec<usize>)>>,
+pub fn search(
+    deps: DependencyGraph,
     mut dependency_buffer: DependencyBuffer,
     graph_buffer: GraphBuffer,
     nthreads: u16,

@@ -70,7 +70,6 @@ impl<F: Default, B> Default for Step<F, B> {
 /// keeps track of previous states in a stack, however, note that this requires more
 /// memory.
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sweep<T> {
     current: T,
     stack: Vec<T>,

@@ -316,5 +316,5 @@ the [scheduling-proptest] is some messy code which does exactly that (the
 [DependencyGraph]: pauli_tracker::tracker::frames::dependency_graph::DependencyGraph
 [graph state]: https://en.wikipedia.org/wiki/Graph_state
 [ordered Bell number]: https://en.wikipedia.org/wiki/Ordered_Bell_number
-[scheduling-proptest]: https://github.com/taeruh/pauli_tracker/blob/main/pauli_tracker/tests/roundtrips/scheduling.rs
+[scheduling-proptest]: https://github.com/taeruh/mbqc_scheduling/blob/main/mbqc_scheduling/roundtrips.rs
 [skipping method]: Sweep::skip_current
