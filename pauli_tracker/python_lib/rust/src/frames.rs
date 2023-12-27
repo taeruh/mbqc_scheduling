@@ -6,14 +6,17 @@ use pyo3::{
 
 use crate::{
     impl_helper::{
-        self,
         doc,
+        serialization,
     },
     Module,
 };
 
+/// A layered directed graph, describing the partial ordering of the measurements in
+/// time.
 #[pyo3::pyclass(subclass)]
-struct DependencyGraph(pub dependency_graph::DependencyGraph);
+#[derive(Clone)]
+pub struct DependencyGraph(pub dependency_graph::DependencyGraph);
 
 #[pyo3::pymethods]
 impl DependencyGraph {
@@ -27,7 +30,7 @@ impl DependencyGraph {
     }
 }
 
-impl_helper::serialization::serde!(DependencyGraph);
+serialization::serde!(DependencyGraph);
 
 // Tracker and Init must be in scope for the macro to work.
 macro_rules! impl_frames {

@@ -12,11 +12,11 @@ use crate::{
     },
 };
 
-pub type SparseGraph = Vec<Vec<usize>>;
+pub type SpacialGraph = Vec<Vec<usize>>;
 pub use pauli_tracker::tracker::frames::dependency_graph::DependencyGraph;
 pub type Paths = Vec<(usize, (usize, Vec<Vec<usize>>))>;
 
-/// Searching for optimal graphs.
+/// Searching for optimal initialization-measuremnt paths.
 ///
 /// - `spacial_graph` is a list of neighbors for each node, describing the graph
 /// obtained from running the stabilizer simulator (and transforming it into a graph).
@@ -36,7 +36,7 @@ pub type Paths = Vec<(usize, (usize, Vec<Vec<usize>>))>;
 /// - `task_bound` is the maximum number of tasks to start in the search, cf.
 /// `nthreads`.
 pub fn run(
-    spacial_graph: SparseGraph,
+    spacial_graph: SpacialGraph,
     dependency_graph: DependencyGraph,
     do_search: bool,
     nthreads: u16,

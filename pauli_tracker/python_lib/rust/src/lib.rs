@@ -41,6 +41,7 @@ mod impl_helper;
 mod frames;
 mod live;
 mod pauli;
+mod scheduling;
 
 #[pyo3::pymodule]
 fn _lib(py: Python, module: &PyModule) -> PyResult<()> {
@@ -52,6 +53,7 @@ fn _lib(py: Python, module: &PyModule) -> PyResult<()> {
     live::add_module(py, &module)?;
     frames::add_module(py, &module)?;
     pauli::add_module(py, &module)?;
+    scheduling::add_module(py, &module)?;
 
     Ok(())
 }
