@@ -52,26 +52,6 @@ impl SpacialGraph {
 
 serialization::serde!(SpacialGraph);
 
-// Searching for optimal initalization-measurement paths.
-//
-// - `spacial_graph` is a list of neighbors for each node, describing the graph
-// obtained from running the stabilizer simulator (and transforming it into a graph).
-// - `dependency_graph` is the output obtained from the pauli tracker, discribing the
-// partial ordering of the measurements in time.
-// - `do_search` is a flag that determines whether to search for all best paths or just
-// take the first one, which is the time optimal path. Searching for all best paths may
-// take some time ...
-// - `nthreads` is the number of threads to use for the search. If `nthreads` is below
-// 3, it will not multithread. Otherwise it will start a threadpool (where one thread
-// is used to manage shared data). The tasks for the threadpool are all the possible
-// focused Scheduler sweeps after doing one initial focus, cf. source code .... The
-// number of those task scales exponentially with the number of bits in the first layer
-// of the dependency graph. Use the `task_bound` option to limit the number of these
-// tasks (but the then last task may take some time because it does all remaining
-// tasks).
-// - `task_bound` is the maximum number of tasks to start in the search, cf.
-// `nthreads`.
-
 // copilot: make a python docstring of the above
 
 /// Search for optimal initalization-measurement paths.
@@ -92,6 +72,8 @@ serialization::serde!(SpacialGraph);
 ///         the then last task may take some time because it does all remaining tasks).
 ///     task_bound (int): The maximum number of tasks to start in the search, cf.
 ///         `nthreads`.
+///     debug (bool): Whether to print some more or less useful information while
+///         multithreading.
 ///
 /// Returns:
 ///     list[tuple[int, tuple[int, list[list[int]]]]]: A list of the optimal paths. In
@@ -99,12 +81,21 @@ serialization::serde!(SpacialGraph);
 ///     tuple contains the total number of required qubits and the list of qubits that
 ///     can be measured in parallel at each time step.
 #[pyo3::pyfunction]
+#[pyo3(signature = (
+    spacial_graph,
+    dependency_graph,
+    do_search,
+    nthreads,
+    task_bound=None,
+    debug=false,
+))]
 fn run(
     spacial_graph: SpacialGraph,
     dependency_graph: DependencyGraph,
     do_search: bool,
     nthreads: u16,
     task_bound: Option<u32>,
+    debug: bool,
 ) -> PyResult<Paths> {
     interface::run(
         spacial_graph.0,
@@ -112,6 +103,7 @@ fn run(
         do_search,
         nthreads,
         task_bound,
+        debug,
     )
     .map_err(|e| PyRuntimeError::new_err(e.to_string()))
 }
