@@ -77,8 +77,7 @@ pub fn run_serialized(
     debug: bool,
     paths: (impl AsRef<Path>, &str),
 ) -> Result<()> {
-    let spacial_graph =
-        Dynamic::try_from(spacial_graph.1)?.read_file(spacial_graph.0)?;
+    let spacial_graph = Dynamic::try_from(spacial_graph.1)?.read_file(spacial_graph.0)?;
     let dependency_graph =
         Dynamic::try_from(dependency_graph.1)?.read_file(dependency_graph.0)?;
     Dynamic::try_from(paths.1)?

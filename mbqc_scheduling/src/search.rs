@@ -128,8 +128,7 @@ fn search_single_task(
 ) -> (Result<MappedPaths>, Vec<usize>) {
     let mut results = HashMap::new();
     let mut current_path = init_path.unwrap_or_default();
-    let mut best_memory =
-        predicates.unwrap_or_else(|| vec![num_bits + 1; num_bits + 1]);
+    let mut best_memory = predicates.unwrap_or_else(|| vec![num_bits + 1; num_bits + 1]);
     let mut scheduler = scheduler.into_iter();
     while let Some(step) = scheduler.next() {
         match step {
@@ -230,8 +229,7 @@ fn threaded_search(
                     clone_best_memory.lock().expect("failed to lock best_memory");
                 let mut results = clone_results.lock().expect("failed to lock results");
 
-                for (i, (o, n)) in
-                    best_memory.iter_mut().zip(new_best_memory).enumerate()
+                for (i, (o, n)) in best_memory.iter_mut().zip(new_best_memory).enumerate()
                 {
                     if *o > n {
                         *o = n;

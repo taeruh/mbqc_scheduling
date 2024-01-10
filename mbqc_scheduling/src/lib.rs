@@ -5,8 +5,8 @@ use it to solve the main problem we want to solve, wrap it into a parallelized r
 
 macro_rules! non_semantic_default {
     () => {
-        "Note that semantically, this impl makes not much sense. It is rather useful \
-         for initialization."
+        "Note that semantically, this impl makes not much sense. It is rather useful for \
+         initialization."
     };
 }
 

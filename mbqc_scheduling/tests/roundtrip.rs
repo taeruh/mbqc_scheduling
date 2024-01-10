@@ -176,8 +176,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
         }
     }
 
-    let mut filtered_all_paths: HashMap<usize, (usize, Vec<Vec<usize>>)> =
-        HashMap::new();
+    let mut filtered_all_paths: HashMap<usize, (usize, Vec<Vec<usize>>)> = HashMap::new();
     for (len, mem, path) in all_paths.iter() {
         if let Some(optimal) = filtered_all_paths.get_mut(len) {
             if optimal.0 > *mem {
@@ -210,8 +209,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
     }
 
     let filtered_skipper_results = final_filter(num_nodes, skipper_results.clone());
-    let filtered_filtered_all_paths =
-        final_filter(num_nodes, filtered_all_paths.clone());
+    let filtered_filtered_all_paths = final_filter(num_nodes, filtered_all_paths.clone());
 
     // println!("{:?}", all_results);
     // println!("{:?}", optimal_paths);
@@ -219,8 +217,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
 
     assert_eq!(
         filtered_skipper_results, filtered_filtered_all_paths,
-        "\n{all_paths:?}\n{filtered_filtered_all_paths:?}\n{filtered_skipper_results:?\
-         }"
+        "\n{all_paths:?}\n{filtered_filtered_all_paths:?}\n{filtered_skipper_results:?}"
     );
 
     let splitted_instructions = split_instructions(path_generator, 4);
