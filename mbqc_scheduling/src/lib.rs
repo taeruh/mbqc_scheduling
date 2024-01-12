@@ -11,5 +11,6 @@ macro_rules! non_semantic_default {
 }
 
 pub mod interface;
+pub mod probabilistic;
 pub mod scheduler;
 pub mod search;

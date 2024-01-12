@@ -12,6 +12,7 @@ const DEPENDENCY_GRAPH_FORMAT: &str = "dependency_graph_format";
 const PATHS: &str = "paths";
 const PATHS_FORMAT: &str = "paths_format";
 const NTHREADS: &str = "nthreads";
+const PROBABILISTIC: &str = "accept_func";
 const TASK_BOUND: &str = "task_bound";
 const SEARCH: &str = "search";
 const DEBUG: &str = "debug";
@@ -76,6 +77,13 @@ fn build() -> Command {
                 .value_parser(value_parser!(u16)),
         )
         .arg(
+            Arg::new(PROBABILISTIC)
+                .short('p')
+                .long("probablistic")
+                .help("Whether to perform a probabilistically filtered serach")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
             Arg::new(TASK_BOUND)
                 .value_name("TASK_BOUND")
                 .short('b')
@@ -101,6 +109,7 @@ pub fn parse() -> (
     String,
     bool,
     u16,
+    bool,
     Option<u32>,
     bool,
 ) {
@@ -112,8 +121,9 @@ pub fn parse() -> (
         args.remove_one(DEPENDENCY_GRAPH_FORMAT).expect("is required"),
         args.remove_one(PATHS).expect("is required"),
         args.remove_one(PATHS_FORMAT).expect("is required"),
-        args.remove_one(SEARCH).expect("is required"),
+        args.remove_one(SEARCH).expect("has ArgAction"),
         args.remove_one(NTHREADS).expect("has default"),
+        args.remove_one(PROBABILISTIC).expect("has ArgAction"),
         args.remove_one::<Option<u32>>(TASK_BOUND).unwrap_or(None),
         args.remove_one(DEBUG).expect("is required"),
     )

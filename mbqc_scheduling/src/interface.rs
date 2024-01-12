@@ -3,6 +3,7 @@ use std::path::Path;
 use anyhow::Result;
 
 use crate::{
+    probabilistic::AcceptFunc,
     scheduler::{
         space::GraphBuffer,
         time::DependencyBuffer,
@@ -42,6 +43,7 @@ pub fn run(
     dependency_graph: DependencyGraph,
     do_search: bool,
     nthreads: u16,
+    probablistic: Option<AcceptFunc>,
     task_bound: Option<u32>,
     debug: bool,
 ) -> Result<Paths> {
@@ -57,10 +59,9 @@ pub fn run(
             dependency_buffer,
             graph_buffer,
             nthreads,
+            probablistic.map(AcceptFunc::get_accept_func),
             num_nodes,
-            task_bound
-                .map(|b| b.try_into().expect("u32 into i64 should be possible"))
-                .unwrap_or(10000),
+            task_bound.map(|b| b.into()).unwrap_or(10000),
             debug,
         )
     }
@@ -68,11 +69,13 @@ pub fn run(
 
 use utils::serialization::Dynamic;
 
+#[allow(clippy::too_many_arguments)]
 pub fn run_serialized(
     spacial_graph: (impl AsRef<Path>, &str),
     dependency_graph: (impl AsRef<Path>, &str),
     do_search: bool,
     nthreads: u16,
+    probablistic: Option<AcceptFunc>,
     task_bound: Option<u32>,
     debug: bool,
     paths: (impl AsRef<Path>, &str),
@@ -88,6 +91,7 @@ pub fn run_serialized(
                 dependency_graph,
                 do_search,
                 nthreads,
+                probablistic,
                 task_bound,
                 debug,
             )?,

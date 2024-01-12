@@ -144,7 +144,7 @@ impl<'l> Graph<'l> {
         self.current_memory
     }
 
-    /// Get the, so far, maximum required quantum memory.
+    /// Get the maximum required quantum memory (so far).
     pub fn max_memory(&self) -> usize {
         self.max_memory
     }

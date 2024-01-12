@@ -102,6 +102,11 @@ impl<'l, T> PathGenerator<'l, T> {
         &self.measurable
     }
 
+    /// How many nodes are left to be measured.
+    pub fn num_remaining_nodes(&self) -> usize {
+        self.deps_counter.len()
+    }
+
     /// Check whether there are qubits that cannot be measured yet.
     pub fn has_unmeasureable(&self) -> bool {
         !self.deps_counter.is_empty()
