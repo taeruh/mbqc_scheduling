@@ -9,7 +9,7 @@ use itertools::{
 /// An iterator over all partitions of a set.
 #[derive(Debug, Clone)]
 pub struct Partition<T> {
-    pub(crate) set: T,
+    pub set: T,
     iter: Powerset<Range<usize>>,
 }
 

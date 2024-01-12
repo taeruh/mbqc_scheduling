@@ -271,7 +271,6 @@ dependencies = [
 [[package]]
 name = "mbqc_scheduling"
 version = "0.1.0"
-source = "git+https://github.com/taeruh/mbqc_scheduling#38760fad28ef1f1b66c9405d0e1644c38f035e84"
 dependencies = [
  "anyhow",
  "bitvec",
@@ -279,6 +278,8 @@ dependencies = [
  "hashbrown",
  "itertools",
  "pauli_tracker",
+ "rand",
+ "rand_pcg",
  "rustc-hash",
  "scoped_threadpool",
  "thiserror",
@@ -458,6 +459,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
+]
+
+[[package]]
+name = "rand_pcg"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59cad018caf63deb318e5a4586d99a24424a364f40f1e5778c29aca23f4fc73e"
+dependencies = [
+ "rand_core",
 ]
 
 [[package]]

@@ -14,7 +14,7 @@ pub fn standard_accept_func(
                 / (num_total_nodes - num_remaining_nodes + 1.))
 }
 
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct Weights {
     pub last_max_mem: f64,
     pub last_cur_mem: f64,
@@ -23,7 +23,7 @@ pub struct Weights {
     pub num_total_nodes: f64,
 }
 
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct Shifts {
     pub last_mem: f64,
     pub cur_mem: f64,

@@ -59,7 +59,7 @@ impl<'l, T> Scheduler<'l, T> {
 }
 
 // just for seeing whether it works as expected while developing
-// pub(crate) static mut COUNT: usize = 0;
+// pub static mut COUNT: usize = 0;
 
 impl<T: MeasurableSet> Focus<&[usize]> for Scheduler<'_, T> {
     type Error = InstructionError;

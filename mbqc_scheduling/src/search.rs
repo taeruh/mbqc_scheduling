@@ -82,7 +82,7 @@ type MappedPaths = HashMap<usize, (usize, Vec<Vec<usize>>)>;
 static ACCEPT: OnceLock<AcceptFn> = OnceLock::new();
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn search(
+pub fn search(
     deps: DependencyGraph,
     mut dependency_buffer: DependencyBuffer,
     graph_buffer: GraphBuffer,
