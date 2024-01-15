@@ -28,7 +28,7 @@ fn builtin_basic(
     num_total_nodes: f64,
 ) -> f64 {
     (bound_best_mem + 1.) / (cur_mem + 1.)
-        * (1e-3
+        * 2e-2 * (1e-3
             + 8.5e-2 * (num_total_nodes + 1.)
                 / (num_total_nodes - num_remaining_nodes + 1.))
 }
