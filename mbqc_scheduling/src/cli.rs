@@ -100,31 +100,35 @@ fn build() -> Command {
         )
 }
 
-pub fn parse() -> (
-    String,
-    String,
-    String,
-    String,
-    String,
-    String,
-    bool,
-    u16,
-    bool,
-    Option<u32>,
-    bool,
-) {
+pub struct Args {
+    pub spacial_graph: String,
+    pub spacial_graph_format: String,
+    pub dependency_graph: String,
+    pub dependency_graph_format: String,
+    pub paths: String,
+    pub paths_format: String,
+    pub search: bool,
+    pub nthreads: u16,
+    pub probabilistic: bool,
+    pub task_bound: Option<u32>,
+    pub debug: bool,
+}
+
+pub fn parse() -> Args {
     let mut args = build().get_matches();
-    (
-        args.remove_one(SPACIAL_GRAPH).expect("is required"),
-        args.remove_one(SPACIAL_GRAPH_FORMAT).expect("is required"),
-        args.remove_one(DEPENDENCY_GRAPH).expect("is required"),
-        args.remove_one(DEPENDENCY_GRAPH_FORMAT).expect("is required"),
-        args.remove_one(PATHS).expect("is required"),
-        args.remove_one(PATHS_FORMAT).expect("is required"),
-        args.remove_one(SEARCH).expect("has ArgAction"),
-        args.remove_one(NTHREADS).expect("has default"),
-        args.remove_one(PROBABILISTIC).expect("has ArgAction"),
-        args.remove_one::<Option<u32>>(TASK_BOUND).unwrap_or(None),
-        args.remove_one(DEBUG).expect("is required"),
-    )
+    Args {
+        spacial_graph: args.remove_one(SPACIAL_GRAPH).expect("is required"),
+        spacial_graph_format: args.remove_one(SPACIAL_GRAPH_FORMAT).expect("is required"),
+        dependency_graph: args.remove_one(DEPENDENCY_GRAPH).expect("is required"),
+        dependency_graph_format: args
+            .remove_one(DEPENDENCY_GRAPH_FORMAT)
+            .expect("is required"),
+        paths: args.remove_one(PATHS).expect("is required"),
+        paths_format: args.remove_one(PATHS_FORMAT).expect("is required"),
+        search: args.remove_one(SEARCH).expect("has ArgAction"),
+        nthreads: args.remove_one(NTHREADS).expect("has default"),
+        probabilistic: args.remove_one(PROBABILISTIC).expect("has ArgAction"),
+        task_bound: args.remove_one::<Option<u32>>(TASK_BOUND).unwrap_or(None),
+        debug: args.remove_one(DEBUG).expect("is required"),
+    }
 }

@@ -4,9 +4,8 @@ use lib::pauli::{
     Pauli,
 };
 use pyo3::{
-    exceptions::PyValueError,
     PyResult,
-    Python,
+    Python, exceptions::PyValueError,
 };
 
 use crate::{

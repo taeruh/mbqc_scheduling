@@ -10,3 +10,4 @@ _autosummary
 # personal development config and caches
 .tmux-session
 Session.vim
+.task.mk

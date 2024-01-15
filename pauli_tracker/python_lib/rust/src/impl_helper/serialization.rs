@@ -12,14 +12,15 @@ macro_rules! serialization_format {
 }
 use core::fmt;
 
+use pyo3::exceptions::PyValueError;
 pub(crate) use serialization_format;
 
 pub fn serialize_error<T: fmt::Display>(error: T) -> pyo3::PyErr {
-    pyo3::exceptions::PyValueError::new_err(format!("failed to serialize: {error}"))
+    PyValueError::new_err(format!("failed to serialize: {error}"))
 }
 
 pub fn deserialize_error<T: fmt::Display>(error: T) -> pyo3::PyErr {
-    pyo3::exceptions::PyValueError::new_err(format!("failed to deserialize: {error}"))
+    PyValueError::new_err(format!("failed to deserialize: {error}"))
 }
 
 macro_rules! serde {

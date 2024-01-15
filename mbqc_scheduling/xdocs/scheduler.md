@@ -1,21 +1,6 @@
-Analyse scheduling paths on a [graph state] (or similar) allowed by a [DependencyGraph].
-
-**This module is currently rather experimental. It may be put into a separate crate in
-the future.**
-
-*The module is rather independent of of Pauli tracking. In general, one just needs a
-time ordering on the qubits, like a [DependencyGraph] (or have no time ordering at
-all). Also, it is not that general and rather specific to certain tasks, but if one
-needs more flexibility, it might be still useful as a template.*
-
-Realizing [graph state]s on a quantum computer can be done sequentially (cf. [space]),
-however, this is often restricted by a time ordering induced by non-determinism (cf.
-[time]).
-
-This module provides a [Scheduler] that combines [PathGenerator] and [Graph]. It can be
-used to analyze allowed scheduling paths - the process of initializing and measuring
-qubits - regarding the required quantum memory and the number of required measurement
-steps.
+This module is the core of the scheduling algorithm. It provides methods to sweep through
+all possible initialization-measurement paths, through the [Scheduler] interface, as well
+as the [PathGenerator] and [Graph] interfaces.
 
 # Performance
 
@@ -28,11 +13,9 @@ cost of memory, but this cost is scaling linearly), and a [skipping method] to s
 states that are known to be not interesting. However, the scaling can still be very,
 very bad.
 
-Saying that, if you have a high number of qubits, you might not want to use this module,
-but it might still be useful for testing purposes.
-
-It is a goal to find better algorithms, but this will probably happen in a separate
-project.
+For larger problems, you need to adjust the brute force method presented in the examples
+below, e.g., put some heuristic and/or probabilistic method on top of it as we do it in
+the [search] module.
 
 # Examples
 
@@ -308,7 +291,8 @@ assert_eq!(
 
 We don't provide explicit methods to generate the paths in parallel, however, it can be
 done by "simply" splitting the iterations. In case of the [Sweep] iterators, one can,
-for example, set different initial states per thread. One can also first calculate all
+for example, set different initial states per thread. This is, for example, done in the
+[search] module, which utilizes this module. One can also first calculate all
 paths with the [PathGenerator], split them up, and then instruct [Graph] with them. In
 the [scheduling-proptest] is some messy code which does exactly that (the
 `split_instructions` function and the code after that function call).
@@ -317,4 +301,5 @@ the [scheduling-proptest] is some messy code which does exactly that (the
 [graph state]: https://en.wikipedia.org/wiki/Graph_state
 [ordered Bell number]: https://en.wikipedia.org/wiki/Ordered_Bell_number
 [scheduling-proptest]: https://github.com/taeruh/mbqc_scheduling/blob/main/mbqc_scheduling/roundtrips.rs
+[search]: crate::search
 [skipping method]: Sweep::skip_current

@@ -58,9 +58,6 @@ impl<'l, T> Scheduler<'l, T> {
     }
 }
 
-// just for seeing whether it works as expected while developing
-// pub static mut COUNT: usize = 0;
-
 impl<T: MeasurableSet> Focus<&[usize]> for Scheduler<'_, T> {
     type Error = InstructionError;
 
@@ -95,7 +92,8 @@ impl FocusIterator for Scheduler<'_, Partitioner> {
         Self: Sized,
     {
         let (new_time, mess) = self.time.next_and_focus()?;
-        // unsafe { COUNT += 1 };
+        // we get the new mess set from time, and since the api does not allow updating
+        // time without space, and vice versa, we can just unwrap here
         #[cfg(debug_assertions)]
         let new_space = self.space.focus(&mess).unwrap();
         #[cfg(not(debug_assertions))]

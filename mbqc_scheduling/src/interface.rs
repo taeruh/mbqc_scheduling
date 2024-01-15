@@ -21,7 +21,7 @@ pub type Paths = Vec<(usize, (usize, Vec<Vec<usize>>))>;
 ///
 /// - `spacial_graph` is a list of neighbors for each node, describing the graph
 /// obtained from running the stabilizer simulator (and transforming it into a graph).
-/// - `dependency_graph` is the output obtained from the pauli tracker, discribing the
+/// - `dependency_graph` is the output obtained from the pauli tracker, describing the
 /// partial ordering of the measurements in time.
 /// - `do_search` is a flag that determines whether to search for all best paths or just
 /// take the first one, which is the time optimal path. Searching for all best paths may
@@ -36,6 +36,12 @@ pub type Paths = Vec<(usize, (usize, Vec<Vec<usize>>))>;
 /// tasks).
 /// - `task_bound` is the maximum number of tasks to start in the search, cf.
 /// `nthreads`.
+/// - `probabilistic` specifies whether the search should be overlayed with an
+/// [AcceptFunc] that specifies the probability to accept a step in the path search. If
+/// None, the search will be deterministically. For larger problems, you will want to do
+/// it probabilistically, with a relatively low accept rate, because otherwise it takes
+/// forever (scaling is in the worst case something between factorial and double
+/// exponential).
 /// - `debug` is a flag that determines whether to print some more or less useful
 /// information when multithreading ...
 pub fn run(
@@ -43,10 +49,10 @@ pub fn run(
     dependency_graph: DependencyGraph,
     do_search: bool,
     nthreads: u16,
-    probablistic: Option<AcceptFunc>,
     task_bound: Option<u32>,
+    probabilistic: Option<AcceptFunc>,
     debug: bool,
-) -> Result<Paths> {
+) -> Paths {
     let num_nodes = spacial_graph.len();
     let dependency_buffer = DependencyBuffer::new(num_nodes);
     let graph_buffer = GraphBuffer::from_sparse(spacial_graph);
@@ -59,7 +65,7 @@ pub fn run(
             dependency_buffer,
             graph_buffer,
             nthreads,
-            probablistic.map(AcceptFunc::get_accept_func),
+            probabilistic.map(AcceptFunc::get_accept_func),
             num_nodes,
             task_bound.map(|b| b.into()).unwrap_or(10000),
             debug,
@@ -69,14 +75,15 @@ pub fn run(
 
 use utils::serialization::Dynamic;
 
+/// Same as [run], but with file paths to the input and output data.
 #[allow(clippy::too_many_arguments)]
 pub fn run_serialized(
     spacial_graph: (impl AsRef<Path>, &str),
     dependency_graph: (impl AsRef<Path>, &str),
     do_search: bool,
     nthreads: u16,
-    probablistic: Option<AcceptFunc>,
     task_bound: Option<u32>,
+    probablistic: Option<AcceptFunc>,
     debug: bool,
     paths: (impl AsRef<Path>, &str),
 ) -> Result<()> {
@@ -91,10 +98,10 @@ pub fn run_serialized(
                 dependency_graph,
                 do_search,
                 nthreads,
-                probablistic,
                 task_bound,
+                probablistic,
                 debug,
-            )?,
+            ),
         )
         .map_err(Into::into)
 }

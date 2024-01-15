@@ -18,7 +18,6 @@ use std::{
     time::Instant,
 };
 
-use anyhow::Result;
 use pauli_tracker::tracker::frames::dependency_graph::DependencyGraph;
 use rand::{
     distributions::{
@@ -57,7 +56,7 @@ pub fn get_time_optimal(
     deps: DependencyGraph,
     mut dependency_buffer: DependencyBuffer,
     graph_buffer: GraphBuffer,
-) -> Result<Paths> {
+) -> Paths {
     let mut scheduler = Scheduler::<Vec<usize>>::new(
         PathGenerator::from_dependency_graph(deps, &mut dependency_buffer, None),
         Graph::new(&graph_buffer),
@@ -68,12 +67,14 @@ pub fn get_time_optimal(
 
     while !scheduler.time().measurable().is_empty() {
         let measurable_set = scheduler.time().measurable().clone();
-        scheduler.focus_inplace(&measurable_set)?;
+        scheduler.focus_inplace(&measurable_set).expect(
+            "weird error; there must be something wrong with the dependency graph",
+        );
         path.push(measurable_set);
         max_memory = cmp::max(max_memory, scheduler.space().max_memory());
     }
 
-    Ok(vec![(path.len(), (max_memory, path))])
+    vec![(path.len(), (max_memory, path))]
 }
 
 type OnePath = Vec<Vec<usize>>;
@@ -91,7 +92,7 @@ pub fn search(
     num_bits: usize,
     task_bound: i64,
     debug: bool,
-) -> Result<Paths> {
+) -> Paths {
     let scheduler = Scheduler::<Partitioner>::new(
         PathGenerator::from_dependency_graph(deps, &mut dependency_buffer, None),
         Graph::new(&graph_buffer),
@@ -113,10 +114,10 @@ pub fn search(
         result
     } else {
         threaded_search(nthreads, num_bits, scheduler, task_bound, debug, probabilistic)
-    }?;
+    };
 
     let mut filtered_results = HashMap::new();
-    let mut best_memory = vec![num_bits + 1; num_bits + 1];
+    let mut best_memory = vec![usize::MAX; num_bits + 1];
     for i in 0..best_memory.len() {
         if let Some((mem, _)) = results.get(&i) {
             let m = best_memory[i];
@@ -141,7 +142,7 @@ pub fn search(
     //     println!("{:?}", r);
     // }
 
-    Ok(sorted)
+    sorted
 }
 
 // cf. pauli_tracker::scheduler doc examples
@@ -151,7 +152,7 @@ fn search_single_task(
     // following two only needed for parallel search
     init_path: Option<OnePath>,
     predicates: Option<Vec<usize>>,
-) -> (Result<MappedPaths>, Vec<usize>) {
+) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
     let mut current_path = init_path.unwrap_or_default();
     let mut best_memory = predicates.unwrap_or_else(|| vec![num_bits + 1; num_bits + 1]);
@@ -169,7 +170,7 @@ fn search_single_task(
         }
     }
 
-    (Ok(results), best_memory)
+    (results, best_memory)
 }
 
 fn minimum_path_length(
@@ -227,7 +228,7 @@ fn probabilistic_search_single_task(
     // following two only needed for parallel search
     init_path: Option<OnePath>,
     predicates: Option<Vec<usize>>,
-) -> (Result<MappedPaths>, Vec<usize>) {
+) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
     let mut current_path = init_path.unwrap_or_default();
     let mut best_memory = predicates.unwrap_or_else(|| vec![num_bits + 1; num_bits + 1]);
@@ -265,7 +266,7 @@ fn probabilistic_search_single_task(
         }
     }
 
-    (Ok(results), best_memory)
+    (results, best_memory)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -281,15 +282,15 @@ fn probabilistic_forward(
 ) -> bool {
     let current = scheduler.current();
     let space = current.space();
-    if space.max_memory()
-        >= best_memory[minimum_path_length(current.time(), current_path)]
-    {
+    let bound_best_mem = best_memory[minimum_path_length(current.time(), current_path)];
+    if space.max_memory() >= bound_best_mem {
         if scheduler.skip_current().is_err() {
             return true;
         }
     } else {
         // TODO: use unwrap_unchecked; should be safe
         let accept = ACCEPT.get().unwrap()(
+            bound_best_mem as f64,
             last_max_mem as f64,
             last_cur_mem as f64,
             space.current_memory() as f64,
@@ -315,7 +316,7 @@ fn task(
     num_bits: usize,
     debug: bool,
     probabilistic: bool,
-) -> Result<()> {
+) {
     let start = if debug {
         println!("start {ntasks:?}: measure {measure:?}; best_memory {best_memory:?}");
         Some(Instant::now())
@@ -343,11 +344,10 @@ fn task(
         println!(
             "done {ntasks:?}: time {:?}; results {:?}",
             Instant::now() - start,
-            results.as_ref().unwrap()
+            results
         );
     }
-    sender.send((new_best_memory, results?)).expect("send failure");
-    Ok(())
+    sender.send((new_best_memory, results)).expect("send failure");
 }
 
 fn threaded_search(
@@ -357,7 +357,7 @@ fn threaded_search(
     task_bound: i64,
     debug: bool,
     probabilistic: bool,
-) -> Result<MappedPaths> {
+) -> MappedPaths {
     // there will be one thread which only collects the results and updates the shared
     // best_memory array, the other threads do the actual search tasks
 
@@ -421,7 +421,6 @@ fn threaded_search(
                     debug,
                     probabilistic,
                 )
-                .expect("task failed");
             });
             ntasks += 1;
             if ntasks == task_bound {
@@ -447,13 +446,12 @@ fn threaded_search(
                 debug,
                 probabilistic,
             )
-            .expect("final task failed");
         });
         // drop(sender);
     });
 
-    Ok(Arc::into_inner(results)
+    Arc::into_inner(results)
         .expect("failed to move out of Arc results")
         .into_inner()
-        .expect("failed to move out of Mutex results"))
+        .expect("failed to move out of Mutex results")
 }
