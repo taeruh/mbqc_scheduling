@@ -15,7 +15,7 @@ use crate::{
 
 pub type SpacialGraph = Vec<Vec<usize>>;
 pub use pauli_tracker::tracker::frames::dependency_graph::DependencyGraph;
-pub type Paths = Vec<(usize, (usize, Vec<Vec<usize>>))>;
+pub type Paths = Vec<(usize, usize, Vec<Vec<usize>>)>;
 
 /// Searching for optimal initialization-measuremnt paths.
 ///

@@ -74,7 +74,7 @@ pub fn get_time_optimal(
         max_memory = cmp::max(max_memory, scheduler.space().max_memory());
     }
 
-    vec![(path.len(), (max_memory, path))]
+    vec![(path.len(), max_memory, path)]
 }
 
 type OnePath = Vec<Vec<usize>>;
@@ -130,8 +130,11 @@ pub fn search(
         }
     }
 
-    let mut sorted = filtered_results.into_iter().collect::<Vec<_>>();
-    sorted.sort_by_key(|(len, _)| *len);
+    let mut sorted = filtered_results
+        .into_iter()
+        .map(|(time, (space, path))| (time, space, path))
+        .collect::<Vec<_>>();
+    sorted.sort_by_key(|(len, _, _)| *len);
 
     // println!("sorted:");
     // for s in sorted.iter() {
