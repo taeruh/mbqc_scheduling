@@ -19,21 +19,52 @@
 /// ```
 pub type AcceptFn = Box<dyn Fn(f64, f64, f64, f64, f64, f64) -> f64 + Send + Sync>;
 
-fn builtin_basic(
+fn builtin_linear_space(
     bound_best_mem: f64,
-    _: f64,
+    last_max_mem: f64,
     _: f64,
     cur_mem: f64,
     num_remaining_nodes: f64,
     num_total_nodes: f64,
 ) -> f64 {
-    (bound_best_mem + 1.) / (cur_mem + 1.)
-        * 2e-2 * (1e-3
+    (bound_best_mem + 1.) / (f64::max(cur_mem, last_max_mem) + 1.)
+        * 5e-3
+        * (1e-3
             + 8.5e-2 * (num_total_nodes + 1.)
                 / (num_total_nodes - num_remaining_nodes + 1.))
 }
 
-fn create_parametrized_basic(
+fn builtin_exponential_space(
+    bound_best_mem: f64,
+    last_max_mem: f64,
+    _: f64,
+    cur_mem: f64,
+    num_remaining_nodes: f64,
+    num_total_nodes: f64,
+) -> f64 {
+    ((bound_best_mem + 1.) / (f64::max(cur_mem, last_max_mem) + 1.)).exp()
+        * 1e-1
+        * (1e-3
+            + 8.5e-2 * (num_total_nodes + 1.)
+                / (num_total_nodes - num_remaining_nodes + 1.))
+}
+
+fn builtin_squared_space(
+    bound_best_mem: f64,
+    last_max_mem: f64,
+    _: f64,
+    cur_mem: f64,
+    num_remaining_nodes: f64,
+    num_total_nodes: f64,
+) -> f64 {
+    ((bound_best_mem + 1.) / (f64::max(cur_mem, last_max_mem) + 1.)).powi(2)
+        * 1e-3
+        * (1e-3
+            + 8.5e-2 * (num_total_nodes + 1.)
+                / (num_total_nodes - num_remaining_nodes + 1.))
+}
+
+fn create_parametrized_linear_space(
     weights: Weights,
     shifts: Shifts,
 ) -> impl Fn(f64, f64, f64, f64, f64, f64) -> f64 {
@@ -56,7 +87,7 @@ fn create_parametrized_basic(
     }
 }
 
-/// The weights for the parametrized accept function [AcceptFunc::ParametrizedBasic].
+/// The weights for the parametrized accept function [AcceptFunc::ParametrizedLinearSpace].
 #[derive(Clone)]
 pub struct Weights {
     pub bound_best_mem: f64,
@@ -67,7 +98,8 @@ pub struct Weights {
     pub num_total_nodes: f64,
 }
 
-/// The shifts for the parametrized accept function [AcceptFunc::ParametrizedBasic].
+/// The shifts for the parametrized accept function
+/// [AcceptFunc::ParametrizedLinearSpace]
 #[derive(Clone)]
 pub struct Shifts {
     pub upper_mem: f64,
@@ -92,7 +124,9 @@ pub enum AcceptFunc {
     ///         + 8.5e-2 * (num_total_nodes + 1.)
     ///             / (num_total_nodes - num_remaining_nodes + 1.));
     /// ```
-    BuiltinBasic,
+    BuiltinLinearSpace,
+    BuiltinExponentialSpace,
+    BuiltinSquaredSpace,
     /// A parametrized version of [BuiltinBasic](AcceptFunc::BuiltinBasic). Following
     /// [AcceptFn], this function is defined as
     /// ```ignore
@@ -106,7 +140,10 @@ pub enum AcceptFunc {
     ///             / (weights.num_measure_nodes * (num_total_nodes - num_remaining_nodes)
     ///                 + shifts.num_measure_nodes));
     /// ```
-    ParametrizedBasic { weights: Weights, shifts: Shifts },
+    ParametrizedLinearSpace {
+        weights: Weights,
+        shifts: Shifts,
+    },
     /// A custom accept function.
     Custom(AcceptFn),
 }
@@ -115,9 +152,11 @@ impl AcceptFunc {
     /// Returns the underlying accept function.
     pub fn get_accept_func(self) -> AcceptFn {
         match self {
-            AcceptFunc::BuiltinBasic => Box::new(builtin_basic),
-            AcceptFunc::ParametrizedBasic { weights, shifts } => {
-                Box::new(create_parametrized_basic(weights, shifts))
+            AcceptFunc::BuiltinLinearSpace => Box::new(builtin_linear_space),
+            AcceptFunc::BuiltinExponentialSpace => Box::new(builtin_exponential_space),
+            AcceptFunc::BuiltinSquaredSpace => Box::new(builtin_squared_space),
+            AcceptFunc::ParametrizedLinearSpace { weights, shifts } => {
+                Box::new(create_parametrized_linear_space(weights, shifts))
             },
             AcceptFunc::Custom(f) => f,
         }
