@@ -1,30 +1,31 @@
-# Python wrapper around pauli_tracker
+# Python wrapper around the pauli_tracker and mbqc_scheduling crates
 
-This Python package is a wrapper around [pauli_tracker crate] exporting the basic
-functionality.
+This package is an extension of the [Pauli tracker package] including an interface to the
+the [mbqc_scheduling crate]. If you already use the [Pauli tracker package], uninstall it.
+This package here is a superset of it.
 
-When using this package, please also look at the [crate's documentation] of the Rust
-crate (additionally to [Python package's documentation] of course) in parallel since it is
-much more extensive about how the Pauli tracking works.
+This weird extension is because of [#1444].
 
-If some essential functionality is missing, because we just forgot to implement it, please
-open an issue or pull request (cf [contributing]). If you need more functionality, it is
-fairly easy to use Rust from Python with the help of [pyo3] and [maturin]. However,
-because of [#1444], you probably want to clone this repo and extend it.
+## Documentation
+
+[To the docs](https://taeruh.github.io/mbqc_scheduling/). Since this here is mainly a
+wrapper, we did not document everything extensively, but rather refer to the documentation
+of the underlying Rust crates, especially when it is about Pauli tracking ([pauli_tracker
+crate's documentation]).
 
 ## Examples
 
-Please look at this [Python example] and also at these [Rust examples].
+coming soon
 
 ## Installation
 
-Until the wrapper is released as a package on PyPI, you can download it from the artifacts
+Until we attach the built package to release tags, you can download it from the artifacts
 of the Github actions that have "pypackage" as workflow, e.g., from the [latest build].
 Just choose the right build for your OS and Python version (for Linux, the builds for the
 different Python versions are all bundled in the "linux-wheels" artifact; they are all
-build for manylinux\_2\_28\_x86\_64, cf [manylinux]; they also contain an abi3 build for
-Python>=3.8). You may have to unzip the artifact. Then you can install the package with
-`pip install <path-to-whl-file>`.
+build for manylinux\_2\_28\_x86\_64, cf [manylinux]; the artifact also contains an abi3
+build for Python>=3.8). You may have to unzip the artifact. Then you can install the
+package with `pip install <path-to-whl-file>`.
 
 ## Manually Building
 
@@ -33,22 +34,15 @@ a docker container such that it is compatible with manylinux\_2\_28\_x86\_64 for
 3.8. With `make update_docs` the documentation can be build. The output of both make
 commands is in the `dist` directory.
 
-## Caution
+## SemVer
 
-Trying to build a Rust-Python package depending on this the underlying Rust create here
-will probably not work because of [#1444].
+The API of the underling Rust crate is not stable (but the Python package will follow
+SemVer as seen as we release a first version).
 
-The API of the underling Rust crate is not stable (but the Python package follows
-SemVer).
-
-[crate's documentation]: https://docs.rs/pauli_tracker/latest/pauli_tracker/
-[contributing]: https://github.com/taeruh/pauli_tracker/blob/main/CONTRIBUTING.md
-[latest build]: https://github.com/taeruh/pauli_tracker/actions/runs/7538212166
-[manilinux]: https://github.com/pypa/manylinux
+[pauli_tracker crate's documentation]: https://docs.rs/pauli_tracker/latest/pauli_tracker/
+[Pauli tracker package]: https://github.com/taeruh/pauli_tracker/tree/main/python_lib#readme
+[latest build]: https://github.com/taeruh/mbqc_scheduling/actions/runs/7549674322
+[manylinux]: https://github.com/pypa/manylinux
 [maturin]: https://github.com/PyO3/maturin
-[pauli_tracker crate]: https://github.com/taeruh/pauli_tracker/tree/main/pauli_tracker
-[pyo3]: https://github.com/PyO3/pyo3
-[Python example]: https://taeruh.github.io/pauli_tracker/#example-usage
-[Python package's documentation]: https://taeruh.github.io/pauli_tracker/
-[Rust examples]: https://docs.rs/pauli_tracker/latest/pauli_tracker/#examples
+[mbqc_scheduling crate]: https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling
 [#1444]: https://github.com/PyO3/pyo3/issues/1444

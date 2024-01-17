@@ -1,3 +1,6 @@
+//! This module is very unstable at the moment and probably only useful if you know what
+//! you are doing. When it is more stable, it will be better documented.
+
 use mbqc_scheduling::probabilistic;
 use pyo3::{
     exceptions::PyValueError,
