@@ -24,9 +24,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 utils = { path = "../utils" }
-# mbqc_scheduling = { version = "0.1.0", git = "https://github.com/taeruh/mbqc_scheduling" }
-mbqc_scheduling = { version = "0.1.0", path = "../../../mbqc_scheduling" }
-pyo3 = { version = "0.20.0", features = ["multiple-pymethods", "abi3-py38"] }
+mbqc_scheduling = { version = "0.1.0", git = "https://github.com/taeruh/mbqc_scheduling" }
+# mbqc_scheduling = { version = "0.1.0", path = "../../../mbqc_scheduling" }
+pyo3 = { version = "0.20.0", features = ["multiple-pymethods"] }
 lib = { package = "pauli_tracker", version = "0.3.2", features = ["serde", "bitvec"]}
 rustc-hash = "1.1.0"
 bitvec = "1.0.1"
