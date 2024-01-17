@@ -6,7 +6,7 @@ __pycache__
 pauli_tracker/python_lib/python/**/*.so
 _build
 _autosummary
-!docs/_autosummay
+!docs/_autosummary
 
 # personal development config and caches
 .tmux-session
