@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 defaults:
   run:
-    working-directory: ./python_lib
+    working-directory: ./pauli_tracker/python_lib
 
 jobs:
 
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: linux-wheels
-          path: python_lib/target/wheels
+          path: pauli_tracker/python_lib/target/wheels
 
   osx-and-windows-wheels:
     runs-on: ${{ matrix.os }}
@@ -66,4 +66,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-3.${{ matrix.python-version }}-wheel
-          path: python_lib/target/wheels
+          path: pauli_tracker/python_lib/target/wheels
