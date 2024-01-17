@@ -30,7 +30,7 @@ use rand_pcg::Pcg64;
 use scoped_threadpool::Pool;
 
 use crate::{
-    interface::Paths,
+    interface::Path,
     probabilistic::AcceptFn,
     scheduler::{
         space::{
@@ -56,7 +56,7 @@ pub fn get_time_optimal(
     deps: DependencyGraph,
     mut dependency_buffer: DependencyBuffer,
     graph_buffer: GraphBuffer,
-) -> Paths {
+) -> Vec<Path> {
     let mut scheduler = Scheduler::<Vec<usize>>::new(
         PathGenerator::from_dependency_graph(deps, &mut dependency_buffer, None),
         Graph::new(&graph_buffer),
@@ -74,7 +74,11 @@ pub fn get_time_optimal(
         max_memory = cmp::max(max_memory, scheduler.space().max_memory());
     }
 
-    vec![(path.len(), max_memory, path)]
+    vec![Path {
+        time: path.len(),
+        space: max_memory,
+        steps: path,
+    }]
 }
 
 type OnePath = Vec<Vec<usize>>;
@@ -92,7 +96,7 @@ pub fn search(
     num_bits: usize,
     task_bound: i64,
     debug: bool,
-) -> Paths {
+) -> Vec<Path> {
     let scheduler = Scheduler::<Partitioner>::new(
         PathGenerator::from_dependency_graph(deps, &mut dependency_buffer, None),
         Graph::new(&graph_buffer),
@@ -132,9 +136,9 @@ pub fn search(
 
     let mut sorted = filtered_results
         .into_iter()
-        .map(|(time, (space, path))| (time, space, path))
+        .map(|(time, (space, steps))| Path { time, space, steps })
         .collect::<Vec<_>>();
-    sorted.sort_by_key(|(len, _, _)| *len);
+    sorted.sort_by_key(|Path { time, .. }| *time);
 
     // println!("sorted:");
     // for s in sorted.iter() {

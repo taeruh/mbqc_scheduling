@@ -1,6 +1,10 @@
-use std::path::Path;
+use std::path;
 
 use anyhow::Result;
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use crate::{
     probabilistic::AcceptFunc,
@@ -15,7 +19,13 @@ use crate::{
 
 pub type SpacialGraph = Vec<Vec<usize>>;
 pub use pauli_tracker::tracker::frames::dependency_graph::DependencyGraph;
-pub type Paths = Vec<(usize, usize, Vec<Vec<usize>>)>;
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Path {
+    pub time: usize,
+    pub space: usize,
+    pub steps: Vec<Vec<usize>>,
+}
 
 /// Searching for optimal initialization-measuremnt paths.
 ///
@@ -52,7 +62,7 @@ pub fn run(
     task_bound: Option<u32>,
     probabilistic: Option<AcceptFunc>,
     debug: bool,
-) -> Paths {
+) -> Vec<Path> {
     let num_nodes = spacial_graph.len();
     let dependency_buffer = DependencyBuffer::new(num_nodes);
     let graph_buffer = GraphBuffer::from_sparse(spacial_graph);
@@ -78,14 +88,14 @@ use utils::serialization::Dynamic;
 /// Same as [run], but with file paths to the input and output data.
 #[allow(clippy::too_many_arguments)]
 pub fn run_serialized(
-    spacial_graph: (impl AsRef<Path>, &str),
-    dependency_graph: (impl AsRef<Path>, &str),
+    spacial_graph: (impl AsRef<path::Path>, &str),
+    dependency_graph: (impl AsRef<path::Path>, &str),
     do_search: bool,
     nthreads: u16,
     task_bound: Option<u32>,
     probablistic: Option<AcceptFunc>,
     debug: bool,
-    paths: (impl AsRef<Path>, &str),
+    paths: (impl AsRef<path::Path>, &str),
 ) -> Result<()> {
     let spacial_graph = Dynamic::try_from(spacial_graph.1)?.read_file(spacial_graph.0)?;
     let dependency_graph =

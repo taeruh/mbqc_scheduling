@@ -7,8 +7,4 @@ The content is aligned with the corresponding module in the `mbqc_scheduling cra
 check out the documentation there for more details*.
 """
 
-from pauli_tracker._lib.probabilistic import (
-    AcceptFunc,
-    Weights,
-    Shifts,
-)
+from pauli_tracker._lib.scheduling.probabilistic import AcceptFunc, Weights, Shifts

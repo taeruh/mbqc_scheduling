@@ -1,6 +1,5 @@
 use mbqc_scheduling::interface::{
     self,
-    Paths,
 };
 use pyo3::{
     PyResult,
@@ -13,9 +12,11 @@ use crate::{
         doc,
         serialization,
     },
-    probabilistic::AcceptFunc,
     Module,
 };
+
+mod probabilistic;
+use probabilistic::AcceptFunc;
 
 #[pyo3::pyclass(subclass)]
 /// A list of neighbors for each node, describing the graph obtained from running the
@@ -52,6 +53,86 @@ impl SpacialGraph {
 
 serialization::serde!(SpacialGraph);
 
+#[pyo3::pyclass(subclass)]
+/// Opaque Rust object. The information returned from the scheduling algorithm (`run`)
+/// describing valid initalization-measurement paths.
+#[derive(Clone)]
+pub struct Paths(pub Vec<interface::Path>);
+
+#[pyo3::pymethods]
+impl Paths {
+    #[new]
+    fn __new__(paths: Vec<Path>) -> Self {
+        Self(
+            paths
+                .into_iter()
+                .map(|Path { time, space, steps }| interface::Path { time, space, steps })
+                .collect(),
+        )
+    }
+
+    /// Create a new Paths object.
+    ///
+    /// Args:
+    ///    paths (list[Path]): The paths to create the Paths object from.
+    ///
+    /// Returns:
+    ///     Paths:
+    #[pyo3(text_signature = "(self, paths)")]
+    fn __init__(&self, _paths: Vec<Path>) {}
+
+    #[doc = doc::transform!()]
+    ///
+    /// Returns:
+    ///    list[Path]:
+    #[allow(clippy::wrong_self_convention)]
+    fn into_py_paths(&self) -> Vec<Path> {
+        self.0
+            .clone()
+            .into_iter()
+            .map(|interface::Path { time, space, steps }| Path { time, space, steps })
+            .collect()
+    }
+}
+
+serialization::serde!(Paths);
+
+#[pyo3::pyclass(subclass)]
+/// The information describing a valid initalization-measurement path.
+#[derive(Clone)]
+pub struct Path {
+    #[pyo3(get)]
+    /// The number of (parallel) :attr:`steps`.
+    pub time: usize,
+    #[pyo3(get)]
+    /// The number of required qubits.
+    pub space: usize,
+    #[pyo3(get)]
+    /// The initialization-measurement steps.
+    pub steps: Vec<Vec<usize>>,
+}
+
+#[pyo3::pymethods]
+impl Path {
+    #[new]
+    fn __new__(time: usize, space: usize, steps: Vec<Vec<usize>>) -> Self {
+        Self { time, space, steps }
+    }
+
+    /// Create a new Path object.
+    ///
+    /// Args:
+    ///     time (int): The number of (parallel) steps (should be the length of
+    ///         :attr:`steps`).
+    ///     space (int): The number of required qubits.
+    ///     steps (list[list[int]]): The initialization-measurement steps.
+    ///
+    /// Returns:
+    ///     Path:
+    #[pyo3(text_signature = "(self, time, space, steps)")]
+    fn __init__(&self, _time: usize, _space: usize, _steps: Vec<Vec<usize>>) {}
+}
+
 /// Search for optimal initalization-measurement paths.
 ///
 /// Args:
@@ -79,10 +160,8 @@ serialization::serde!(SpacialGraph);
 ///         multithreading.
 ///
 /// Returns:
-///     list[tuple[int, tuple[int, list[list[int]]]]]: A list of the optimal paths. In
-///     the outer tuple, the first entry is the number of time steps, and the second
-///     tuple contains the total number of required qubits and the list of qubits that
-///     can be measured in parallel at each time step.
+///     Paths: A list of the optimal paths. Turn it into the corresponding Python object
+///     via :meth:`Paths.into_py_paths`.
 #[pyo3::pyfunction]
 #[pyo3(signature = (
     spacial_graph,
@@ -102,7 +181,7 @@ fn run(
     task_bound: Option<u32>,
     debug: bool,
 ) -> Paths {
-    interface::run(
+    Paths(interface::run(
         spacial_graph.0,
         dependency_graph.0,
         do_search,
@@ -110,15 +189,16 @@ fn run(
         task_bound,
         probabilistic.map(|e| e.to_real()),
         debug,
-    )
+    ))
 }
 
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
     let module = Module::new(py, "scheduling", parent_module.path.clone())?;
-
     module.add_class::<SpacialGraph>()?;
+    module.add_class::<Paths>()?;
+    module.add_class::<Path>()?;
     module.add_function(pyo3::wrap_pyfunction!(run, module.pymodule)?)?;
-
+    probabilistic::add_module(py, &module)?;
     parent_module.add_submodule(py, module)?;
     Ok(())
 }

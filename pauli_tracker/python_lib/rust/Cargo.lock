@@ -282,6 +282,7 @@ dependencies = [
  "rand_pcg",
  "rustc-hash",
  "scoped_threadpool",
+ "serde",
  "thiserror",
  "utils 0.1.0 (git+https://github.com/taeruh/pauli_tracker)",
 ]

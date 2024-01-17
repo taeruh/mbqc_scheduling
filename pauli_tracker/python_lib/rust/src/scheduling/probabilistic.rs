@@ -23,8 +23,8 @@ pub struct Shifts(probabilistic::Shifts);
 // note that the original probabilistic::AcceptFunc cannot implement Clone
 #[derive(Clone)]
 enum AcceptFuncBase {
-    BuiltinBasic,
-    ParametrizedBasic { weights: Weights, shifts: Shifts },
+    BuiltinLinearSpace,
+    ParametrizedLinearSpace { weights: Weights, shifts: Shifts },
     Custom(PyObject),
 }
 
@@ -105,19 +105,19 @@ impl Shifts {
 impl AcceptFunc {
     #[new]
     #[pyo3(signature = (
-    kind="BuiltinBasic".to_string(),
-    parametrized_basic_parameters=None,
+    kind="BuiltinLinearSpace".to_string(),
+    parametrized_linear_space_parameters=None,
     custom_func=None,
     ))]
     fn __new__(
         kind: String,
-        parametrized_basic_parameters: Option<(Weights, Shifts)>,
+        parametrized_linear_space_parameters: Option<(Weights, Shifts)>,
         custom_func: Option<PyObject>,
     ) -> PyResult<Self> {
         Ok(Self(match kind.as_str() {
-            "BuiltinBasic" => AcceptFuncBase::BuiltinBasic,
+            "BuiltinBasic" => AcceptFuncBase::BuiltinLinearSpace,
             "ParametrizedBasic" => {
-                let parameters = match parametrized_basic_parameters {
+                let parameters = match parametrized_linear_space_parameters {
                     Some(p) => p.clone(),
                     None => {
                         return Err(PyValueError::new_err(
@@ -126,7 +126,7 @@ impl AcceptFunc {
                         ));
                     },
                 };
-                AcceptFuncBase::ParametrizedBasic {
+                AcceptFuncBase::ParametrizedLinearSpace {
                     weights: parameters.0,
                     shifts: parameters.1,
                 }
@@ -147,16 +147,17 @@ impl AcceptFunc {
     ///
     /// Args:
     ///     kind (String): The kind of AcceptFunc to create; possible values are:
-    ///         "BuiltinBasic", "ParametrizedBasic", "Custom".
+    ///         "BuiltinLinearSpace", "ParametrizedLinearSpace", "Custom".
     ///     parametrized_basic_parameters (tuple[Weights, Shifts]): The parameters for the
     ///         ParametrizedBasic AcceptFunc (if kind = "ParametrizedBasic").
     ///     custom_func (callable): The custom AcceptFunc (if kind = "Custom").
-    #[pyo3(text_signature = "(self, kind='BuiltinBasic', \
-                             parametrized_basic_parameters=None, custom_func=None)")]
+    #[pyo3(text_signature = "(self, kind='BuiltinLinearSpace', \
+                             parametrized_linear_space_parameters=None, \
+                             custom_func=None)")]
     fn __init__(
         &self,
         _kind: String,
-        _parametrized_basic_parameters: Option<(Weights, Shifts)>,
+        _parametrized_linear_space_parameters: Option<(Weights, Shifts)>,
         _custom_func: Option<PyObject>,
     ) {
     }
@@ -165,9 +166,11 @@ impl AcceptFunc {
 impl AcceptFunc {
     pub(crate) fn to_real(&self) -> probabilistic::AcceptFunc {
         match self.0.clone() {
-            AcceptFuncBase::BuiltinBasic => probabilistic::AcceptFunc::BuiltinBasic,
-            AcceptFuncBase::ParametrizedBasic { weights, shifts } => {
-                probabilistic::AcceptFunc::ParametrizedBasic {
+            AcceptFuncBase::BuiltinLinearSpace => {
+                probabilistic::AcceptFunc::BuiltinLinearSpace
+            },
+            AcceptFuncBase::ParametrizedLinearSpace { weights, shifts } => {
+                probabilistic::AcceptFunc::ParametrizedLinearSpace {
                     weights: weights.0,
                     shifts: shifts.0,
                 }
@@ -194,7 +197,8 @@ impl AcceptFunc {
                             None,
                         )?
                         .extract(py)
-                    }).expect("custom AcceptFunc failed")
+                    })
+                    .expect("custom AcceptFunc failed")
                 },
             )),
         }
