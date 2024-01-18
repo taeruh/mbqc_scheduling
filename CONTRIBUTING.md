@@ -54,6 +54,10 @@ Commit:
 git add --all; git commit -m "Add pauli_tracker"
 ```
 We pull in updates from upstream via
+**EDIT; IMPORTANT: I don't know why, but if there is any file in the `./docs` directory
+then the following subtree merge ignores the pauli_tracker prefix and just merges at the
+root level. WHY??? -> before the merge, remove just the whole `./docs` directory and
+commit and then do the merge.**
 ```
 git fetch upstream/pauli_tracker
 git merge -Xsubtree=pauli_tracker upstream/pauli_tracker/main --no-commit
