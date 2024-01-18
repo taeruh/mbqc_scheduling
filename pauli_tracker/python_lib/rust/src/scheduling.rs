@@ -137,7 +137,7 @@ impl Path {
 ///
 /// Args:
 ///     spacial_graph (SpacialGraph): The spacial graph.
-///     dependency_graph (DependencyGraph): The dependency graph on the measurements.
+///     time_order (PartialOrderGraph): The dependency graph on the measurements.
 ///     do_search (bool): Whether to search for all best paths or just take the first
 ///         one, which is the time optimal path. Searching for all best paths may take
 ///         some time ...
@@ -165,7 +165,7 @@ impl Path {
 #[pyo3::pyfunction]
 #[pyo3(signature = (
     spacial_graph,
-    dependency_graph,
+    time_order,
     do_search=false,
     nthreads=1,
     probabilistic=None,
@@ -174,7 +174,7 @@ impl Path {
 ))]
 fn run(
     spacial_graph: SpacialGraph,
-    dependency_graph: PartialOrderGraph,
+    time_order: PartialOrderGraph,
     do_search: bool,
     nthreads: u16,
     probabilistic: Option<AcceptFunc>,
@@ -183,7 +183,7 @@ fn run(
 ) -> Paths {
     Paths(interface::run(
         spacial_graph.0,
-        dependency_graph.0,
+        time_order.0,
         do_search,
         nthreads,
         task_bound,

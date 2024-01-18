@@ -15,7 +15,7 @@ crate's documentation]).
 
 ## Examples
 
-coming soon
+See `examples/simple.py` for a very basic example.
 
 ## Installation
 
