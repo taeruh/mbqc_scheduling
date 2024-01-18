@@ -288,6 +288,7 @@ name = "mbqc_scheduling"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bit-vec",
  "bitvec",
  "clap",
  "hashbrown",
@@ -329,6 +330,7 @@ dependencies = [
  "bitvec_simd",
  "hashbrown",
  "itertools",
+ "rand",
  "serde",
  "thiserror",
 ]

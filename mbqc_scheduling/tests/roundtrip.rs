@@ -97,7 +97,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
         return;
     }
 
-    let dependency_graph = dependency_graph::create_dependency_graph(
+    let dependency_graph = induced_order::get_order(
         <Storage as Iterable>::iter_pairs(&circuit.storage),
         &measurements.0,
     );

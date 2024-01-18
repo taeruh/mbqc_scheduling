@@ -7,7 +7,7 @@ use pyo3::{
 };
 
 use crate::{
-    frames::DependencyGraph,
+    frames::PartialOrderGraph,
     impl_helper::{
         doc,
         serialization,
@@ -174,7 +174,7 @@ impl Path {
 ))]
 fn run(
     spacial_graph: SpacialGraph,
-    dependency_graph: DependencyGraph,
+    dependency_graph: PartialOrderGraph,
     do_search: bool,
     nthreads: u16,
     probabilistic: Option<AcceptFunc>,
