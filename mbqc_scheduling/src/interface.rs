@@ -1,6 +1,7 @@
 use std::path;
 
 use anyhow::Result;
+use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
 use serde::{
     Deserialize,
     Serialize,
@@ -18,7 +19,6 @@ use crate::{
 };
 
 pub type SpacialGraph = Vec<Vec<usize>>;
-pub use pauli_tracker::tracker::frames::dependency_graph::DependencyGraph;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Path {
@@ -56,7 +56,7 @@ pub struct Path {
 /// information when multithreading ...
 pub fn run(
     spacial_graph: SpacialGraph,
-    dependency_graph: DependencyGraph,
+    dependency_graph: PartialOrderGraph,
     do_search: bool,
     nthreads: u16,
     task_bound: Option<u32>,

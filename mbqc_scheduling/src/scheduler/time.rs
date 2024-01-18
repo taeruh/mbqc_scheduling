@@ -13,7 +13,7 @@ introduced by quantum measurements, e.g., as in MBQC, and captured by a Pauli tr
 use std::hash::BuildHasherDefault;
 
 use hashbrown::HashMap;
-use pauli_tracker::tracker::frames::dependency_graph::DependencyGraph;
+use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
 use rustc_hash::FxHasher;
 use thiserror::Error;
 
@@ -122,7 +122,7 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
     /// Panics if the dependency_buffer has a length smaller than the number of qubits
     /// in the `graph`
     pub fn from_dependency_graph(
-        mut graph: DependencyGraph,
+        mut graph: PartialOrderGraph,
         dependency_buffer: &'l mut DependencyBuffer,
         bit_mapping: Option<&HashMap<usize, usize>>,
     ) -> Self {
@@ -374,7 +374,7 @@ mod tests {
     };
 
     #[cfg_attr(coverage_nightly, coverage(off))]
-    pub fn example_ordering() -> DependencyGraph {
+    pub fn example_ordering() -> PartialOrderGraph {
         // 0 --- 3 --- 2
         //  \
         //    -- 1

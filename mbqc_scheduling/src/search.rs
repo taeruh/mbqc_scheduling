@@ -18,7 +18,7 @@ use std::{
     time::Instant,
 };
 
-use pauli_tracker::tracker::frames::dependency_graph::DependencyGraph;
+use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
 use rand::{
     distributions::{
         Distribution,
@@ -53,7 +53,7 @@ use crate::{
 };
 
 pub fn get_time_optimal(
-    deps: DependencyGraph,
+    deps: PartialOrderGraph,
     mut dependency_buffer: DependencyBuffer,
     graph_buffer: GraphBuffer,
 ) -> Vec<Path> {
@@ -88,7 +88,7 @@ static ACCEPT: OnceLock<AcceptFn> = OnceLock::new();
 
 #[allow(clippy::too_many_arguments)]
 pub fn search(
-    deps: DependencyGraph,
+    deps: PartialOrderGraph,
     mut dependency_buffer: DependencyBuffer,
     graph_buffer: GraphBuffer,
     nthreads: u16,
