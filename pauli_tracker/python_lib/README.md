@@ -41,7 +41,7 @@ SemVer as seen as we release a first version).
 
 [pauli_tracker crate's documentation]: https://docs.rs/pauli_tracker/latest/pauli_tracker/
 [Pauli tracker package]: https://github.com/taeruh/pauli_tracker/tree/main/python_lib#readme
-[latest build]: https://github.com/taeruh/mbqc_scheduling/actions/runs/7549674322
+[latest build]: https://github.com/taeruh/mbqc_scheduling/actions/runs/7566721453
 [manylinux]: https://github.com/pypa/manylinux
 [maturin]: https://github.com/PyO3/maturin
 [mbqc_scheduling crate]: https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling
