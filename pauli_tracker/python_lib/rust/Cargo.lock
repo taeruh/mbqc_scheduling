@@ -329,7 +329,7 @@ dependencies = [
 [[package]]
 name = "pauli_tracker"
 version = "0.4.0-alpha.2"
-source = "git+https://github.com/taeruh/pauli_tracker#7dd57c06d21f7fdf37aa5215dbd92353495a9764"
+source = "git+https://github.com/taeruh/pauli_tracker#69ab54aa786d733944ed138bc5dae81d13c4d09f"
 dependencies = [
  "bit-vec",
  "bitvec",
@@ -632,7 +632,7 @@ dependencies = [
 [[package]]
 name = "utils"
 version = "0.1.0"
-source = "git+https://github.com/taeruh/pauli_tracker#7dd57c06d21f7fdf37aa5215dbd92353495a9764"
+source = "git+https://github.com/taeruh/pauli_tracker#69ab54aa786d733944ed138bc5dae81d13c4d09f"
 dependencies = [
  "bincode",
  "serde",

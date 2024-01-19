@@ -8,7 +8,10 @@ use pyo3::{
 };
 
 use crate::{
-    impl_helper::{doc, serialization},
+    impl_helper::{
+        doc,
+        serialization,
+    },
     BitVec,
     Module,
 };
@@ -107,6 +110,11 @@ impl PauliStack {
     #[allow(clippy::wrong_self_convention)]
     pub fn into_py_tuple(&self) -> (Vec<u64>, Vec<u64>) {
         (self.0.z.clone().into_vec(), self.0.x.clone().into_vec())
+    }
+
+    #[staticmethod]
+    fn zeros(len: usize) -> Self {
+        PauliStack(pauli::PauliStack::zeros(len))
     }
 
     pub fn xor_inplace(&mut self, other: &PauliStack) {
