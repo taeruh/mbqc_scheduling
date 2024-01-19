@@ -34,9 +34,9 @@ checksum = "0942ffc6dcaadf03badf6e6a2d0228460359d5e34b57ccdc720b7382dfbd5ec5"
 
 [[package]]
 name = "anstream"
-version = "0.6.9"
+version = "0.6.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fde6067df7359f2d6335ec1a50c1f8f825801687d10da0cc4c6b08e3f6afd15"
+checksum = "6e2e1ebcb11de5c03c67de28a7df593d32191b44939c482e97702baaaa6ab6a5"
 dependencies = [
  "anstyle",
  "anstyle-parse",
@@ -271,7 +271,7 @@ dependencies = [
 [[package]]
 name = "mbqc_scheduling"
 version = "0.1.0"
-source = "git+https://github.com/taeruh/mbqc_scheduling#e21ff4746b393bd8dc0a90de2b58311d6a14b03c"
+source = "git+https://github.com/taeruh/mbqc_scheduling#47c448506db332e15e2cf760a30a1edecf3f7ce8"
 dependencies = [
  "anyhow",
  "bitvec",
@@ -329,7 +329,7 @@ dependencies = [
 [[package]]
 name = "pauli_tracker"
 version = "0.4.0-alpha.2"
-source = "git+https://github.com/taeruh/pauli_tracker#46711fad57cefb8acf03fa83d9b5d164209033d6"
+source = "git+https://github.com/taeruh/pauli_tracker#7dd57c06d21f7fdf37aa5215dbd92353495a9764"
 dependencies = [
  "bit-vec",
  "bitvec",
@@ -546,9 +546,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.12.0"
+version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2593d31f82ead8df961d8bd23a64c2ccf2eb5dd34b0a34bfb4dd54011c72009e"
+checksum = "3b187f0231d56fe41bfb12034819dd2bf336422a5866de41bc3fec4b2e3883e8"
 dependencies = [
  "serde",
 ]
@@ -632,7 +632,7 @@ dependencies = [
 [[package]]
 name = "utils"
 version = "0.1.0"
-source = "git+https://github.com/taeruh/pauli_tracker#46711fad57cefb8acf03fa83d9b5d164209033d6"
+source = "git+https://github.com/taeruh/pauli_tracker#7dd57c06d21f7fdf37aa5215dbd92353495a9764"
 dependencies = [
  "bincode",
  "serde",
