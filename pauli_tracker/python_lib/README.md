@@ -15,7 +15,10 @@ crate's documentation]).
 
 ## Examples
 
-See `examples/simple.py` for a very basic example.
+See [examples/simple.py] for a very basic example. [examples/compile_flow.py] is a
+specific example describing how the Pauli tracking and the scheduling can be used when
+combining/stitching graphs that, for example, represent parts of a larger circuit (it's a
+specific example for the project for which this library was initially developed).
 
 ## Installation
 
@@ -39,9 +42,11 @@ commands is in the `dist` directory.
 The API of the underling Rust crate is not stable (but the Python package will follow
 SemVer as seen as we release a first version).
 
+[examples/simple.py]: https://github.com/taeruh/mbqc_scheduling/blob/main/pauli_tracker/python_lib/examples/simple.py
+[examples/compile_flow.py]: https://github.com/taeruh/mbqc_scheduling/blob/main/pauli_tracker/python_lib/examples/compile_flow.py
 [pauli_tracker crate's documentation]: https://docs.rs/pauli_tracker/latest/pauli_tracker/
 [Pauli tracker package]: https://github.com/taeruh/pauli_tracker/tree/main/python_lib#readme
-[latest build]: https://github.com/taeruh/mbqc_scheduling/actions/runs/7566721453
+[latest build]: https://github.com/taeruh/mbqc_scheduling/actions/runs/7577099611
 [manylinux]: https://github.com/pypa/manylinux
 [maturin]: https://github.com/PyO3/maturin
 [mbqc_scheduling crate]: https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling
