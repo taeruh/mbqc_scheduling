@@ -186,10 +186,10 @@ fn run(
 
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
     let module = Module::new(py, "scheduling", parent_module.path.clone())?;
-    module.add_class::<SpacialGraph>()?;
-    module.add_class::<Paths>()?;
-    module.add_class::<Path>()?;
-    module.add_function(pyo3::wrap_pyfunction!(run, module.pymodule)?)?;
+    module.pymodule.add_class::<SpacialGraph>()?;
+    module.pymodule.add_class::<Paths>()?;
+    module.pymodule.add_class::<Path>()?;
+    module.pymodule.add_function(pyo3::wrap_pyfunction!(run, module.pymodule)?)?;
     probabilistic::add_module(py, &module)?;
     parent_module.add_submodule(py, module)?;
     Ok(())

@@ -205,9 +205,9 @@ impl AcceptFunc {
 
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
     let module = Module::new(py, "probabilistic", parent_module.path.clone())?;
-    module.add_class::<AcceptFunc>()?;
-    module.add_class::<Weights>()?;
-    module.add_class::<Shifts>()?;
+    module.pymodule.add_class::<AcceptFunc>()?;
+    module.pymodule.add_class::<Weights>()?;
+    module.pymodule.add_class::<Shifts>()?;
     parent_module.add_submodule(py, module)?;
     Ok(())
 }
