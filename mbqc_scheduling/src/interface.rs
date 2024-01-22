@@ -29,7 +29,7 @@ pub struct Path {
 /// take the first one, which is the time optimal path. Searching for all best paths may
 /// take some time ...
 /// - `nthreads` is the number of threads to use for the search. If `nthreads` is below
-/// 3, it will not multithread. Otherwise it will start a threadpool (where one thread
+/// 2, it will not multithread. Otherwise it will start a threadpool (where one thread
 /// is used to manage shared data). The tasks for the threadpool are all the possible
 /// focused Scheduler sweeps after doing one initial focus, cf. source code .... The
 /// number of those task scales exponentially with the number of bits in the first layer
