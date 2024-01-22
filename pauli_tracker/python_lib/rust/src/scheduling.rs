@@ -1,17 +1,9 @@
-use mbqc_scheduling::interface::{
-    self,
-};
-use pyo3::{
-    PyResult,
-    Python,
-};
+use mbqc_scheduling::interface::{self};
+use pyo3::{PyResult, Python};
 
 use crate::{
     frames::PartialOrderGraph,
-    impl_helper::{
-        doc,
-        serialization,
-    },
+    impl_helper::{doc, serialization},
     Module,
 };
 

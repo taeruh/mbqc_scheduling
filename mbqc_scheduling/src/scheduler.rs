@@ -3,22 +3,9 @@
 mod combinatoric;
 
 pub use combinatoric::Partition;
-use space::{
-    AlreadyMeasured,
-    Graph,
-};
-use time::{
-    MeasurableSet,
-    NotMeasurable,
-    Partitioner,
-    PathGenerator,
-};
-use tree::{
-    Focus,
-    FocusIterator,
-    Step,
-    Sweep,
-};
+use space::{AlreadyMeasured, Graph};
+use time::{MeasurableSet, NotMeasurable, Partitioner, PathGenerator};
+use tree::{Focus, FocusIterator, Step, Sweep};
 
 macro_rules! update {
     ($bit:expr, $map:expr) => {
@@ -79,7 +66,10 @@ impl<T: MeasurableSet> Focus<&[usize]> for Scheduler<'_, T> {
         let new_space = self.space.focus(measure_set)?;
         #[cfg(not(debug_assertions))]
         let new_space = self.space.focus_unchecked(measure_set);
-        Ok(Self { time: new_time, space: new_space })
+        Ok(Self {
+            time: new_time,
+            space: new_space,
+        })
     }
 }
 
@@ -98,11 +88,21 @@ impl FocusIterator for Scheduler<'_, Partitioner> {
         let new_space = self.space.focus(&mess).unwrap();
         #[cfg(not(debug_assertions))]
         let new_space = self.space.focus_unchecked(&mess);
-        Some((Self { time: new_time, space: new_space }, mess))
+        Some((
+            Self {
+                time: new_time,
+                space: new_space,
+            },
+            mess,
+        ))
     }
 
     fn at_leaf(&self) -> Option<Self::LeafItem> {
-        self.time.measurable().set().is_empty().then_some(self.space.max_memory())
+        self.time
+            .measurable()
+            .set()
+            .is_empty()
+            .then_some(self.space.max_memory())
     }
 }
 

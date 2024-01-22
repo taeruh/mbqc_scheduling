@@ -18,12 +18,7 @@ use rustc_hash::FxHasher;
 use thiserror::Error;
 
 use super::{
-    tree::{
-        Focus,
-        FocusIterator,
-        Step,
-        Sweep,
-    },
+    tree::{Focus, FocusIterator, Step, Sweep},
     Partition,
 };
 
@@ -368,10 +363,7 @@ pub struct NotMeasurable(pub Vec<usize>);
 mod tests {
     use std::panic;
 
-    use super::{
-        super::tree::Step,
-        *,
-    };
+    use super::{super::tree::Step, *};
 
     #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn example_ordering() -> PartialOrderGraph {
@@ -463,7 +455,11 @@ mod tests {
             .is_err()
         );
 
-        let map = map.iter().enumerate().map(|(i, &e)| (e, i)).collect::<HashMap<_, _>>();
+        let map = map
+            .iter()
+            .enumerate()
+            .map(|(i, &e)| (e, i))
+            .collect::<HashMap<_, _>>();
 
         let mut time = PathGenerator::<Partitioner>::from_dependency_graph(
             dependency_graph,

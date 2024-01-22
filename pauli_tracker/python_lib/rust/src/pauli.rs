@@ -1,19 +1,9 @@
-use lib::pauli::{
-    self,
-    Pauli,
-};
-use pyo3::{
-    PyResult,
-    Python, exceptions::PyValueError,
-};
+use lib::pauli::{self, Pauli};
+use pyo3::{exceptions::PyValueError, PyResult, Python};
 
 use crate::{
-    impl_helper::{
-        doc,
-        serialization,
-    },
-    BitVec,
-    Module,
+    impl_helper::{doc, serialization},
+    BitVec, Module,
 };
 
 /// `PauliDense

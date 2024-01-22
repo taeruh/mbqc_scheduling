@@ -9,21 +9,13 @@ with pauli tracking anymore, except that we take the [DependencyGraph] as input.
 use std::{
     cmp,
     collections::HashMap,
-    sync::{
-        mpsc,
-        Arc,
-        Mutex,
-        OnceLock,
-    },
+    sync::{mpsc, Arc, Mutex, OnceLock},
     time::Instant,
 };
 
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
 use rand::{
-    distributions::{
-        Distribution,
-        Uniform,
-    },
+    distributions::{Distribution, Uniform},
     SeedableRng,
 };
 use rand_pcg::Pcg64;
@@ -33,21 +25,9 @@ use crate::{
     interface::Path,
     probabilistic::AcceptFn,
     scheduler::{
-        space::{
-            Graph,
-            GraphBuffer,
-        },
-        time::{
-            DependencyBuffer,
-            Partitioner,
-            PathGenerator,
-        },
-        tree::{
-            Focus,
-            FocusIterator,
-            Step,
-            Sweep,
-        },
+        space::{Graph, GraphBuffer},
+        time::{DependencyBuffer, Partitioner, PathGenerator},
+        tree::{Focus, FocusIterator, Step, Sweep},
         Scheduler,
     },
 };
@@ -443,16 +423,7 @@ fn threaded_search(
                 .lock()
                 .expect("failed to lock best_memory for final task")
                 .to_vec();
-            task(
-                scheduler,
-                best_memory,
-                -1,
-                sender,
-                None,
-                num_bits,
-                debug,
-                probabilistic,
-            )
+            task(scheduler, best_memory, -1, sender, None, num_bits, debug, probabilistic)
         });
         // drop(sender);
     });

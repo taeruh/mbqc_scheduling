@@ -1,9 +1,4 @@
-use clap::{
-    value_parser,
-    Arg,
-    ArgAction,
-    Command,
-};
+use clap::{value_parser, Arg, ArgAction, Command};
 
 const SPACIAL_GRAPH: &str = "spacial_graph";
 const SPACIAL_GRAPH_FORMAT: &str = "spacial_graph_format";

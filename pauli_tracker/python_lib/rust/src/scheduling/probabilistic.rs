@@ -2,12 +2,7 @@
 //! you are doing. When it is more stable, it will be better documented.
 
 use mbqc_scheduling::probabilistic;
-use pyo3::{
-    exceptions::PyValueError,
-    PyObject,
-    PyResult,
-    Python,
-};
+use pyo3::{exceptions::PyValueError, PyObject, PyResult, Python};
 
 use crate::Module;
 

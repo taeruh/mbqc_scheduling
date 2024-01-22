@@ -2,20 +2,12 @@ use std::path;
 
 use anyhow::Result;
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     probabilistic::AcceptFunc,
-    scheduler::{
-        space::GraphBuffer,
-        time::DependencyBuffer,
-    },
-    search::{
-        self,
-    },
+    scheduler::{space::GraphBuffer, time::DependencyBuffer},
+    search::{self},
 };
 
 pub type SpacialGraph = Vec<Vec<usize>>;

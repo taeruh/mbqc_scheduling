@@ -1,27 +1,12 @@
 include!("../../pauli_tracker/pauli_tracker/tests/roundtrips/tracking.rs");
 
-use std::{
-    cmp,
-    mem,
-    thread,
-};
+use std::{cmp, mem, thread};
 
 use hashbrown::HashSet;
 use mbqc_scheduling::scheduler::{
-    space::{
-        Graph,
-        GraphBuffer,
-    },
-    time::{
-        DependencyBuffer,
-        Partitioner,
-        PathGenerator,
-    },
-    tree::{
-        Focus,
-        FocusIterator,
-        Step,
-    },
+    space::{Graph, GraphBuffer},
+    time::{DependencyBuffer, Partitioner, PathGenerator},
+    tree::{Focus, FocusIterator, Step},
     Scheduler,
 };
 use proptest::strategy::Just;

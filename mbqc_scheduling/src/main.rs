@@ -1,8 +1,5 @@
 use cli::Args;
-use mbqc_scheduling::{
-    interface,
-    probabilistic::AcceptFunc,
-};
+use mbqc_scheduling::{interface, probabilistic::AcceptFunc};
 
 mod cli;
 

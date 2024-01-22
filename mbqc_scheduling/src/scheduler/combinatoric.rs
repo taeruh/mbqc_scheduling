@@ -1,10 +1,6 @@
 use std::ops::Range;
 
-use itertools::{
-    Either,
-    Itertools,
-    Powerset,
-};
+use itertools::{Either, Itertools, Powerset};
 
 /// An iterator over all partitions of a set.
 #[derive(Debug, Clone)]
