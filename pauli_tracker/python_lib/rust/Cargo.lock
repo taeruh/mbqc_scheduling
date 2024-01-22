@@ -271,6 +271,7 @@ dependencies = [
 [[package]]
 name = "mbqc_scheduling"
 version = "0.1.0"
+source = "git+https://github.com/taeruh/mbqc_scheduling#aef556bf56a953c24c9876270b99f8156bee2583"
 dependencies = [
  "anyhow",
  "bitvec",
