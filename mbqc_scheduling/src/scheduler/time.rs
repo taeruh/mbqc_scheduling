@@ -25,7 +25,8 @@ use super::{
 type DepsCounters = HashMap<usize, usize, BuildHasherDefault<FxHasher>>;
 type Dependents = Vec<Vec<usize>>;
 
-/// A buffer that holds the dependency structure implied by a [DependencyGraph].
+/// A buffer that holds the dependency structure implied by a [PartialOrderGraph], in a
+/// form that is more efficient for the [PathGenerator]
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DependencyBuffer {
     dependents: Dependents,
@@ -38,6 +39,10 @@ impl DependencyBuffer {
         Self {
             dependents: vec![Vec::new(); len],
         }
+    }
+
+    pub fn num_bits(&self) -> usize {
+        self.dependents.len()
     }
 }
 

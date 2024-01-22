@@ -22,6 +22,9 @@ pub mod tree;
 
 /// A scheduler to generate allowed paths scheduling paths, capturing the required
 /// quantum memory. Compare the [module documentation](crate::scheduler).
+// PathGenerator has a reference to the dependency structure and Graph has a reference to
+// the spacial structure (DependencyBuffer and GraphBuffer, respectively). Doing that
+// enables us to do cheaper clones of the Scheduler
 #[derive(Debug, Clone)]
 pub struct Scheduler<'l, T> {
     time: PathGenerator<'l, T>,

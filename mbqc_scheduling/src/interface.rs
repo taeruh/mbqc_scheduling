@@ -4,13 +4,8 @@ use anyhow::Result;
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    probabilistic::AcceptFunc,
-    scheduler::{space::GraphBuffer, time::DependencyBuffer},
-    search::{self},
-};
-
-pub type SpacialGraph = Vec<Vec<usize>>;
+pub use crate::search::SpacialGraph;
+use crate::{probabilistic::AcceptFunc, search};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Path {
@@ -48,27 +43,21 @@ pub struct Path {
 /// information when multithreading ...
 pub fn run(
     spacial_graph: SpacialGraph,
-    dependency_graph: PartialOrderGraph,
+    time_ordering: PartialOrderGraph,
     do_search: bool,
     nthreads: u16,
     task_bound: Option<u32>,
     probabilistic: Option<AcceptFunc>,
     debug: bool,
 ) -> Vec<Path> {
-    let num_nodes = spacial_graph.len();
-    let dependency_buffer = DependencyBuffer::new(num_nodes);
-    let graph_buffer = GraphBuffer::from_sparse(spacial_graph);
-
     if !do_search {
-        search::get_time_optimal(dependency_graph, dependency_buffer, graph_buffer)
+        search::get_time_optimal(spacial_graph, time_ordering)
     } else {
         search::search(
-            dependency_graph,
-            dependency_buffer,
-            graph_buffer,
+            spacial_graph,
+            time_ordering,
             nthreads,
             probabilistic.map(AcceptFunc::get_accept_func),
-            num_nodes,
             task_bound.map(|b| b.into()).unwrap_or(10000),
             debug,
         )

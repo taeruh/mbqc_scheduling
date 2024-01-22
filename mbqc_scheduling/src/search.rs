@@ -32,13 +32,17 @@ use crate::{
     },
 };
 
+pub type SpacialGraph = Vec<Vec<usize>>;
+
 pub fn get_time_optimal(
-    deps: PartialOrderGraph,
-    mut dependency_buffer: DependencyBuffer,
-    graph_buffer: GraphBuffer,
+    spacial_graph: SpacialGraph,
+    time_ordering: PartialOrderGraph,
 ) -> Vec<Path> {
+    let mut dependency_buffer = DependencyBuffer::new(spacial_graph.len());
+    let graph_buffer = GraphBuffer::from_sparse(spacial_graph);
+
     let mut scheduler = Scheduler::<Vec<usize>>::new(
-        PathGenerator::from_dependency_graph(deps, &mut dependency_buffer, None),
+        PathGenerator::from_dependency_graph(time_ordering, &mut dependency_buffer, None),
         Graph::new(&graph_buffer),
     );
 
@@ -66,19 +70,19 @@ type MappedPaths = HashMap<usize, (usize, Vec<Vec<usize>>)>;
 
 static ACCEPT: OnceLock<AcceptFn> = OnceLock::new();
 
-#[allow(clippy::too_many_arguments)]
 pub fn search(
-    deps: PartialOrderGraph,
-    mut dependency_buffer: DependencyBuffer,
-    graph_buffer: GraphBuffer,
+    spacial_graph: SpacialGraph,
+    time_ordering: PartialOrderGraph,
     nthreads: u16,
     probabilistic: Option<AcceptFn>,
-    num_bits: usize,
     task_bound: i64,
     debug: bool,
 ) -> Vec<Path> {
+    let num_bits = spacial_graph.len();
+    let mut dependency_buffer = DependencyBuffer::new(num_bits);
+    let graph_buffer = GraphBuffer::from_sparse(spacial_graph);
     let scheduler = Scheduler::<Partitioner>::new(
-        PathGenerator::from_dependency_graph(deps, &mut dependency_buffer, None),
+        PathGenerator::from_dependency_graph(time_ordering, &mut dependency_buffer, None),
         Graph::new(&graph_buffer),
     );
 
@@ -284,14 +288,12 @@ fn probabilistic_forward(
     false
 }
 
-#[allow(clippy::too_many_arguments)]
 fn task(
     best_memory: Arc<Mutex<Vec<usize>>>,
     results: Arc<Mutex<MappedPaths>>,
     scheduler: Scheduler<Partitioner>,
     ntasks: i64,
     measure: Option<Vec<usize>>,
-    num_bits: usize,
     debug: bool,
     probabilistic: bool,
 ) {
@@ -307,6 +309,7 @@ fn task(
 
     let cloned_best_memory =
         best_memory.lock().expect("failed to lock best_memory").to_vec();
+    let num_bits = cloned_best_memory.len() - 1;
 
     let (mut new_results, new_best_memory) = if probabilistic {
         probabilistic_search_single_task(
@@ -388,7 +391,6 @@ fn threaded_search(
                     scheduler_focused,
                     ntasks,
                     Some(init_measure),
-                    num_bits,
                     debug,
                     probabilistic,
                 )
@@ -402,16 +404,7 @@ fn threaded_search(
         // remaining search tasks; note that this one takes ownership of best_memory
         let results = results.clone();
         scope.execute(move || {
-            task(
-                best_memory,
-                results,
-                scheduler,
-                -1,
-                None,
-                num_bits,
-                debug,
-                probabilistic,
-            )
+            task(best_memory, results, scheduler, -1, None, debug, probabilistic)
         });
     });
     Arc::into_inner(results)
