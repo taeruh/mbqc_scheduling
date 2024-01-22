@@ -1,9 +1,6 @@
 // #![cfg(feature = "circuit")]
 
-use std::{
-    fmt::Debug,
-    hash::BuildHasherDefault,
-};
+use std::{fmt::Debug, hash::BuildHasherDefault};
 
 use hashbrown::HashMap;
 use pauli_tracker::{
@@ -33,19 +30,14 @@ use pauli_tracker::{
             },
             Frames,
         },
-        live,
-        Tracker,
+        live, Tracker,
     },
 };
 use proptest::{
     arbitrary::any,
-    prop_oneof,
-    proptest,
+    prop_oneof, proptest,
     strategy::Strategy,
-    test_runner::{
-        Config,
-        FileFailurePersistence,
-    },
+    test_runner::{Config, FileFailurePersistence},
 };
 use rustc_hash::FxHasher;
 
