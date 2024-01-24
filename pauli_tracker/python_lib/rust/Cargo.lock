@@ -271,7 +271,7 @@ dependencies = [
 [[package]]
 name = "mbqc_scheduling"
 version = "0.1.0"
-source = "git+https://github.com/taeruh/mbqc_scheduling#aef556bf56a953c24c9876270b99f8156bee2583"
+source = "git+https://github.com/taeruh/mbqc_scheduling#319cbeced81d99c7db007733d57ee02f41dc3281"
 dependencies = [
  "anyhow",
  "bitvec",
@@ -329,7 +329,7 @@ dependencies = [
 [[package]]
 name = "pauli_tracker"
 version = "0.4.0-alpha.2"
-source = "git+https://github.com/taeruh/pauli_tracker#fdb6816d9527ad2e92d86a39fb9962f26dc06f26"
+source = "git+https://github.com/taeruh/pauli_tracker#267b7babdbeecd6470653fc57eba4d1b9807ab83"
 dependencies = [
  "bit-vec",
  "bitvec",
@@ -632,7 +632,7 @@ dependencies = [
 [[package]]
 name = "utils"
 version = "0.1.0"
-source = "git+https://github.com/taeruh/pauli_tracker#fdb6816d9527ad2e92d86a39fb9962f26dc06f26"
+source = "git+https://github.com/taeruh/pauli_tracker#267b7babdbeecd6470653fc57eba4d1b9807ab83"
 dependencies = [
  "bincode",
  "serde",

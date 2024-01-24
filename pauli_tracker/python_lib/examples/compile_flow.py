@@ -59,7 +59,7 @@ def main():
     # running it, we probably want major-frame-minor-qubit, because each time a qubit is
     # measured, we want to access the frame)
     storage_a = Storage(
-        tracker.stacked_transpose_reverted(len(graph)),
+        tracker.stacked_transpose(len(graph)),
         frame_flags,
         graph,
         path,
@@ -83,12 +83,12 @@ def main():
         SpacialGraph(graph), tracker.get_order(frame_flags)
     ).into_py_paths()[0]
     storage_b = Storage(
-        tracker.stacked_transpose_reverted(len(graph)),
+        tracker.stacked_transpose(len(graph)),
         frame_flags,
         graph,
         path,
         local_clifford_corrections,
-        buffer.stacked_transpose_reverted(len(graph)),
+        buffer.stacked_transpose(len(graph)),
     )
 
     # note that while `tracker` scales quadratically with the total number of nodes in the
