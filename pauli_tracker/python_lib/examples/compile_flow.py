@@ -112,13 +112,13 @@ def main():
 
     # this frame will be used to capture the Pauli corrections we need to perform (or
     # adjust the measurements)
-    frame = PauliStack.zeros(len(storage_a.graph))
+    correction_frame = PauliStack.zeros(len(storage_a.graph))
 
     for step in storage_a.path.steps:
         for node in step:
             # pseudo: init qubit node and it's neighbors graph[node] and create the edges
             # pseudo: perform local_clifford_corrections[node]
-            pauli_correction = frame.get(node).into_py_tuple()
+            pauli_correction = correction_frame.get(node).into_py_tuple()
             if pauli_correction[0]:
                 pass  # pseudo: perform Pauli Z correction on node
             elif pauli_correction[1]:
@@ -128,7 +128,7 @@ def main():
             if measurement_outcome and node in storage_a.frame_flags:
                 # an additional hashmap would probably be senseful for the frame_flags...
                 idx = storage_a.frame_flags.index(node)
-                storage_a.frames.get_and_add_to_stack(idx, frame)
+                storage_a.frames.get_and_add_to_stack(idx, correction_frame)
 
     # that was widget_a (if I didn't forget something); now widget_b
 
@@ -143,15 +143,18 @@ def main():
         PauliTuple(True, True),  # Y
     ]  # random ...
 
-    frame = PauliStack.zeros(len(storage_b.graph))
-
+    correction_frame = PauliStack.zeros(len(storage_b.graph))
     # account for the corrections from widget_a
-    for i, correction in enumerate(output_corrections):
+    for idx, correction in enumerate(output_corrections):
         correction = correction.into_py_tuple()
         if correction[0]:
-            storage_b.buffer.get_and_add_to_stack(i, frame)  # pyright: ignore
+            storage_b.buffer.get_and_add_to_stack(  # pyright: ignore
+                idx, correction_frame
+            )
         if correction[1]:
-            storage_b.buffer.get_and_add_to_stack(i + 1, frame)  # pyright: ignore
+            storage_b.buffer.get_and_add_to_stack(  # pyright: ignore
+                idx + 1, correction_frame
+            )
 
     # now do the same loop as above
 

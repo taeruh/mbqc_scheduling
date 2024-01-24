@@ -25,7 +25,7 @@ fn main() {
         nthreads,
         task_bound,
         // probabilistic.then_some(AcceptFunc::BuiltinBasic),
-        probabilistic.then_some(AcceptFunc::BuiltinExponentialSpace),
+        probabilistic.then_some(AcceptFunc::BuiltinHeavyside),
         // probabilistic.then_some(AcceptFunc::BuiltinSquaredSpace),
         debug,
         (paths, &paths_format),

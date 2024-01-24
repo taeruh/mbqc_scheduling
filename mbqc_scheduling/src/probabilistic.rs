@@ -64,6 +64,31 @@ fn builtin_squared_space(
                 / (num_total_nodes - num_remaining_nodes + 1.))
 }
 
+#[inline]
+fn builtin_heavyside(
+    bound_best_mem: f64,
+    last_max_mem: f64,
+    _: f64,
+    cur_mem: f64,
+    num_remaining_nodes: f64,
+    num_total_nodes: f64,
+) -> f64 {
+    let diff = (bound_best_mem - f64::max(cur_mem, last_max_mem)) * bound_best_mem;
+    if diff < 0. {
+        0.
+    } else {
+        let ret = (-(
+                num_total_nodes.powi(3)
+              * (num_total_nodes - num_remaining_nodes)
+              / diff.powi(3)
+              ).powi(2)).exp();
+        // if ret > 0.5 {
+        //     println!("{:?}", ret);
+        // }
+        ret
+    }
+}
+
 fn create_parametrized_linear_space(
     weights: Weights,
     shifts: Shifts,
@@ -127,6 +152,7 @@ pub enum AcceptFunc {
     BuiltinLinearSpace,
     BuiltinExponentialSpace,
     BuiltinSquaredSpace,
+    BuiltinHeavyside,
     /// A parametrized version of [BuiltinBasic](AcceptFunc::BuiltinBasic). Following
     /// [AcceptFn], this function is defined as
     /// ```ignore
@@ -155,6 +181,7 @@ impl AcceptFunc {
             AcceptFunc::BuiltinLinearSpace => Box::new(builtin_linear_space),
             AcceptFunc::BuiltinExponentialSpace => Box::new(builtin_exponential_space),
             AcceptFunc::BuiltinSquaredSpace => Box::new(builtin_squared_space),
+            AcceptFunc::BuiltinHeavyside => Box::new(builtin_heavyside),
             AcceptFunc::ParametrizedLinearSpace { weights, shifts } => {
                 Box::new(create_parametrized_linear_space(weights, shifts))
             },
