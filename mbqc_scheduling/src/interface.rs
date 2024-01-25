@@ -18,16 +18,17 @@ pub struct Path {
 ///
 /// # Arguments
 ///
-/// * `spacial_graph` - a list of neighbors for each node, describing the graph
+/// * `spacial_graph` - A list of neighbors for each node, describing the graph
 /// obtained from running the stabilizer simulator (and transforming it into a graph).
-/// * `dependency_graph` - the output obtained from the pauli tracker, describing the
+/// * `dependency_graph` - The output obtained from the pauli tracker, describing the
 /// partial ordering of the measurements in time.
-/// * `do_search` - a flag that determines whether to search for all best paths or just
+/// * `do_search` - A flag that determines whether to search for all best paths or just
 /// take the first one, which is the time optimal path. Searching for all best paths may
 /// take some time ...
-/// * `timeout` - a timeout for the search. You'll probably want to set this, so that you
-/// don't have to potentially cancel the run and loose all results (if the run is stopped
-/// with the timeout, the function returns normally with the results obtained so far).
+/// * `timeout` - A timeout for the search. You'll probably want to set this, because if
+/// the run is cancelled by some other reason, the results are generally lost, but when
+/// the run cancelled because of a timeout, the function returns as normally with the
+/// results obtained so far.
 /// * `nthreads` - the number of threads to use for the search. If `nthreads` is below
 /// 2, it will not multithread. Otherwise it will start a threadpool (where one thread
 /// is used to manage shared data). The tasks for the threadpool are all the possible
@@ -36,15 +37,15 @@ pub struct Path {
 /// of the dependency graph. Use the `task_bound` option to limit the number of these
 /// tasks (but the then last task may take some time because it does all remaining
 /// tasks).
-/// * `task_bound` - the maximum number of tasks to start in the search, cf.
+/// * `task_bound` - The maximum number of tasks to start in the search, cf.
 /// `nthreads`.
-/// * `probabilistic` - specifies whether the search should be overlayed with an
+/// * `probabilistic` - Specifies whether the search should be overlayed with an
 /// [AcceptFunc] that specifies the probability to accept a step in the path search. If
 /// None, the search will be deterministically. For larger problems, you will want to do
 /// it probabilistically, with a relatively low accept rate, because otherwise it takes
 /// forever (scaling is in the worst case something between factorial and double
 /// exponential).
-/// * `debug` - a flag that determines whether to print some more or less useful
+/// * `debug` - A flag that determines whether to print some more or less useful
 /// information when multithreading ...
 #[allow(clippy::too_many_arguments)]
 pub fn run(

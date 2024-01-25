@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use mbqc_scheduling::interface::{self};
 use pyo3::{PyResult, Python};
 
@@ -133,6 +135,10 @@ impl Path {
 ///     do_search (bool): Whether to search for all best paths or just take the first
 ///         one, which is the time optimal path. Searching for all best paths may take
 ///         some time ...
+///     timeout (Optional[int]): A timeout for the search. You'll probably want to set
+///         this, because if the run is cancelled by some other reason, the results are
+///         generally lost, but when the run cancelled because of a timeout, the function
+///         returns as normally with the results obtained so far.
 ///     nthreads (int): The number of threads to use for the search. If `nthreads` is
 ///         below 3, it will not multithread. Otherwise it will start a threadpool
 ///         (where one thread is used to manage shared data). The tasks for the
@@ -159,15 +165,18 @@ impl Path {
     spacial_graph,
     time_order,
     do_search=false,
+    timeout=None,
     nthreads=1,
     probabilistic=None,
     task_bound=None,
     debug=false,
 ))]
+#[allow(clippy::too_many_arguments)]
 fn run(
     spacial_graph: SpacialGraph,
     time_order: PartialOrderGraph,
     do_search: bool,
+    timeout: Option<u32>,
     nthreads: u16,
     probabilistic: Option<AcceptFunc>,
     task_bound: Option<u32>,
@@ -177,6 +186,7 @@ fn run(
         spacial_graph.0,
         time_order.0,
         do_search,
+        timeout.map(|t| Duration::from_secs(t.into())),
         nthreads,
         task_bound,
         probabilistic.map(|e| e.to_real()),
@@ -189,7 +199,9 @@ pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
     module.pymodule.add_class::<SpacialGraph>()?;
     module.pymodule.add_class::<Paths>()?;
     module.pymodule.add_class::<Path>()?;
-    module.pymodule.add_function(pyo3::wrap_pyfunction!(run, module.pymodule)?)?;
+    module
+        .pymodule
+        .add_function(pyo3::wrap_pyfunction!(run, module.pymodule)?)?;
     probabilistic::add_module(py, &module)?;
     parent_module.add_submodule(py, module)?;
     Ok(())
