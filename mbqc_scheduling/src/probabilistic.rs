@@ -73,17 +73,21 @@ fn builtin_heavyside(
     num_remaining_nodes: f64,
     num_total_nodes: f64,
 ) -> f64 {
-    let diff = (bound_best_mem - f64::max(cur_mem, last_max_mem)) * bound_best_mem;
+    let max = f64::max(cur_mem, last_max_mem);
+    let diff = bound_best_mem - max;
     if diff < 0. {
         0.
     } else {
-        let ret = (-(
-                num_total_nodes.powi(3)
-              * (num_total_nodes - num_remaining_nodes)
-              / diff.powi(3)
-              ).powi(2)).exp();
+        let ret = 1.;
+        // let ret =
+        //     num_total_nodes.powi(2)
+        //   * (-(
+        //         num_total_nodes.powi(1)
+        //       * (num_total_nodes - num_remaining_nodes).powi(2)
+        //       // / (num_total_nodes - max).powi(1)
+        //     )).exp();
         // if ret > 0.5 {
-        //     println!("{:?}", ret);
+        // println!("{:?}", ret);
         // }
         ret
     }

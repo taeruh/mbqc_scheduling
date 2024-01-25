@@ -6,12 +6,7 @@ with pauli tracking anymore, except that we take the [DependencyGraph] as input.
 // the logic of the path search is basically described in the documentation of the
 // schedule module; here I'm basically just multithreading it
 
-use std::{
-    cmp,
-    collections::HashMap,
-    sync::{Arc, Mutex, OnceLock},
-    time::Instant,
-};
+use std::{cmp, collections::HashMap, sync::OnceLock};
 
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
 use rand::{
@@ -19,7 +14,6 @@ use rand::{
     SeedableRng,
 };
 use rand_pcg::Pcg64;
-use scoped_threadpool::Pool;
 
 use crate::{
     interface::Path,
@@ -28,10 +22,11 @@ use crate::{
         space::{Graph, GraphBuffer},
         time::{DependencyBuffer, Partitioner, PathGenerator},
         tree::{Focus, FocusIterator, Step, Sweep},
-        Scheduler,
+        Partition, Scheduler,
     },
 };
 
+mod threaded;
 pub type SpacialGraph = Vec<Vec<usize>>;
 
 pub fn get_time_optimal(
@@ -95,13 +90,13 @@ pub fn search(
 
     let results = if nthreads < 2 {
         let (result, _) = if probabilistic {
-            probabilistic_search_single_task(scheduler, num_bits, None, None)
+            do_probabilistic_search(scheduler.into_iter(), num_bits)
         } else {
-            search_single_task(scheduler, num_bits, None, None)
+            do_search(scheduler.into_iter(), num_bits)
         };
         result
     } else {
-        threaded_search(nthreads, num_bits, scheduler, task_bound, debug, probabilistic)
+        threaded::search(nthreads, num_bits, scheduler, task_bound, debug, probabilistic)
     };
 
     let mut filtered_results = HashMap::new();
@@ -127,18 +122,14 @@ pub fn search(
     sorted
 }
 
-// cf. pauli_tracker::scheduler doc examples
-fn search_single_task(
-    scheduler: Scheduler<Partitioner>,
+// cf. crate::scheduler doc examples
+fn do_search(
+    mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
     num_bits: usize,
-    // following two only needed for parallel search
-    init_path: Option<OnePath>,
-    predicates: Option<Vec<usize>>,
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
-    let mut current_path = init_path.unwrap_or_default();
-    let mut best_memory = predicates.unwrap_or_else(|| vec![num_bits + 1; num_bits + 1]);
-    let mut scheduler = scheduler.into_iter();
+    let mut current_path = Vec::new();
+    let mut best_memory = vec![num_bits + 1; num_bits + 1];
     while let Some(step) = scheduler.next() {
         match step {
             Step::Forward(measure) => {
@@ -155,6 +146,7 @@ fn search_single_task(
     (results, best_memory)
 }
 
+#[inline]
 fn minimum_path_length(
     time: &PathGenerator<Partitioner>,
     current_path: &OnePath,
@@ -168,6 +160,7 @@ fn minimum_path_length(
     }
 }
 
+#[inline]
 fn forward(
     measure: Vec<usize>,
     scheduler: &mut Sweep<Scheduler<Partitioner>>,
@@ -188,6 +181,7 @@ fn forward(
     false
 }
 
+#[inline]
 fn backward(
     leaf: Option<usize>,
     current_path: &mut OnePath,
@@ -204,17 +198,13 @@ fn backward(
     current_path.pop();
 }
 
-fn probabilistic_search_single_task(
-    scheduler: Scheduler<Partitioner>,
+fn do_probabilistic_search(
+    mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
     num_bits: usize,
-    // following two only needed for parallel search
-    init_path: Option<OnePath>,
-    predicates: Option<Vec<usize>>,
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
-    let mut current_path = init_path.unwrap_or_default();
-    let mut best_memory = predicates.unwrap_or_else(|| vec![num_bits + 1; num_bits + 1]);
-    let mut scheduler = scheduler.into_iter();
+    let mut current_path = Vec::new();
+    let mut best_memory = vec![num_bits + 1; num_bits + 1];
 
     let mut rng = Pcg64::from_entropy();
     let dist = Uniform::new(0., 1.);
@@ -252,6 +242,7 @@ fn probabilistic_search_single_task(
 }
 
 #[allow(clippy::too_many_arguments)]
+#[inline]
 fn probabilistic_forward(
     measure: Vec<usize>,
     scheduler: &mut Sweep<Scheduler<Partitioner>>,
@@ -270,7 +261,7 @@ fn probabilistic_forward(
             return true;
         }
     } else {
-        // TODO: use unwrap_unchecked; should be safe
+        // PERF: use unwrap_unchecked; should be safe
         let accept = ACCEPT.get().unwrap()(
             bound_best_mem as f64,
             last_max_mem as f64,
@@ -286,129 +277,4 @@ fn probabilistic_forward(
         }
     }
     false
-}
-
-fn task(
-    best_memory: Arc<Mutex<Vec<usize>>>,
-    results: Arc<Mutex<MappedPaths>>,
-    scheduler: Scheduler<Partitioner>,
-    ntasks: i64,
-    measure: Option<Vec<usize>>,
-    debug: bool,
-    probabilistic: bool,
-) {
-    let start = if debug {
-        println!(
-            "start {ntasks:?}: measure {measure:?}; best_memory {:?}",
-            best_memory.lock().unwrap()
-        );
-        Some(Instant::now())
-    } else {
-        None
-    };
-
-    let cloned_best_memory =
-        best_memory.lock().expect("failed to lock best_memory").to_vec();
-    let num_bits = cloned_best_memory.len() - 1;
-
-    let (mut new_results, new_best_memory) = if probabilistic {
-        probabilistic_search_single_task(
-            scheduler,
-            num_bits,
-            measure.map(|e| vec![e]),
-            Some(cloned_best_memory),
-        )
-    } else {
-        search_single_task(
-            scheduler,
-            num_bits,
-            measure.map(|e| vec![e]),
-            Some(cloned_best_memory),
-        )
-    };
-
-    if let Some(start) = start {
-        println!(
-            "done {ntasks:?}: time {:?}; results {:?}",
-            Instant::now() - start,
-            results.lock().unwrap()
-        );
-    }
-
-    let mut best_memory = best_memory.lock().expect("failed to lock best_memory");
-    let mut results = results.lock().expect("failed to lock results");
-
-    for (time, (old_mem, new_mem)) in
-        best_memory.iter_mut().zip(new_best_memory).enumerate()
-    {
-        if *old_mem > new_mem {
-            *old_mem = new_mem;
-            // we cannot just unwrap, because when we do the
-            // Step::Backward, we also update the best_memory for all
-            // paths with a longer path length, but we might not have
-            // collected a result for them (which is okay there)
-            if let Some(mem) = new_results.remove(&time) {
-                results.insert(time, mem);
-            }
-        }
-    }
-}
-
-fn threaded_search(
-    nthreads: u16,
-    num_bits: usize,
-    mut scheduler: Scheduler<Partitioner>,
-    task_bound: i64,
-    debug: bool,
-    probabilistic: bool,
-) -> MappedPaths {
-    // there will be one thread which only collects the results and updates the shared
-    // best_memory array, the other threads do the actual search tasks
-
-    let mut pool = Pool::new(nthreads as u32);
-
-    let best_memory = Arc::new(Mutex::new(vec![num_bits + 1; num_bits + 1]));
-    let results: Arc<Mutex<MappedPaths>> = Arc::new(Mutex::new(HashMap::new()));
-
-    let mut ntasks = 0;
-    pool.scoped(|scope| {
-        // NOTE: if probabilistic is true, one should maybe potentially skip here; but
-        // maybe it is actually good to not do it, because this increases the probability
-        // that we get at least some results
-        while let Some((scheduler_focused, init_measure)) = scheduler.next_and_focus() {
-            // println!("{:?}", ntasks);
-            let best_memory = best_memory.clone();
-            let results = results.clone();
-            // search tasks
-            scope.execute(move || {
-                // don't do that in the search fn call, because this would create a
-                // temporary varialbe of the MutexGuard, I think, which is only
-                // dropped when the function returns -> one task would block all
-                // others tasks
-                task(
-                    best_memory,
-                    results,
-                    scheduler_focused,
-                    ntasks,
-                    Some(init_measure),
-                    debug,
-                    probabilistic,
-                )
-            });
-            ntasks += 1;
-            if ntasks == task_bound {
-                break;
-            }
-        }
-
-        // remaining search tasks; note that this one takes ownership of best_memory
-        let results = results.clone();
-        scope.execute(move || {
-            task(best_memory, results, scheduler, -1, None, debug, probabilistic)
-        });
-    });
-    Arc::into_inner(results)
-        .expect("failed to move out of Arc results")
-        .into_inner()
-        .expect("failed to move out of Mutex results")
 }

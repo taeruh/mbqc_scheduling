@@ -24,14 +24,3 @@ cmd [ \
     --sdist \
   " \
 ]
-
-# run for py in /opt/python/cp3{8,9,10,11}*/bin; do "${py}/pip" install maturin; done
-# cmd [ \
-#   "bash", "-c", \
-#   "for py in /opt/python/cp3{8,9,10,11}*/bin; do ${py}/maturin build \
-#     --interpreter ${py}/python \
-#     --compatibility manylinux_2_28_x86_64 \
-#     --release \
-#     --sdist \
-#   ; done" \
-# ]
