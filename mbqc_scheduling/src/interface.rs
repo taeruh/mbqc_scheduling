@@ -1,4 +1,4 @@
-use std::path;
+use std::{path, time::Duration};
 
 use anyhow::Result;
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
@@ -14,16 +14,21 @@ pub struct Path {
     pub steps: Vec<Vec<usize>>,
 }
 
-/// Searching for optimal initialization-measuremnt paths.
+/// Searching for optimal initialization-measurement paths.
 ///
-/// - `spacial_graph` is a list of neighbors for each node, describing the graph
+/// # Arguments
+///
+/// * `spacial_graph` - a list of neighbors for each node, describing the graph
 /// obtained from running the stabilizer simulator (and transforming it into a graph).
-/// - `dependency_graph` is the output obtained from the pauli tracker, describing the
+/// * `dependency_graph` - the output obtained from the pauli tracker, describing the
 /// partial ordering of the measurements in time.
-/// - `do_search` is a flag that determines whether to search for all best paths or just
+/// * `do_search` - a flag that determines whether to search for all best paths or just
 /// take the first one, which is the time optimal path. Searching for all best paths may
 /// take some time ...
-/// - `nthreads` is the number of threads to use for the search. If `nthreads` is below
+/// * `timeout` - a timeout for the search. You'll probably want to set this, so that you
+/// don't have to potentially cancel the run and loose all results (if the run is stopped
+/// with the timeout, the function returns normally with the results obtained so far).
+/// * `nthreads` - the number of threads to use for the search. If `nthreads` is below
 /// 2, it will not multithread. Otherwise it will start a threadpool (where one thread
 /// is used to manage shared data). The tasks for the threadpool are all the possible
 /// focused Scheduler sweeps after doing one initial focus, cf. source code .... The
@@ -31,20 +36,22 @@ pub struct Path {
 /// of the dependency graph. Use the `task_bound` option to limit the number of these
 /// tasks (but the then last task may take some time because it does all remaining
 /// tasks).
-/// - `task_bound` is the maximum number of tasks to start in the search, cf.
+/// * `task_bound` - the maximum number of tasks to start in the search, cf.
 /// `nthreads`.
-/// - `probabilistic` specifies whether the search should be overlayed with an
+/// * `probabilistic` - specifies whether the search should be overlayed with an
 /// [AcceptFunc] that specifies the probability to accept a step in the path search. If
 /// None, the search will be deterministically. For larger problems, you will want to do
 /// it probabilistically, with a relatively low accept rate, because otherwise it takes
 /// forever (scaling is in the worst case something between factorial and double
 /// exponential).
-/// - `debug` is a flag that determines whether to print some more or less useful
+/// * `debug` - a flag that determines whether to print some more or less useful
 /// information when multithreading ...
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     spacial_graph: SpacialGraph,
     time_ordering: PartialOrderGraph,
     do_search: bool,
+    timeout: Option<Duration>,
     nthreads: u16,
     task_bound: Option<u32>,
     probabilistic: Option<AcceptFunc>,
@@ -56,6 +63,7 @@ pub fn run(
         search::search(
             spacial_graph,
             time_ordering,
+            timeout,
             nthreads,
             probabilistic.map(AcceptFunc::get_accept_func),
             task_bound.map(|b| b.into()).unwrap_or(10000),
@@ -72,6 +80,7 @@ pub fn run_serialized(
     spacial_graph: (impl AsRef<path::Path>, &str),
     dependency_graph: (impl AsRef<path::Path>, &str),
     do_search: bool,
+    timeout: Option<Duration>,
     nthreads: u16,
     task_bound: Option<u32>,
     probablistic: Option<AcceptFunc>,
@@ -88,6 +97,7 @@ pub fn run_serialized(
                 spacial_graph,
                 dependency_graph,
                 do_search,
+                timeout,
                 nthreads,
                 task_bound,
                 probablistic,

@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use clap::{value_parser, Arg, ArgAction, Command};
 
 const SPACIAL_GRAPH: &str = "spacial_graph";
@@ -6,10 +8,11 @@ const DEPENDENCY_GRAPH: &str = "dependency_graph";
 const DEPENDENCY_GRAPH_FORMAT: &str = "dependency_graph_format";
 const PATHS: &str = "paths";
 const PATHS_FORMAT: &str = "paths_format";
+const SEARCH: &str = "search";
+const TIMEOUT: &str = "timeout";
 const NTHREADS: &str = "nthreads";
 const PROBABILISTIC: &str = "accept_func";
 const TASK_BOUND: &str = "task_bound";
-const SEARCH: &str = "search";
 const DEBUG: &str = "debug";
 
 fn build() -> Command {
@@ -63,6 +66,14 @@ fn build() -> Command {
                 .action(ArgAction::SetTrue),
         )
         .arg(
+            Arg::new(TIMEOUT)
+                .value_name("TIMEOUT")
+                .short('t')
+                .long("timeout")
+                .help("A timeout for the search")
+                .value_parser(value_parser!(u32)),
+        )
+        .arg(
             Arg::new(NTHREADS)
                 .value_name("NTHREADS")
                 .short('n')
@@ -103,6 +114,7 @@ pub struct Args {
     pub paths: String,
     pub paths_format: String,
     pub search: bool,
+    pub timeout: Option<u32>,
     pub nthreads: u16,
     pub probabilistic: bool,
     pub task_bound: Option<u32>,
@@ -121,9 +133,10 @@ pub fn parse() -> Args {
         paths: args.remove_one(PATHS).expect("is required"),
         paths_format: args.remove_one(PATHS_FORMAT).expect("is required"),
         search: args.remove_one(SEARCH).expect("has ArgAction"),
+        timeout: args.remove_one::<u32>(TIMEOUT),
         nthreads: args.remove_one(NTHREADS).expect("has default"),
         probabilistic: args.remove_one(PROBABILISTIC).expect("has ArgAction"),
-        task_bound: args.remove_one::<Option<u32>>(TASK_BOUND).unwrap_or(None),
+        task_bound: args.remove_one::<u32>(TASK_BOUND),
         debug: args.remove_one(DEBUG).expect("is required"),
     }
 }

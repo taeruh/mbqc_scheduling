@@ -6,7 +6,7 @@ with pauli tracking anymore, except that we take the [DependencyGraph] as input.
 // the logic of the path search is basically described in the documentation of the
 // schedule module; here I'm basically just multithreading it
 
-use std::{cmp, collections::HashMap, sync::OnceLock};
+use std::{cmp, collections::HashMap, sync::OnceLock, thread, time::Duration};
 
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
 use rand::{
@@ -64,10 +64,12 @@ type OnePath = Vec<Vec<usize>>;
 type MappedPaths = HashMap<usize, (usize, Vec<Vec<usize>>)>;
 
 static ACCEPT: OnceLock<AcceptFn> = OnceLock::new();
+static TIMEOUT: OnceLock<()> = OnceLock::new();
 
 pub fn search(
     spacial_graph: SpacialGraph,
     time_ordering: PartialOrderGraph,
+    timeout: Option<Duration>,
     nthreads: u16,
     probabilistic: Option<AcceptFn>,
     task_bound: i64,
@@ -82,11 +84,22 @@ pub fn search(
     );
 
     let probabilistic = if let Some(probabilistic) = probabilistic {
-        ACCEPT.get_or_init(|| probabilistic);
+        // ACCEPT.get_or_init(|| probabilistic);
+        match ACCEPT.set(probabilistic) {
+            Ok(_) => {},
+            Err(_) => panic!("failed to set accept function"),
+        }
         true
     } else {
         false
     };
+
+    if let Some(timeout) = timeout {
+        thread::spawn(move || {
+            thread::sleep(timeout);
+            TIMEOUT.set(()).unwrap();
+        });
+    }
 
     let results = if nthreads < 2 {
         let (result, _) = if probabilistic {
@@ -140,6 +153,9 @@ fn do_search(
             Step::Backward(leaf) => {
                 backward(leaf, &mut current_path, &mut best_memory, &mut results);
             },
+        }
+        if matches!(TIMEOUT.get(), Some(())) {
+            break;
         }
     }
 
@@ -234,6 +250,9 @@ fn do_probabilistic_search(
                 },
             }
         } else {
+            break;
+        }
+        if matches!(TIMEOUT.get(), Some(())) {
             break;
         }
     }

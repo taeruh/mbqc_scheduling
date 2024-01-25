@@ -10,10 +10,13 @@ use rand_pcg::Pcg64;
 use scoped_threadpool::Pool;
 
 use super::{MappedPaths, OnePath};
-use crate::scheduler::{
-    time::Partitioner,
-    tree::{FocusIterator, Step, Sweep},
-    Partition, Scheduler,
+use crate::{
+    scheduler::{
+        time::Partitioner,
+        tree::{FocusIterator, Step, Sweep},
+        Partition, Scheduler,
+    },
+    search::TIMEOUT,
 };
 
 pub fn search(
@@ -130,7 +133,7 @@ fn update(
     best_memory: &Arc<Mutex<Vec<usize>>>,
     this_best_mem: &mut [usize],
     update_counter: &mut usize,
-) {
+) -> bool {
     if *update_counter == 1000 {
         best_memory
             .lock()
@@ -143,8 +146,10 @@ fn update(
                 Ordering::Equal => {},
             });
         *update_counter = 0;
+        matches!(TIMEOUT.get(), Some(()))
     } else {
         *update_counter += 1;
+        false
     }
 }
 
@@ -180,7 +185,9 @@ fn do_search(
                 );
             },
         }
-        update(best_memory, &mut this_best_mem, &mut update_counter);
+        if update(best_memory, &mut this_best_mem, &mut update_counter) {
+            break;
+        }
     }
 
     (results, this_best_mem)
@@ -229,7 +236,9 @@ fn do_probabilistic_search(
                     );
                 },
             }
-            update(best_memory, &mut this_best_mem, &mut update_counter);
+            if update(best_memory, &mut this_best_mem, &mut update_counter) {
+                break;
+            }
         } else {
             break;
         }
