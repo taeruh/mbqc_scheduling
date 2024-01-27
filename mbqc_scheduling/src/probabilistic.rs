@@ -8,6 +8,7 @@
 /// fn accept_func(
 ///    bound_best_mem: f64, // the lowest memory that was already found for a full path
 ///                         // with less steps than the current path
+///    minimal_mem: f64, // the lowest memory that was already found for a full path
 ///    last_max_mem: f64, // the maximum memory that was required so far
 ///    last_cur_mem: f64, // the memory that was required for the last step
 ///    cur_mem: f64, // the memory that is required for the current step
@@ -17,125 +18,58 @@
 ///          // probabilities above 1. are allowed and mean that the path is always
 ///          // accepted
 /// ```
-pub type AcceptFn = Box<dyn Fn(f64, f64, f64, f64, f64, f64) -> f64 + Send + Sync>;
-
-fn builtin_linear_space(
-    bound_best_mem: f64,
-    last_max_mem: f64,
-    _: f64,
-    cur_mem: f64,
-    num_remaining_nodes: f64,
-    num_total_nodes: f64,
-) -> f64 {
-    (bound_best_mem + 1.) / (f64::max(cur_mem, last_max_mem) + 1.)
-        * 5e-3
-        * (1e-3
-            + 8.5e-2 * (num_total_nodes + 1.)
-                / (num_total_nodes - num_remaining_nodes + 1.))
-}
-
-fn builtin_exponential_space(
-    bound_best_mem: f64,
-    last_max_mem: f64,
-    _: f64,
-    cur_mem: f64,
-    num_remaining_nodes: f64,
-    num_total_nodes: f64,
-) -> f64 {
-    ((bound_best_mem + 1.) / (f64::max(cur_mem, last_max_mem) + 1.)).exp()
-        * 1e-1
-        * (1e-3
-            + 8.5e-2 * (num_total_nodes + 1.)
-                / (num_total_nodes - num_remaining_nodes + 1.))
-}
-
-fn builtin_squared_space(
-    bound_best_mem: f64,
-    last_max_mem: f64,
-    _: f64,
-    cur_mem: f64,
-    num_remaining_nodes: f64,
-    num_total_nodes: f64,
-) -> f64 {
-    ((bound_best_mem + 1.) / (f64::max(cur_mem, last_max_mem) + 1.)).powi(2)
-        * 1e-3
-        * (1e-3
-            + 8.5e-2 * (num_total_nodes + 1.)
-                / (num_total_nodes - num_remaining_nodes + 1.))
-}
+pub type AcceptFn = Box<dyn Fn(f64, f64, f64, f64, f64, f64, f64) -> f64 + Send + Sync>;
 
 #[inline]
 fn builtin_heavyside(
-    bound_best_mem: f64,
+    _: f64,
+    minimal_mem: f64,
     last_max_mem: f64,
     _: f64,
     cur_mem: f64,
     num_remaining_nodes: f64,
     num_total_nodes: f64,
 ) -> f64 {
-    let max = f64::max(cur_mem, last_max_mem);
-    let diff = bound_best_mem - max;
+    let diff = minimal_mem - f64::max(cur_mem, last_max_mem);
     if diff < 0. {
         0.
     } else {
-        let ret = 1.;
-        // let ret =
-        //     num_total_nodes.powi(2)
-        //   * (-(
-        //         num_total_nodes.powi(1)
-        //       * (num_total_nodes - num_remaining_nodes).powi(2)
-        //       // / (num_total_nodes - max).powi(1)
-        //     )).exp();
-        // if ret > 0.5 {
-        // println!("{:?}", ret);
-        // }
-        ret
+        num_total_nodes.powi(2)
+            * (-(num_total_nodes * num_remaining_nodes
+                / diff.powi(3)
+                / (num_total_nodes - num_remaining_nodes)))
+                .exp()
     }
 }
 
-fn create_parametrized_linear_space(
-    weights: Weights,
-    shifts: Shifts,
-) -> impl Fn(f64, f64, f64, f64, f64, f64) -> f64 {
-    move |bound_best_mem,
+fn create_parametrized_heavyside(
+    cutoff: f64,
+    lin_num_total_nodes_exp: i32,
+    exp_num_total_nodes_exp: i32,
+    exp_num_remaining_nodes_exp: i32,
+    exp_diff_exp: i32,
+    exp_num_measured_nodes_exp: i32,
+) -> impl Fn(f64, f64, f64, f64, f64, f64, f64) -> f64 {
+    move |_,
+          minimal_mem,
           last_max_mem,
-          last_cur_mem,
+          _,
           cur_mem,
           num_remaining_nodes,
           num_total_nodes| {
-        (weights.bound_best_mem * bound_best_mem
-            + weights.last_max_mem * last_max_mem
-            + weights.last_cur_mem * last_cur_mem
-            + shifts.upper_mem)
-            / (weights.cur_mem * cur_mem + shifts.cur_mem)
-            * (shifts.time
-                + (weights.num_total_nodes * num_total_nodes + shifts.num_total_nodes)
-                    / (weights.num_measure_nodes
-                        * (num_total_nodes - num_remaining_nodes)
-                        + shifts.num_measure_nodes))
+        let diff = minimal_mem - f64::max(cur_mem, last_max_mem);
+        if diff < cutoff {
+            0.
+        } else {
+            num_total_nodes.powi(lin_num_total_nodes_exp)
+                * (-(num_total_nodes.powi(exp_num_total_nodes_exp)
+                    * num_remaining_nodes.powi(exp_num_remaining_nodes_exp)
+                    / diff.powi(exp_diff_exp)
+                    / (num_total_nodes - num_remaining_nodes)
+                        .powi(exp_num_measured_nodes_exp)))
+                .exp()
+        }
     }
-}
-
-/// The weights for the parametrized accept function [AcceptFunc::ParametrizedLinearSpace].
-#[derive(Clone)]
-pub struct Weights {
-    pub bound_best_mem: f64,
-    pub last_max_mem: f64,
-    pub last_cur_mem: f64,
-    pub cur_mem: f64,
-    pub num_measure_nodes: f64,
-    pub num_total_nodes: f64,
-}
-
-/// The shifts for the parametrized accept function
-/// [AcceptFunc::ParametrizedLinearSpace]
-#[derive(Clone)]
-pub struct Shifts {
-    pub upper_mem: f64,
-    pub cur_mem: f64,
-    pub time: f64,
-    pub num_measure_nodes: f64,
-    pub num_total_nodes: f64,
 }
 
 /// The possible accept functions.
@@ -148,31 +82,41 @@ pub enum AcceptFunc {
     /// A fixed accept function that is used by default. Following the definitions in
     /// [AcceptFn], this function is defined as
     /// ```ignore
-    /// return (bound_best_mem + 1.) / (cur_mem + 1.)
-    ///     * (1e-3
-    ///         + 8.5e-2 * (num_total_nodes + 1.)
-    ///             / (num_total_nodes - num_remaining_nodes + 1.));
+    /// let diff = minimal_mem - f64::max(cur_mem, last_max_mem);
+    /// if diff < 0. {
+    ///     0.
+    /// } else {
+    ///     num_total_nodes.powi(2)
+    ///         * (-(num_total_nodes * num_remaining_nodes
+    ///             / diff.powi(3)
+    ///             / (num_total_nodes - num_remaining_nodes)))
+    ///            .exp();
     /// ```
-    BuiltinLinearSpace,
-    BuiltinExponentialSpace,
-    BuiltinSquaredSpace,
+    /// It rather aggresively rejects potential time optimal paths in favor of faster
+    /// finding memory optimal paths.
     BuiltinHeavyside,
-    /// A parametrized version of [BuiltinBasic](AcceptFunc::BuiltinBasic). Following
-    /// [AcceptFn], this function is defined as
+    /// A parametrized version of [BuiltinHeavyside](AcceptFunc::BuiltinHeavyside).
+    /// Following [AcceptFn], this function is defined as
     /// ```ignore
-    /// return (weights.bound_best_mem * bound_best_mem
-    ///     + weights.last_max_mem * last_max_mem
-    ///     + weights.last_cur_mem * last_cur_mem
-    ///     + shifts.upper_mem)
-    ///     / (weights.cur_mem * cur_mem + shifts.cur_mem)
-    ///     * (shifts.time
-    ///         + (weights.num_total_nodes * num_total_nodes + shifts.num_total_nodes)
-    ///             / (weights.num_measure_nodes * (num_total_nodes - num_remaining_nodes)
-    ///                 + shifts.num_measure_nodes));
+    /// let diff = minimal_mem - f64::max(cur_mem, last_max_mem);
+    /// if diff < cutoff {
+    ///    0.
+    /// } else {
+    ///    num_total_nodes.powi(lin_num_total_nodes_exp)
+    ///        * (-(num_total_nodes.powi(exp_num_total_nodes_exp)
+    ///            * num_remaining_nodes.powi(exp_num_remaining_nodes_exp)
+    ///            / diff.powi(exp_diff_exp)
+    ///            / (num_total_nodes - num_remaining_nodes)
+    ///            .powi(exp_num_measured_nodes_exp)))
+    ///        .exp();
     /// ```
-    ParametrizedLinearSpace {
-        weights: Weights,
-        shifts: Shifts,
+    ParametrizedHeavyside {
+        cutoff: f64,
+        lin_num_total_nodes_exp: i32,
+        exp_num_total_nodes_exp: i32,
+        exp_num_remaining_nodes_exp: i32,
+        exp_diff_exp: i32,
+        exp_num_measured_nodes_exp: i32,
     },
     /// A custom accept function.
     Custom(AcceptFn),
@@ -182,13 +126,22 @@ impl AcceptFunc {
     /// Returns the underlying accept function.
     pub fn get_accept_func(self) -> AcceptFn {
         match self {
-            AcceptFunc::BuiltinLinearSpace => Box::new(builtin_linear_space),
-            AcceptFunc::BuiltinExponentialSpace => Box::new(builtin_exponential_space),
-            AcceptFunc::BuiltinSquaredSpace => Box::new(builtin_squared_space),
             AcceptFunc::BuiltinHeavyside => Box::new(builtin_heavyside),
-            AcceptFunc::ParametrizedLinearSpace { weights, shifts } => {
-                Box::new(create_parametrized_linear_space(weights, shifts))
-            },
+            AcceptFunc::ParametrizedHeavyside {
+                cutoff,
+                lin_num_total_nodes_exp,
+                exp_num_total_nodes_exp,
+                exp_num_remaining_nodes_exp,
+                exp_diff_exp,
+                exp_num_measured_nodes_exp,
+            } => Box::new(create_parametrized_heavyside(
+                cutoff,
+                lin_num_total_nodes_exp,
+                exp_num_total_nodes_exp,
+                exp_num_remaining_nodes_exp,
+                exp_diff_exp,
+                exp_num_measured_nodes_exp,
+            )),
             AcceptFunc::Custom(f) => f,
         }
     }

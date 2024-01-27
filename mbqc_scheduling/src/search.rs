@@ -283,6 +283,7 @@ fn probabilistic_forward(
         // PERF: use unwrap_unchecked; should be safe
         let accept = ACCEPT.get().unwrap()(
             bound_best_mem as f64,
+            *best_memory.last().unwrap() as f64,
             last_max_mem as f64,
             last_cur_mem as f64,
             space.current_memory() as f64,
