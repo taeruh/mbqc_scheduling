@@ -42,13 +42,18 @@ fn builtin_heavyside(
     }
 }
 
+#[derive(Clone, Copy)]
+pub struct HeavysideParameters {
+    pub cutoff: f64,
+    pub lin_num_total_nodes_exp: i32,
+    pub exp_num_total_nodes_exp: i32,
+    pub exp_num_remaining_nodes_exp: i32,
+    pub exp_diff_exp: i32,
+    pub exp_num_measured_nodes_exp: i32,
+}
+
 fn create_parametrized_heavyside(
-    cutoff: f64,
-    lin_num_total_nodes_exp: i32,
-    exp_num_total_nodes_exp: i32,
-    exp_num_remaining_nodes_exp: i32,
-    exp_diff_exp: i32,
-    exp_num_measured_nodes_exp: i32,
+    param: HeavysideParameters,
 ) -> impl Fn(f64, f64, f64, f64, f64, f64, f64) -> f64 {
     move |_,
           minimal_mem,
@@ -58,15 +63,15 @@ fn create_parametrized_heavyside(
           num_remaining_nodes,
           num_total_nodes| {
         let diff = minimal_mem - f64::max(cur_mem, last_max_mem);
-        if diff < cutoff {
+        if diff < param.cutoff {
             0.
         } else {
-            num_total_nodes.powi(lin_num_total_nodes_exp)
-                * (-(num_total_nodes.powi(exp_num_total_nodes_exp)
-                    * num_remaining_nodes.powi(exp_num_remaining_nodes_exp)
-                    / diff.powi(exp_diff_exp)
+            num_total_nodes.powi(param.lin_num_total_nodes_exp)
+                * (-(num_total_nodes.powi(param.exp_num_total_nodes_exp)
+                    * num_remaining_nodes.powi(param.exp_num_remaining_nodes_exp)
+                    / diff.powi(param.exp_diff_exp)
                     / (num_total_nodes - num_remaining_nodes)
-                        .powi(exp_num_measured_nodes_exp)))
+                        .powi(param.exp_num_measured_nodes_exp)))
                 .exp()
         }
     }
@@ -99,25 +104,18 @@ pub enum AcceptFunc {
     /// Following [AcceptFn], this function is defined as
     /// ```ignore
     /// let diff = minimal_mem - f64::max(cur_mem, last_max_mem);
-    /// if diff < cutoff {
+    /// if diff < param.cutoff {
     ///    0.
     /// } else {
-    ///    num_total_nodes.powi(lin_num_total_nodes_exp)
-    ///        * (-(num_total_nodes.powi(exp_num_total_nodes_exp)
-    ///            * num_remaining_nodes.powi(exp_num_remaining_nodes_exp)
-    ///            / diff.powi(exp_diff_exp)
+    ///    num_total_nodes.powi(param.lin_num_total_nodes_exp)
+    ///        * (-(num_total_nodes.powi(param.exp_num_total_nodes_exp)
+    ///            * num_remaining_nodes.powi(param.exp_num_remaining_nodes_exp)
+    ///            / diff.powi(param.exp_diff_exp)
     ///            / (num_total_nodes - num_remaining_nodes)
-    ///            .powi(exp_num_measured_nodes_exp)))
+    ///            .powi(param.exp_num_measured_nodes_exp)))
     ///        .exp();
     /// ```
-    ParametrizedHeavyside {
-        cutoff: f64,
-        lin_num_total_nodes_exp: i32,
-        exp_num_total_nodes_exp: i32,
-        exp_num_remaining_nodes_exp: i32,
-        exp_diff_exp: i32,
-        exp_num_measured_nodes_exp: i32,
-    },
+    ParametrizedHeavyside { param: HeavysideParameters },
     /// A custom accept function.
     Custom(AcceptFn),
 }
@@ -127,21 +125,9 @@ impl AcceptFunc {
     pub fn get_accept_func(self) -> AcceptFn {
         match self {
             AcceptFunc::BuiltinHeavyside => Box::new(builtin_heavyside),
-            AcceptFunc::ParametrizedHeavyside {
-                cutoff,
-                lin_num_total_nodes_exp,
-                exp_num_total_nodes_exp,
-                exp_num_remaining_nodes_exp,
-                exp_diff_exp,
-                exp_num_measured_nodes_exp,
-            } => Box::new(create_parametrized_heavyside(
-                cutoff,
-                lin_num_total_nodes_exp,
-                exp_num_total_nodes_exp,
-                exp_num_remaining_nodes_exp,
-                exp_diff_exp,
-                exp_num_measured_nodes_exp,
-            )),
+            AcceptFunc::ParametrizedHeavyside { param } => {
+                Box::new(create_parametrized_heavyside(param))
+            },
             AcceptFunc::Custom(f) => f,
         }
     }

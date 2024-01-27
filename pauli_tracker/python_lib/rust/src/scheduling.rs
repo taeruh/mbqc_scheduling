@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use mbqc_scheduling::interface::{self};
-use pyo3::{PyResult, Python};
+use pyo3::{exceptions::PyValueError, PyResult, Python};
 
 use crate::{
     frames::PartialOrderGraph,
@@ -11,6 +11,8 @@ use crate::{
 
 mod probabilistic;
 use probabilistic::AcceptFunc;
+
+use self::probabilistic::AcceptFuncBase;
 
 #[pyo3::pyclass(subclass)]
 /// A list of neighbors for each node, describing the graph obtained from running the
@@ -181,8 +183,16 @@ fn run(
     probabilistic: Option<AcceptFunc>,
     task_bound: Option<u32>,
     debug: bool,
-) -> Paths {
-    Paths(interface::run(
+) -> PyResult<Paths> {
+    // GIL problems ... (it completely locks the execution)
+    if let Some(AcceptFunc(AcceptFuncBase::Custom(_))) = probabilistic {
+        if nthreads > 1 {
+            return Err(PyValueError::new_err(
+                "multi-threading with a custom Python callback is not supported",
+            ));
+        }
+    }
+    Ok(Paths(interface::run(
         spacial_graph.0,
         time_order.0,
         do_search,
@@ -191,7 +201,7 @@ fn run(
         task_bound,
         probabilistic.map(|e| e.to_real()),
         debug,
-    ))
+    )))
 }
 
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {

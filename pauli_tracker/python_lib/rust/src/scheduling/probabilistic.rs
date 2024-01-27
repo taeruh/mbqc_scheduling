@@ -7,22 +7,52 @@ use pyo3::{exceptions::PyValueError, PyObject, PyResult, Python};
 use crate::Module;
 
 #[pyo3::pyclass(subclass)]
-/// Compare the corresponding documentation in the `mbqc_scheduling crate
-/// <https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling>`_.
 #[derive(Clone)]
-pub struct Weights(probabilistic::Weights);
+pub struct HeavysideParameters(probabilistic::HeavysideParameters);
 
-#[pyo3::pyclass(subclass)]
-/// Compare the corresponding documentation in the `mbqc_scheduling crate
-/// <https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling>`_.
-#[derive(Clone)]
-pub struct Shifts(probabilistic::Shifts);
+#[pyo3::pymethods]
+impl HeavysideParameters {
+    #[new]
+    fn __new__(
+        cutoff: f64,
+        lin_num_total_nodes_exp: i32,
+        exp_num_total_nodes_exp: i32,
+        exp_num_remaining_nodes_exp: i32,
+        exp_diff_exp: i32,
+        exp_num_measured_nodes_exp: i32,
+    ) -> Self {
+        Self(probabilistic::HeavysideParameters {
+            cutoff,
+            lin_num_total_nodes_exp,
+            exp_num_total_nodes_exp,
+            exp_num_remaining_nodes_exp,
+            exp_diff_exp,
+            exp_num_measured_nodes_exp,
+        })
+    }
 
-// note that the original probabilistic::AcceptFunc cannot implement Clone
+    #[pyo3(text_signature = "(self, cutoff, lin_num_total_nodes_exp, \
+                             exp_num_total_nodes_exp, exp_num_remaining_nodes_exp, \
+                             exp_diff_exp, exp_num_measured_nodes_exp)")]
+    fn __init__(
+        &self,
+        _cutoff: f64,
+        _lin_num_total_nodes_exp: i32,
+        _exp_num_total_nodes_exp: i32,
+        _exp_num_remaining_nodes_exp: i32,
+        _exp_diff_exp: i32,
+        _exp_num_measured_nodes_exp: i32,
+    ) {
+    }
+}
+
+// since the original probabilistic::AcceptFunc cannot implement Clone
 #[derive(Clone)]
-enum AcceptFuncBase {
-    BuiltinLinearSpace,
-    ParametrizedLinearSpace { weights: Weights, shifts: Shifts },
+pub enum AcceptFuncBase {
+    BuiltinHeavyside,
+    ParametrizedHeavyside {
+        param: probabilistic::HeavysideParameters,
+    },
     Custom(PyObject),
 }
 
@@ -30,104 +60,34 @@ enum AcceptFuncBase {
 /// Compare the corresponding documentation in the `mbqc_scheduling crate
 /// <https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling>`_.
 #[derive(Clone)]
-pub struct AcceptFunc(AcceptFuncBase);
-
-#[pyo3::pymethods]
-impl Weights {
-    #[new]
-    fn __new__(
-        bound_best_mem: f64,
-        last_max_mem: f64,
-        last_cur_mem: f64,
-        cur_mem: f64,
-        num_measure_nodes: f64,
-        num_total_nodes: f64,
-    ) -> Self {
-        Self(probabilistic::Weights {
-            bound_best_mem,
-            last_max_mem,
-            last_cur_mem,
-            cur_mem,
-            num_measure_nodes,
-            num_total_nodes,
-        })
-    }
-
-    #[pyo3(text_signature = "(self, bound_best_mem, last_max_mem, last_cur_mem, \
-                             cur_mem, num_measure_nodes, num_total_nodes)")]
-    fn __init__(
-        &self,
-        _bound_best_mem: f64,
-        _last_max_mem: f64,
-        _last_cur_mem: f64,
-        _cur_mem: f64,
-        _num_measure_nodes: f64,
-        _num_total_nodes: f64,
-    ) {
-    }
-}
-
-#[pyo3::pymethods]
-impl Shifts {
-    #[new]
-    fn __new__(
-        upper_mem: f64,
-        cur_mem: f64,
-        time: f64,
-        num_measure_nodes: f64,
-        num_total_nodes: f64,
-    ) -> Self {
-        Self(probabilistic::Shifts {
-            upper_mem,
-            cur_mem,
-            time,
-            num_measure_nodes,
-            num_total_nodes,
-        })
-    }
-
-    #[pyo3(text_signature = "(self, upper_mem, cur_mem, time, num_measure_nodes, \
-                             num_total_nodes)")]
-    fn __init__(
-        &self,
-        _upper_mem: f64,
-        _cur_mem: f64,
-        _time: f64,
-        _num_measure_nodes: f64,
-        _num_total_nodes: f64,
-    ) {
-    }
-}
+pub struct AcceptFunc(pub AcceptFuncBase);
 
 #[pyo3::pymethods]
 impl AcceptFunc {
     #[new]
     #[pyo3(signature = (
-    kind="BuiltinLinearSpace".to_string(),
-    parametrized_linear_space_parameters=None,
+    kind="BuiltinHeavyside".to_string(),
+    heavyside_parameters=None,
     custom_func=None,
     ))]
     fn __new__(
         kind: String,
-        parametrized_linear_space_parameters: Option<(Weights, Shifts)>,
+        heavyside_parameters: Option<HeavysideParameters>,
         custom_func: Option<PyObject>,
     ) -> PyResult<Self> {
         Ok(Self(match kind.as_str() {
-            "BuiltinBasic" => AcceptFuncBase::BuiltinLinearSpace,
-            "ParametrizedBasic" => {
-                let parameters = match parametrized_linear_space_parameters {
-                    Some(p) => p.clone(),
+            "BuiltinHeavyside" => AcceptFuncBase::BuiltinHeavyside,
+            "ParametrizedHeavyside" => {
+                let param = match heavyside_parameters {
+                    Some(p) => p,
                     None => {
                         return Err(PyValueError::new_err(
-                            "kind is ParametrizedBasic but \
-                             parametrized_basic_parameters is None",
+                            "kind is ParametrizedHeavyside but heavyside_parameters is \
+                             None",
                         ));
                     },
                 };
-                AcceptFuncBase::ParametrizedLinearSpace {
-                    weights: parameters.0,
-                    shifts: parameters.1,
-                }
+                AcceptFuncBase::ParametrizedHeavyside { param: param.0 }
             },
             "Custom" => AcceptFuncBase::Custom(match custom_func {
                 Some(f) => f.clone(),
@@ -145,17 +105,17 @@ impl AcceptFunc {
     ///
     /// Args:
     ///     kind (String): The kind of AcceptFunc to create; possible values are:
-    ///         "BuiltinLinearSpace", "ParametrizedLinearSpace", "Custom".
-    ///     parametrized_basic_parameters (tuple[Weights, Shifts]): The parameters for the
-    ///         ParametrizedBasic AcceptFunc (if kind = "ParametrizedBasic").
+    ///         "BuiltinHeavyside", "ParamBuiltinHeavyside", "Custom".
+    ///     heavyside_parameters (Optional[HeavysideParameters]): The
+    ///         parameters for the ParametrizedHeavyside AcceptFunc (if kind =
+    ///         "ParametrizedBasic").
     ///     custom_func (callable): The custom AcceptFunc (if kind = "Custom").
     #[pyo3(text_signature = "(self, kind='BuiltinLinearSpace', \
-                             parametrized_linear_space_parameters=None, \
-                             custom_func=None)")]
+                             heavyside_parameters=None, custom_func=None)")]
     fn __init__(
         &self,
         _kind: String,
-        _parametrized_linear_space_parameters: Option<(Weights, Shifts)>,
+        _heavyside_parameters: Option<HeavysideParameters>,
         _custom_func: Option<PyObject>,
     ) {
     }
@@ -164,17 +124,15 @@ impl AcceptFunc {
 impl AcceptFunc {
     pub(crate) fn to_real(&self) -> probabilistic::AcceptFunc {
         match self.0.clone() {
-            AcceptFuncBase::BuiltinLinearSpace => {
-                probabilistic::AcceptFunc::BuiltinLinearSpace
+            AcceptFuncBase::BuiltinHeavyside => {
+                probabilistic::AcceptFunc::BuiltinHeavyside
             },
-            AcceptFuncBase::ParametrizedLinearSpace { weights, shifts } => {
-                probabilistic::AcceptFunc::ParametrizedLinearSpace {
-                    weights: weights.0,
-                    shifts: shifts.0,
-                }
+            AcceptFuncBase::ParametrizedHeavyside { param } => {
+                probabilistic::AcceptFunc::ParametrizedHeavyside { param }
             },
             AcceptFuncBase::Custom(func) => probabilistic::AcceptFunc::Custom(Box::new(
                 move |bound_best_mem,
+                      minimal_mem,
                       last_max_mem: f64,
                       last_cur_mem: f64,
                       cur_mem: f64,
@@ -186,6 +144,7 @@ impl AcceptFunc {
                             py,
                             (
                                 bound_best_mem,
+                                minimal_mem,
                                 last_max_mem,
                                 last_cur_mem,
                                 cur_mem,
@@ -206,8 +165,7 @@ impl AcceptFunc {
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
     let module = Module::new(py, "probabilistic", parent_module.path.clone())?;
     module.pymodule.add_class::<AcceptFunc>()?;
-    module.pymodule.add_class::<Weights>()?;
-    module.pymodule.add_class::<Shifts>()?;
+    module.pymodule.add_class::<HeavysideParameters>()?;
     parent_module.add_submodule(py, module)?;
     Ok(())
 }
