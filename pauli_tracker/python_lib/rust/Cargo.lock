@@ -142,9 +142,9 @@ dependencies = [
 
 [[package]]
 name = "bytemuck"
-version = "1.14.0"
+version = "1.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "374d28ec25809ee0e23827c2ab573d729e293f281dfe393500e7ad618baa61c6"
+checksum = "ed2490600f404f2b94c167e31d3ed1d5f3c225a0f3b80230053b3e0b7b962bd9"
 
 [[package]]
 name = "cfg-if"
@@ -271,7 +271,7 @@ dependencies = [
 [[package]]
 name = "mbqc_scheduling"
 version = "0.1.0"
-source = "git+https://github.com/taeruh/mbqc_scheduling#319cbeced81d99c7db007733d57ee02f41dc3281"
+source = "git+https://github.com/taeruh/mbqc_scheduling#6e67bf973b9277e726ec4429c92464803d9f9d14"
 dependencies = [
  "anyhow",
  "bitvec",
@@ -329,7 +329,7 @@ dependencies = [
 [[package]]
 name = "pauli_tracker"
 version = "0.4.0-alpha.2"
-source = "git+https://github.com/taeruh/pauli_tracker#267b7babdbeecd6470653fc57eba4d1b9807ab83"
+source = "git+https://github.com/taeruh/pauli_tracker#05a5e32cd57f6ea28ddc4ebead1ebcc93a983ef3"
 dependencies = [
  "bit-vec",
  "bitvec",
@@ -632,7 +632,7 @@ dependencies = [
 [[package]]
 name = "utils"
 version = "0.1.0"
-source = "git+https://github.com/taeruh/pauli_tracker#267b7babdbeecd6470653fc57eba4d1b9807ab83"
+source = "git+https://github.com/taeruh/pauli_tracker#05a5e32cd57f6ea28ddc4ebead1ebcc93a983ef3"
 dependencies = [
  "bincode",
  "serde",
