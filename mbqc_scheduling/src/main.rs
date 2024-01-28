@@ -18,7 +18,6 @@ fn main() {
         nthreads,
         probabilistic,
         task_bound,
-        debug,
     } = cli::parse();
 
     interface::run_serialized(
@@ -31,7 +30,6 @@ fn main() {
         // probabilistic.then_some(AcceptFunc::BuiltinBasic),
         probabilistic.then_some(AcceptFunc::BuiltinHeavyside),
         // probabilistic.then_some(AcceptFunc::BuiltinSquaredSpace),
-        debug,
         (paths, &paths_format),
     )
     .expect("path search failed: ")

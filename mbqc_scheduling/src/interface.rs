@@ -1,4 +1,4 @@
-use std::{path, time::Duration};
+use std::{env, path, time::Duration};
 
 use anyhow::Result;
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
@@ -45,9 +45,10 @@ pub struct Path {
 /// it probabilistically, with a relatively low accept rate, because otherwise it takes
 /// forever (scaling is in the worst case something between factorial and double
 /// exponential).
-/// * `debug` - A flag that determines whether to print some more or less useful
-/// information when multithreading ...
-#[allow(clippy::too_many_arguments)]
+///
+/// When setting the variable MBQC_SCHEDULING_DEBUG to something, the search will print
+/// some more or less useful debug information (if multithreaded); this is *unstable*
+/// though.
 pub fn run(
     spacial_graph: SpacialGraph,
     time_ordering: PartialOrderGraph,
@@ -56,7 +57,6 @@ pub fn run(
     nthreads: u16,
     task_bound: Option<u32>,
     probabilistic: Option<AcceptFunc>,
-    debug: bool,
 ) -> Vec<Path> {
     if !do_search {
         search::get_time_optimal(spacial_graph, time_ordering)
@@ -68,7 +68,7 @@ pub fn run(
             nthreads,
             probabilistic.map(AcceptFunc::get_accept_func),
             task_bound.map(|b| b.into()).unwrap_or(10000),
-            debug,
+            env::var("MBQC_SCHEDULING_DEBUG").is_ok(),
         )
     }
 }
@@ -85,7 +85,6 @@ pub fn run_serialized(
     nthreads: u16,
     task_bound: Option<u32>,
     probablistic: Option<AcceptFunc>,
-    debug: bool,
     paths: (impl AsRef<path::Path>, &str),
 ) -> Result<()> {
     let spacial_graph = Dynamic::try_from(spacial_graph.1)?.read_file(spacial_graph.0)?;
@@ -102,7 +101,6 @@ pub fn run_serialized(
                 nthreads,
                 task_bound,
                 probablistic,
-                debug,
             ),
         )
         .map_err(Into::into)

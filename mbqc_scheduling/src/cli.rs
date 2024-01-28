@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use clap::{value_parser, Arg, ArgAction, Command};
 
 const SPACIAL_GRAPH: &str = "spacial_graph";
@@ -13,7 +11,6 @@ const TIMEOUT: &str = "timeout";
 const NTHREADS: &str = "nthreads";
 const PROBABILISTIC: &str = "accept_func";
 const TASK_BOUND: &str = "task_bound";
-const DEBUG: &str = "debug";
 
 fn build() -> Command {
     Command::new(env!("CARGO_PKG_NAME"))
@@ -97,13 +94,6 @@ fn build() -> Command {
                 .help("A bound on the possible number of tasks")
                 .value_parser(value_parser!(u32)),
         )
-        .arg(
-            Arg::new(DEBUG)
-                .short('d')
-                .long("debug")
-                .help("Print some information while searching ...")
-                .action(ArgAction::SetTrue),
-        )
 }
 
 pub struct Args {
@@ -118,7 +108,6 @@ pub struct Args {
     pub nthreads: u16,
     pub probabilistic: bool,
     pub task_bound: Option<u32>,
-    pub debug: bool,
 }
 
 pub fn parse() -> Args {
@@ -137,6 +126,5 @@ pub fn parse() -> Args {
         nthreads: args.remove_one(NTHREADS).expect("has default"),
         probabilistic: args.remove_one(PROBABILISTIC).expect("has ArgAction"),
         task_bound: args.remove_one::<u32>(TASK_BOUND),
-        debug: args.remove_one(DEBUG).expect("is required"),
     }
 }

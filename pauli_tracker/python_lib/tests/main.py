@@ -15,13 +15,12 @@ def main():
         time_order,
         do_search=True,
         nthreads=10,
-        debug=True,
         # probabilistic=AcceptFunc(),
         # probabilistic=AcceptFunc(kind="Custom", custom_func=custom),
-        probabilistic=AcceptFunc(
-            kind="ParametrizedHeavyside",
-            heavyside_parameters=HeavysideParameters(0, 2, 1, 1, 3, 1),
-        ),
+        # probabilistic=AcceptFunc(
+        #     kind="ParametrizedHeavyside",
+        #     heavyside_parameters=HeavysideParameters(0, 2, 1, 1, 3, 1),
+        # ),
     ).into_py_paths()
     for path in paths:
         print(f"time: {path.time}, space: {path.space}, steps: {path.steps}")
