@@ -18,7 +18,8 @@
 ///          // probabilities above 1. are allowed and mean that the path is always
 ///          // accepted
 /// ```
-pub type AcceptFn = Box<dyn Fn(f64, f64, f64, f64, f64, f64, f64) -> f64 + Send + Sync>;
+pub type AcceptBox = Box<dyn Fn(f64, f64, f64, f64, f64, f64, f64) -> f64 + Send + Sync>;
+pub type Accept = dyn Fn(f64, f64, f64, f64, f64, f64, f64) -> f64 + Send + Sync;
 
 #[inline]
 fn builtin_heavyside(
@@ -117,12 +118,12 @@ pub enum AcceptFunc {
     /// ```
     ParametrizedHeavyside { param: HeavysideParameters },
     /// A custom accept function.
-    Custom(AcceptFn),
+    Custom(AcceptBox),
 }
 
 impl AcceptFunc {
     /// Returns the underlying accept function.
-    pub fn get_accept_func(self) -> AcceptFn {
+    pub fn get_accept_func(self) -> AcceptBox {
         match self {
             AcceptFunc::BuiltinHeavyside => Box::new(builtin_heavyside),
             AcceptFunc::ParametrizedHeavyside { param } => {

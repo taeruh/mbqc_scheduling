@@ -14,3 +14,4 @@ pub mod interface;
 pub mod probabilistic;
 pub mod scheduler;
 pub mod search;
+pub mod timer;

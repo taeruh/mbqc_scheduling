@@ -11,12 +11,13 @@ use scoped_threadpool::Pool;
 
 use super::{MappedPaths, OnePath};
 use crate::{
+    probabilistic::{Accept, AcceptBox},
     scheduler::{
         time::Partitioner,
         tree::{FocusIterator, Step, Sweep},
         Partition, Scheduler,
     },
-    search::TIMEOUT,
+    timer::Timer,
 };
 
 pub fn search(
@@ -25,12 +26,14 @@ pub fn search(
     mut scheduler: Scheduler<Partitioner>,
     task_bound: i64,
     debug: bool,
-    probabilistic: bool,
+    accept_func: Option<AcceptBox>,
+    timer: &Timer,
 ) -> MappedPaths {
     let mut pool = Pool::new(nthreads as u32);
 
     let best_memory = Arc::new(Mutex::new(vec![num_bits + 1; num_bits + 1]));
     let results: Arc<Mutex<MappedPaths>> = Arc::new(Mutex::new(HashMap::new()));
+    let accept_func = accept_func.as_deref();
 
     let mut ntasks = 0;
     pool.scoped(|scope| {
@@ -48,7 +51,8 @@ pub fn search(
                     ntasks,
                     Some(init_measure),
                     debug,
-                    probabilistic,
+                    timer,
+                    accept_func,
                 )
             });
             ntasks += 1;
@@ -60,13 +64,14 @@ pub fn search(
         // remaining search tasks; note that this one takes ownership of best_memory
         let results = results.clone();
         scope.execute(move || {
-            task(best_memory, results, scheduler, -1, None, debug, probabilistic)
+            task(best_memory, results, scheduler, -1, None, debug, timer, accept_func)
         });
     });
 
     Arc::into_inner(results).unwrap().into_inner().unwrap()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn task(
     best_memory: Arc<Mutex<Vec<usize>>>,
     results: Arc<Mutex<MappedPaths>>,
@@ -74,7 +79,8 @@ fn task(
     ntasks: i64,
     measure: Option<Vec<usize>>,
     debug: bool,
-    probabilistic: bool,
+    timer: &Timer,
+    accept_func: Option<&Accept>,
 ) {
     let start = if debug {
         println!(
@@ -86,14 +92,16 @@ fn task(
         None
     };
 
-    let (mut new_results, this_best_mem) = if probabilistic {
+    let (mut new_results, this_best_mem) = if let Some(accept_func) = accept_func {
         do_probabilistic_search(
             scheduler.into_iter(),
             measure.map(|e| vec![e]),
             &best_memory,
+            timer,
+            accept_func,
         )
     } else {
-        do_search(scheduler.into_iter(), measure.map(|e| vec![e]), &best_memory)
+        do_search(scheduler.into_iter(), measure.map(|e| vec![e]), &best_memory, timer)
     };
 
     if let Some(start) = start {
@@ -133,6 +141,7 @@ fn update(
     best_memory: &Arc<Mutex<Vec<usize>>>,
     this_best_mem: &mut [usize],
     update_counter: &mut usize,
+    timer: &Timer,
 ) -> bool {
     if *update_counter == 1000 {
         best_memory
@@ -146,7 +155,7 @@ fn update(
                 Ordering::Equal => {},
             });
         *update_counter = 0;
-        matches!(TIMEOUT.get(), Some(()))
+        timer.finished()
     } else {
         *update_counter += 1;
         false
@@ -157,8 +166,10 @@ fn do_search(
     mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
     init_path: Option<OnePath>,
     best_memory: &Arc<Mutex<Vec<usize>>>,
+    timer: &Timer,
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
+    let was_initialized = init_path.is_some();
     let mut current_path = init_path.unwrap_or_default();
     let mut this_best_mem =
         best_memory.lock().expect("failed to lock predicates").to_vec();
@@ -185,9 +196,18 @@ fn do_search(
                 );
             },
         }
-        if update(best_memory, &mut this_best_mem, &mut update_counter) {
+        if update(best_memory, &mut this_best_mem, &mut update_counter, timer) {
             break;
         }
+    }
+
+    if update_counter == 0 && was_initialized {
+        super::backward(
+            Some(scheduler.current().space().max_memory()),
+            &mut current_path,
+            &mut this_best_mem,
+            &mut results,
+        )
     }
 
     (results, this_best_mem)
@@ -197,8 +217,11 @@ fn do_probabilistic_search(
     mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
     init_path: Option<OnePath>,
     best_memory: &Arc<Mutex<Vec<usize>>>,
+    timer: &Timer,
+    accept_func: &Accept,
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
+    let was_initialized = init_path.is_some();
     let mut current_path = init_path.unwrap_or_default();
     let mut this_best_mem =
         best_memory.lock().expect("failed to lock best_memory").to_vec();
@@ -223,6 +246,7 @@ fn do_probabilistic_search(
                         last_max_mem,
                         &mut rng,
                         &dist,
+                        accept_func,
                     ) {
                         break;
                     }
@@ -236,12 +260,21 @@ fn do_probabilistic_search(
                     );
                 },
             }
-            if update(best_memory, &mut this_best_mem, &mut update_counter) {
+            if update(best_memory, &mut this_best_mem, &mut update_counter, timer) {
                 break;
             }
         } else {
             break;
         }
+    }
+
+    if update_counter == 0 && was_initialized {
+        super::backward(
+            Some(scheduler.current().space().max_memory()),
+            &mut current_path,
+            &mut this_best_mem,
+            &mut results,
+        )
     }
 
     (results, this_best_mem)

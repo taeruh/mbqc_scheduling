@@ -6,7 +6,7 @@ with pauli tracking anymore, except that we take the [DependencyGraph] as input.
 // the logic of the path search is basically described in the documentation of the
 // schedule module; here I'm basically just multithreading it
 
-use std::{cmp, collections::HashMap, sync::OnceLock, thread, time::Duration};
+use std::{cmp, collections::HashMap, time::Duration};
 
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
 use rand::{
@@ -17,13 +17,14 @@ use rand_pcg::Pcg64;
 
 use crate::{
     interface::Path,
-    probabilistic::AcceptFn,
+    probabilistic::{Accept, AcceptBox},
     scheduler::{
         space::{Graph, GraphBuffer},
         time::{DependencyBuffer, Partitioner, PathGenerator},
         tree::{Focus, FocusIterator, Step, Sweep},
         Partition, Scheduler,
     },
+    timer::Timer,
 };
 
 mod threaded;
@@ -63,15 +64,12 @@ pub fn get_time_optimal(
 type OnePath = Vec<Vec<usize>>;
 type MappedPaths = HashMap<usize, (usize, Vec<Vec<usize>>)>;
 
-static ACCEPT: OnceLock<AcceptFn> = OnceLock::new();
-static TIMEOUT: OnceLock<()> = OnceLock::new();
-
 pub fn search(
     spacial_graph: SpacialGraph,
     time_ordering: PartialOrderGraph,
     timeout: Option<Duration>,
     nthreads: u16,
-    probabilistic: Option<AcceptFn>,
+    accept_func: Option<AcceptBox>,
     task_bound: i64,
     debug: bool,
 ) -> Vec<Path> {
@@ -83,33 +81,28 @@ pub fn search(
         Graph::new(&graph_buffer),
     );
 
-    let probabilistic = if let Some(probabilistic) = probabilistic {
-        // ACCEPT.get_or_init(|| probabilistic);
-        match ACCEPT.set(probabilistic) {
-            Ok(_) => {},
-            Err(_) => panic!("failed to set accept function"),
-        }
-        true
-    } else {
-        false
-    };
-
+    let mut timer = Timer::new();
     if let Some(timeout) = timeout {
-        thread::spawn(move || {
-            thread::sleep(timeout);
-            TIMEOUT.set(()).unwrap();
-        });
+        timer.start(timeout);
     }
 
     let results = if nthreads < 2 {
-        let (result, _) = if probabilistic {
-            do_probabilistic_search(scheduler.into_iter(), num_bits)
+        let (result, _) = if let Some(accept_func) = accept_func {
+            do_probabilistic_search(scheduler.into_iter(), num_bits, &timer, accept_func)
         } else {
-            do_search(scheduler.into_iter(), num_bits)
+            do_search(scheduler.into_iter(), num_bits, &timer)
         };
         result
     } else {
-        threaded::search(nthreads, num_bits, scheduler, task_bound, debug, probabilistic)
+        threaded::search(
+            nthreads,
+            num_bits,
+            scheduler,
+            task_bound,
+            debug,
+            accept_func,
+            &timer,
+        )
     };
 
     let mut filtered_results = HashMap::new();
@@ -139,6 +132,7 @@ pub fn search(
 fn do_search(
     mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
     num_bits: usize,
+    timer: &Timer,
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
     let mut current_path = Vec::new();
@@ -154,7 +148,7 @@ fn do_search(
                 backward(leaf, &mut current_path, &mut best_memory, &mut results);
             },
         }
-        if matches!(TIMEOUT.get(), Some(())) {
+        if timer.finished() {
             break;
         }
     }
@@ -217,6 +211,8 @@ fn backward(
 fn do_probabilistic_search(
     mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
     num_bits: usize,
+    timer: &Timer,
+    accept_func: AcceptBox,
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
     let mut current_path = Vec::new();
@@ -241,6 +237,7 @@ fn do_probabilistic_search(
                         last_max_mem,
                         &mut rng,
                         &dist,
+                        &accept_func,
                     ) {
                         break;
                     }
@@ -252,7 +249,7 @@ fn do_probabilistic_search(
         } else {
             break;
         }
-        if matches!(TIMEOUT.get(), Some(())) {
+        if timer.finished() {
             break;
         }
     }
@@ -271,6 +268,7 @@ fn probabilistic_forward(
     last_max_mem: usize,
     rng: &mut impl rand::Rng,
     dist: &Uniform<f64>,
+    accept_func: &Accept,
 ) -> bool {
     let current = scheduler.current();
     let space = current.space();
@@ -281,7 +279,7 @@ fn probabilistic_forward(
         }
     } else {
         // PERF: use unwrap_unchecked; should be safe
-        let accept = ACCEPT.get().unwrap()(
+        let accept = accept_func(
             bound_best_mem as f64,
             *best_memory.last().unwrap() as f64,
             last_max_mem as f64,

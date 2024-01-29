@@ -28,7 +28,9 @@ pub struct Path {
 /// * `timeout` - A timeout for the search. You'll probably want to set this, because if
 /// the run is cancelled by some other reason, the results are generally lost, but when
 /// the run cancelled because of a timeout, the function returns as normally with the
-/// results obtained so far.
+/// results obtained so far. However, note that is timeout is too short, i.e., shorter
+/// than how long it would take to get the first path (which depends potentially
+/// `probabilistic`), then the function will return an empty list.
 /// * `nthreads` - the number of threads to use for the search. If `nthreads` is below
 /// 2, it will not multithread. Otherwise it will start a threadpool (where one thread
 /// is used to manage shared data). The tasks for the threadpool are all the possible
