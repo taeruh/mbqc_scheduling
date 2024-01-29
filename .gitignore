@@ -1,7 +1,7 @@
 output
 target
 dist
-.venv
+.venv*
 __pycache__
 pauli_tracker/python_lib/python/**/*.so
 _build
