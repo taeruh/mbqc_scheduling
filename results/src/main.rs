@@ -57,15 +57,21 @@ fn main() {
                 true,
                 // Some(Duration::from_millis(2000)),
                 None,
-                1,
+                10,
                 None,
                 Some((AcceptFunc::BuiltinHeavyside, Some(rng.gen()))),
             );
 
-            results[0].push(time_optimal.first().unwrap().time);
-            results[1].push(time_optimal.first().unwrap().space);
-            results[2].push(space_optimal_approx.last().unwrap().time);
-            results[3].push(space_optimal_approx.last().unwrap().space);
+            // if the accept function was to aggressive we may not have a path at all
+            if let Some(time_optimal) = time_optimal.first() {
+                results[0].push(time_optimal.time);
+                results[1].push(time_optimal.space);
+            }
+            if let Some(space_optimal_approx) = space_optimal_approx.last() {
+                results[2].push(space_optimal_approx.time);
+                results[3].push(space_optimal_approx.space);
+            }
+
             for (result, mean) in results.iter_mut().zip(means.iter_mut()) {
                 *mean += *result.last().unwrap() as f64;
             }
@@ -77,16 +83,23 @@ fn main() {
                 .into_iter()
                 .zip(means.into_iter())
                 .map(|(result, mut mean)| {
-                    mean /= NUM_AVERAGE as f64;
+                    let actual_num_average = result.len();
+                    if actual_num_average as f64 / (NUM_AVERAGE as f64) < 0.9 {
+                        println!(
+                            "Warning: less 90% results for size {}; only {} results \
+                             instead of {}",
+                            size, actual_num_average, NUM_AVERAGE
+                        );
+                    }
+                    mean /= actual_num_average as f64;
                     let deviatian =
                         (result.iter().map(|e| (*e as f64 - mean).powi(2)).sum::<f64>()
-                            / NUM_AVERAGE as f64)
+                            / actual_num_average as f64)
                             .sqrt();
                     (mean, deviatian)
                 })
                 .collect(),
         ));
-        // println!("{:?}", averaged_results.last().unwrap());
     }
 
     let output = Output {
@@ -97,7 +110,7 @@ fn main() {
     };
 
     fs::create_dir_all("output").unwrap();
-    serde_json::to_writer_pretty(File::create(output_file).unwrap(), &output).unwrap();
+    serde_json::to_writer(File::create(output_file).unwrap(), &output).unwrap();
 }
 
 #[derive(Serialize)]

@@ -188,7 +188,7 @@ let mut skipped_results = HashMap::new();
 let mut current_path = Vec::new();
 
 // we keep track of the minimum required memory for a given path length
-let mut best_memory = vec![num_bits + 1; num_bits + 1];
+let mut best_memory = vec![usize::MAX; num_bits + 1];
 
 let mut scheduler = scheduler.into_iter();
 
@@ -254,7 +254,7 @@ fn final_filter(
     num_bits: usize,
     paths: HashMap<usize, (usize, Vec<Vec<usize>>)>,
 ) -> HashMap<usize, (usize, Vec<Vec<usize>>)> {
-    let mut best_memory = vec![num_bits + 1; num_bits + 1];
+    let mut best_memory = vec![usize::MAX; num_bits + 1];
     let mut res: HashMap<usize, (usize, Vec<Vec<usize>>)> = HashMap::new();
     for i in 0..best_memory.len() {
         if let Some((mem, _)) = paths.get(&i) {

@@ -216,7 +216,7 @@ fn do_probabilistic_search(
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
     let mut current_path = Vec::new();
-    let mut best_memory = vec![num_bits + 1; num_bits + 1];
+    let mut best_memory = vec![usize::MAX; num_bits + 1];
 
     let mut rng = if let Some(seed) = seed {
         Pcg64::seed_from_u64(seed)

@@ -5,7 +5,8 @@ edition = "2021"
 
 [dependencies]
 pauli_tracker = { version = "0.4.0-alpha.2", features = ["serde", "bitvec"], git = "https://github.com/taeruh/pauli_tracker" }
-mbqc_scheduling = { version = "0.1.0", path = "../mbqc_scheduling" }
+# mbqc_scheduling = { version = "0.1.0", path = "../mbqc_scheduling" }
+mbqc_scheduling = { version = "0.1.0", git = "https://github.com/taeruh/mbqc_scheduling" }
 rand = { version = "0.8.5", default-features = false }
 rand_pcg = { version = "0.3.1", default-features = false }
 bitvec = { version = "1.0.1", default-features = false }

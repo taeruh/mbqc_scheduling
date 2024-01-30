@@ -219,6 +219,7 @@ checksum = "13e3bf6590cbc649f4d1a3eefc9d5d6eb746f5200ffb04e5e142700b8faa56e7"
 [[package]]
 name = "mbqc_scheduling"
 version = "0.1.0"
+source = "git+https://github.com/taeruh/mbqc_scheduling#ad62c54152dfdf194b355fd8ab2690c32f9b1f62"
 dependencies = [
  "anyhow",
  "bitvec",
