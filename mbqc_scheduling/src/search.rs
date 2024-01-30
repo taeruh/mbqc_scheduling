@@ -136,7 +136,7 @@ fn do_search(
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
     let mut current_path = Vec::new();
-    let mut best_memory = vec![num_bits + 1; num_bits + 1];
+    let mut best_memory = vec![usize::MAX; num_bits + 1];
     while let Some(step) = scheduler.next() {
         match step {
             Step::Forward(measure) => {

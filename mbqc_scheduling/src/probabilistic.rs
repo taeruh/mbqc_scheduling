@@ -9,7 +9,8 @@
 ///    bound_best_mem: f64, // the lowest memory that was already found for a full path
 ///                         // with less steps than the current path
 ///    minimal_mem: f64, // the lowest memory that was already found for a full path
-///    last_max_mem: f64, // the maximum memory that was required so far
+///    last_max_mem: f64, // the maximum memory that was required so far (note that the
+///                       // maximum memory is with usize::MAX initialized)
 ///    last_cur_mem: f64, // the memory that was required for the last step
 ///    cur_mem: f64, // the memory that is required for the current step
 ///    num_remaining_nodes: f64, // how many nodes are still left to measure

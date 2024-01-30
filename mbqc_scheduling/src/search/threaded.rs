@@ -31,7 +31,7 @@ pub fn search(
 ) -> MappedPaths {
     let mut pool = Pool::new(nthreads as u32);
 
-    let best_memory = Arc::new(Mutex::new(vec![num_bits + 1; num_bits + 1]));
+    let best_memory = Arc::new(Mutex::new(vec![usize::MAX; num_bits + 1]));
     let results: Arc<Mutex<MappedPaths>> = Arc::new(Mutex::new(HashMap::new()));
     let accept_func = accept_func.as_deref();
 
