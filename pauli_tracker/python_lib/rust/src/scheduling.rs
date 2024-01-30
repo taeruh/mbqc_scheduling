@@ -152,11 +152,17 @@ impl Path {
 ///         exponentially with the number of bits in the first layer of the dependency
 ///         graph. Use the `task_bound` option to limit the number of these tasks (but
 ///         the then last task may take some time because it does all remaining tasks).
-///     probabilistic (Optional[AcceptFunc]): Whether to do the search probabilistically
-///         or deterministically. If None, the search will be deterministic. For larger
-///         problems, you will want to do it probabilistically, with a relatively low
-///         accept rate, because otherwise it takes forever (scaling is in the worst
-///         something between factorial and double exponential).
+///     probabilistic (Optional[Tuple[AcceptFunc, Optional[int]]]): Whether to do the
+///         search probabilistically or deterministically. If None, the search will be
+///         deterministic. For larger problems, you will want to do it probabilistically,
+///         with a relatively low accept rate, because otherwise it takes forever (scaling
+///         is in the worst something between factorial and double exponential). The
+///         second tuple element is an optional seed for the random number generator.
+///         However, note that if multithreaded, i.e., `nthreads > 1`, fixing the seed
+///         does not ensure reproducibibility (the threads communicate the results with
+///         each other, and depending on that they adjust the search; this communication
+///         is not deterministic (on this level here) since it depends on how the threads
+///         are scheduled).
 ///     task_bound (int): The maximum number of tasks to start in the search, cf.
 ///         `nthreads`.
 ///
@@ -184,11 +190,11 @@ fn run(
     do_search: bool,
     timeout: Option<u32>,
     nthreads: u16,
-    probabilistic: Option<AcceptFunc>,
+    probabilistic: Option<(AcceptFunc, Option<u64>)>,
     task_bound: Option<u32>,
 ) -> PyResult<Paths> {
     // GIL problems ... (it completely locks the execution)
-    if let Some(AcceptFunc(AcceptFuncBase::Custom(_))) = probabilistic {
+    if let Some((AcceptFunc(AcceptFuncBase::Custom(_)), _)) = probabilistic {
         if nthreads > 1 {
             return Err(PyValueError::new_err(
                 "multi-threading with a custom Python callback is not supported",
@@ -202,7 +208,7 @@ fn run(
         timeout.map(|t| Duration::from_secs(t.into())),
         nthreads,
         task_bound,
-        probabilistic.map(|e| e.to_real()),
+        probabilistic.map(|(func, seed)| (func.to_real(), seed)),
     )))
 }
 

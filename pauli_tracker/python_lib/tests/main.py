@@ -10,23 +10,21 @@ import pauli_tracker
 
 def main():
     tracker, graph, frame_flags = data()
-    frames = tracker.into_py_dict_recursive()
-    print(pauli_tracker.bitvector_to_boolvector(frames[0][1], len(frame_flags)))
     time_order = tracker.get_order(frame_flags)
-    # paths = scheduling.run(
-    #     graph,
-    #     time_order,
-    #     do_search=True,
-    #     nthreads=10,
-    #     # probabilistic=AcceptFunc(),
-    #     # probabilistic=AcceptFunc(kind="Custom", custom_func=custom),
-    #     # probabilistic=AcceptFunc(
-    #     #     kind="ParametrizedHeavyside",
-    #     #     heavyside_parameters=HeavysideParameters(0, 2, 1, 1, 3, 1),
-    #     # ),
-    # ).into_py_paths()
-    # for path in paths:
-    #     print(f"time: {path.time}, space: {path.space}, steps: {path.steps}")
+    paths = scheduling.run(
+        graph,
+        time_order,
+        do_search=True,
+        nthreads=10,
+        probabilistic=(AcceptFunc(), 0),
+        # probabilistic=AcceptFunc(kind="Custom", custom_func=custom),
+        # probabilistic=AcceptFunc(
+        #     kind="ParametrizedHeavyside",
+        #     heavyside_parameters=HeavysideParameters(0, 2, 1, 1, 3, 1),
+        # ),
+    ).into_py_paths()
+    for path in paths:
+        print(f"time: {path.time}, space: {path.space}, steps: {path.steps}")
 
 
 def custom(

@@ -69,7 +69,7 @@ pub fn search(
     time_ordering: PartialOrderGraph,
     timeout: Option<Duration>,
     nthreads: u16,
-    accept_func: Option<AcceptBox>,
+    probabilistic: Option<(AcceptBox, Option<u64>)>,
     task_bound: i64,
     debug: bool,
 ) -> Vec<Path> {
@@ -87,7 +87,7 @@ pub fn search(
     }
 
     let results = if nthreads < 2 {
-        let (result, _) = if let Some(accept_func) = accept_func {
+        let (result, _) = if let Some(accept_func) = probabilistic {
             do_probabilistic_search(scheduler.into_iter(), num_bits, &timer, accept_func)
         } else {
             do_search(scheduler.into_iter(), num_bits, &timer)
@@ -100,7 +100,7 @@ pub fn search(
             scheduler,
             task_bound,
             debug,
-            accept_func,
+            probabilistic,
             &timer,
         )
     };
@@ -212,13 +212,17 @@ fn do_probabilistic_search(
     mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
     num_bits: usize,
     timer: &Timer,
-    accept_func: AcceptBox,
+    (accept_func, seed): (AcceptBox, Option<u64>),
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
     let mut current_path = Vec::new();
     let mut best_memory = vec![num_bits + 1; num_bits + 1];
 
-    let mut rng = Pcg64::from_entropy();
+    let mut rng = if let Some(seed) = seed {
+        Pcg64::seed_from_u64(seed)
+    } else {
+        Pcg64::from_entropy()
+    };
     let dist = Uniform::new(0., 1.);
 
     loop {

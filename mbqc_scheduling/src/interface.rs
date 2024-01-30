@@ -46,7 +46,11 @@ pub struct Path {
 /// None, the search will be deterministically. For larger problems, you will want to do
 /// it probabilistically, with a relatively low accept rate, because otherwise it takes
 /// forever (scaling is in the worst case something between factorial and double
-/// exponential).
+/// exponential). The second tuple element is an optional seed for the random number
+/// generator. However, note that if multithreaded, i.e., `nthreads > 1`, fixing the seed
+/// does not ensure reproducibibility (the threads communicate the results with each
+/// other, and depending on that they adjust the search; this communication is not
+/// deterministic (on this level here) since it depends on how the threads are scheduled).
 ///
 /// When setting the variable MBQC_SCHEDULING_DEBUG to something, the search will print
 /// some more or less useful debug information (if multithreaded); this is *unstable*
@@ -58,7 +62,7 @@ pub fn run(
     timeout: Option<Duration>,
     nthreads: u16,
     task_bound: Option<u32>,
-    probabilistic: Option<AcceptFunc>,
+    probabilistic: Option<(AcceptFunc, Option<u64>)>,
 ) -> Vec<Path> {
     if !do_search {
         search::get_time_optimal(spacial_graph, time_ordering)
@@ -68,7 +72,7 @@ pub fn run(
             time_ordering,
             timeout,
             nthreads,
-            probabilistic.map(AcceptFunc::get_accept_func),
+            probabilistic.map(|(func, seed)| (func.get_accept_func(), seed)),
             task_bound.map(|b| b.into()).unwrap_or(10000),
             env::var("MBQC_SCHEDULING_DEBUG").is_ok(),
         )
@@ -102,7 +106,7 @@ pub fn run_serialized(
                 timeout,
                 nthreads,
                 task_bound,
-                probablistic,
+                probablistic.map(|func| (func, None))
             ),
         )
         .map_err(Into::into)

@@ -1,11 +1,12 @@
 use std::{
     cmp::Ordering,
     collections::HashMap,
+    ops::Deref,
     sync::{Arc, Mutex},
     time::Instant,
 };
 
-use rand::{distributions::Uniform, SeedableRng};
+use rand::{distributions::Uniform, Rng, SeedableRng};
 use rand_pcg::Pcg64;
 use scoped_threadpool::Pool;
 
@@ -26,14 +27,24 @@ pub fn search(
     mut scheduler: Scheduler<Partitioner>,
     task_bound: i64,
     debug: bool,
-    accept_func: Option<AcceptBox>,
+    probabilistic: Option<(AcceptBox, Option<u64>)>,
     timer: &Timer,
 ) -> MappedPaths {
     let mut pool = Pool::new(nthreads as u32);
 
     let best_memory = Arc::new(Mutex::new(vec![usize::MAX; num_bits + 1]));
     let results: Arc<Mutex<MappedPaths>> = Arc::new(Mutex::new(HashMap::new()));
-    let accept_func = accept_func.as_deref();
+    let mut probabilistic = match probabilistic {
+        Some((ref func, seed)) => Some((
+            func.deref(),
+            if let Some(seed) = seed {
+                Pcg64::seed_from_u64(seed)
+            } else {
+                Pcg64::from_entropy()
+            },
+        )),
+        None => None,
+    };
 
     let mut ntasks = 0;
     pool.scoped(|scope| {
@@ -43,6 +54,10 @@ pub fn search(
         while let Some((scheduler_focused, init_measure)) = scheduler.next_and_focus() {
             let best_memory = best_memory.clone();
             let results = results.clone();
+            let probabilistic = match probabilistic {
+                Some((func, ref mut rng)) => Some((func, rng.gen())),
+                None => None,
+            };
             scope.execute(move || {
                 task(
                     best_memory,
@@ -52,7 +67,7 @@ pub fn search(
                     Some(init_measure),
                     debug,
                     timer,
-                    accept_func,
+                    probabilistic,
                 )
             });
             ntasks += 1;
@@ -63,8 +78,12 @@ pub fn search(
 
         // remaining search tasks; note that this one takes ownership of best_memory
         let results = results.clone();
+        let probabilistic = match probabilistic {
+            Some((func, ref mut rng)) => Some((func, rng.gen())),
+            None => None,
+        };
         scope.execute(move || {
-            task(best_memory, results, scheduler, -1, None, debug, timer, accept_func)
+            task(best_memory, results, scheduler, -1, None, debug, timer, probabilistic)
         });
     });
 
@@ -80,7 +99,7 @@ fn task(
     measure: Option<Vec<usize>>,
     debug: bool,
     timer: &Timer,
-    accept_func: Option<&Accept>,
+    probabilistic: Option<(&Accept, u64)>,
 ) {
     let start = if debug {
         println!(
@@ -92,13 +111,13 @@ fn task(
         None
     };
 
-    let (mut new_results, this_best_mem) = if let Some(accept_func) = accept_func {
+    let (mut new_results, this_best_mem) = if let Some(probabilistic) = probabilistic {
         do_probabilistic_search(
             scheduler.into_iter(),
             measure.map(|e| vec![e]),
             &best_memory,
             timer,
-            accept_func,
+            probabilistic,
         )
     } else {
         do_search(scheduler.into_iter(), measure.map(|e| vec![e]), &best_memory, timer)
@@ -218,7 +237,7 @@ fn do_probabilistic_search(
     init_path: Option<OnePath>,
     best_memory: &Arc<Mutex<Vec<usize>>>,
     timer: &Timer,
-    accept_func: &Accept,
+    (accept_func, seed): (&Accept, u64),
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
     let was_initialized = init_path.is_some();
@@ -227,7 +246,7 @@ fn do_probabilistic_search(
         best_memory.lock().expect("failed to lock best_memory").to_vec();
     let mut update_counter = 0;
 
-    let mut rng = Pcg64::from_entropy();
+    let mut rng = Pcg64::seed_from_u64(seed);
     let dist = Uniform::new(0., 1.);
 
     loop {
