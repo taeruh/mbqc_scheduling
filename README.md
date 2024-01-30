@@ -43,3 +43,8 @@ the [mbqc_scheduling crate].
 [mbqc_scheduling crate]: https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling
 [Python package]: https://github.com/taeruh/mbqc_scheduling/tree/main/pauli_tracker/python_lib#readme
 [Pauli tracker package]: https://github.com/taeruh/pauli_tracker/tree/main/python_lib#readme
+
+## License
+
+MBQC Scheduling is distributed under the terms of both the MIT license and the
+Apache License (Version 2.0).
