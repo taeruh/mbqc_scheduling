@@ -24,18 +24,19 @@ use rand_pcg::Pcg64;
 use serde::Serialize;
 
 // cf. ncpus and walltime in scripts/exe_hpc.bash
-// depending on the walltime we timeout; run this in debug mode and and ensure that
-// there's enough time such that the first few sizes definitely find at least one path
-const MAX_SIZE: usize = 35;
-const NUM_AVERAGE: u64 = 500;
+// depending on the walltime we timeout; do a test run for the first view sizes and ensure
+// that there's enough time such that the first few sizes definitely find at least one
+// path
+const MAX_SIZE: usize = 50;
+const NUM_AVERAGE: u64 = 1500;
 const NCPUS: u16 = 30;
-const WALLTIME: u64 = 10 * 3600;
+const WALLTIME: u64 = 60 * 3600;
 
 const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 = // 10min buffer and in nano seconds
     (WALLTIME - 600) / NUM_AVERAGE * 1_000_000_000;
 const RANGE: Range<usize> = 1..MAX_SIZE + 1;
 
-// increase time quadratically with size: require
+// increase time quadratically (because that's how the memory scales) with size: require:
 // sum_1^{n} a * x^2 = TIMEOUT_PER_SINGLE_SHOT_SWEEP
 // <=> a = TIMEOUT_PER_SINGLE_SHOT_SWEEP / (1/6 n(n+1)(2n+1))
 fn timeouts() -> [Duration; MAX_SIZE + 1] {
@@ -49,6 +50,8 @@ fn timeouts() -> [Duration; MAX_SIZE + 1] {
 }
 
 fn main() {
+    let full_time = Instant::now();
+
     let args = env::args().collect::<Vec<String>>();
     assert_eq!(args.len(), 3, "Usage: <edge_density> <correction_density>");
     let edge_density = Density::new(args[1].parse::<f64>().unwrap());
@@ -69,7 +72,7 @@ fn main() {
 
     #[cfg(debug_assertions)]
     println!(
-        "set:\t\t{:?}\ncalculated:\t{:?}",
+        "set:\t\t{:?}\ncalculated:\t{:?}\ntimeouts: {timeouts:?}",
         Duration::from_nanos(TIMEOUT_PER_SINGLE_SHOT_SWEEP),
         timeouts.iter().sum::<Duration>()
     );
@@ -80,6 +83,7 @@ fn main() {
         let timeout = timeouts[size];
 
         let total_time = Instant::now();
+
         let mut averaged_time = Duration::default();
 
         for _ in 0..NUM_AVERAGE {
@@ -97,6 +101,7 @@ fn main() {
                 None,
                 Some((AcceptFunc::BuiltinHeavyside, Some(rng.gen()))),
             );
+
             averaged_time += time.elapsed();
 
             // if the accept function was to aggressive we may not have a path at all
@@ -114,7 +119,6 @@ fn main() {
             }
         }
 
-        #[cfg(debug_assertions)]
         println!(
             "size={size:<3}: total time: {:?}; per shot: {:?} from {:?}",
             total_time.elapsed(),
@@ -158,6 +162,8 @@ fn main() {
 
     fs::create_dir_all("output").unwrap();
     serde_json::to_writer(File::create(output_file).unwrap(), &output).unwrap();
+
+    println!("total time: {:?}", full_time.elapsed());
 }
 
 #[derive(Serialize)]
