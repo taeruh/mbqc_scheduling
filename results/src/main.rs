@@ -1,7 +1,8 @@
 use std::{
     env,
     fs::{self, File},
-    time::Duration,
+    ops::Range,
+    time::{Duration, Instant},
 };
 
 use bitvec::vec::BitVec;
@@ -22,8 +23,30 @@ use rand::{
 use rand_pcg::Pcg64;
 use serde::Serialize;
 
-const MAX_SIZE: usize = 20;
-const NUM_AVERAGE: usize = 1000;
+// cf. ncpus and walltime in scripts/exe_hpc.bash
+// depending on the walltime we timeout; run this in debug mode and and ensure that
+// there's enough time such that the first few sizes definitely find at least one path
+const MAX_SIZE: usize = 35;
+const NUM_AVERAGE: u64 = 500;
+const NCPUS: u16 = 30;
+const WALLTIME: u64 = 10 * 3600;
+
+const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 = // 10min buffer and in nano seconds
+    (WALLTIME - 600) / NUM_AVERAGE * 1_000_000_000;
+const RANGE: Range<usize> = 1..MAX_SIZE + 1;
+
+// increase time quadratically with size: require
+// sum_1^{n} a * x^2 = TIMEOUT_PER_SINGLE_SHOT_SWEEP
+// <=> a = TIMEOUT_PER_SINGLE_SHOT_SWEEP / (1/6 n(n+1)(2n+1))
+fn timeouts() -> [Duration; MAX_SIZE + 1] {
+    let mut ret = [Duration::default(); MAX_SIZE + 1];
+    let a = TIMEOUT_PER_SINGLE_SHOT_SWEEP as f64
+        / (1. / 6. * (MAX_SIZE * (MAX_SIZE + 1) * (2 * MAX_SIZE + 1)) as f64);
+    for size in RANGE {
+        ret[size] = Duration::from_nanos((a * (size as f64).powi(2)).round() as u64)
+    }
+    ret
+}
 
 fn main() {
     let args = env::args().collect::<Vec<String>>();
@@ -42,25 +65,39 @@ fn main() {
     let mut rng = Pcg64::seed_from_u64(seed);
     let mut averaged_results = Vec::with_capacity(MAX_SIZE);
 
-    for size in 1..MAX_SIZE + 1 {
+    let timeouts = timeouts();
+
+    #[cfg(debug_assertions)]
+    println!(
+        "set:\t\t{:?}\ncalculated:\t{:?}",
+        Duration::from_nanos(TIMEOUT_PER_SINGLE_SHOT_SWEEP),
+        timeouts.iter().sum::<Duration>()
+    );
+
+    for size in RANGE {
         let mut results = vec![Vec::with_capacity(MAX_SIZE); 4];
         let mut means = [0.0; 4];
+        let timeout = timeouts[size];
+
+        let total_time = Instant::now();
+        let mut averaged_time = Duration::default();
 
         for _ in 0..NUM_AVERAGE {
             let graph = get_graph(edge_density, size, &mut rng);
             let order = get_order(correction_density, size, &mut rng);
             let time_optimal =
                 interface::run(graph.clone(), order.clone(), false, None, 1, None, None);
+            let time = Instant::now();
             let space_optimal_approx = interface::run(
                 graph,
                 order,
                 true,
-                // Some(Duration::from_millis(2000)),
-                None,
-                10,
+                Some(timeout),
+                NCPUS,
                 None,
                 Some((AcceptFunc::BuiltinHeavyside, Some(rng.gen()))),
             );
+            averaged_time += time.elapsed();
 
             // if the accept function was to aggressive we may not have a path at all
             if let Some(time_optimal) = time_optimal.first() {
@@ -76,6 +113,16 @@ fn main() {
                 *mean += *result.last().unwrap() as f64;
             }
         }
+
+        #[cfg(debug_assertions)]
+        println!(
+            "size={size:<3}: total time: {:?}; per shot: {:?} from {:?}",
+            total_time.elapsed(),
+            Duration::from_nanos(
+                (averaged_time.as_nanos() / NUM_AVERAGE as u128).try_into().unwrap()
+            ),
+            timeout
+        );
 
         averaged_results.push((
             size,
