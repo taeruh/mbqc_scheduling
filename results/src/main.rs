@@ -17,7 +17,6 @@ use pauli_tracker::{
 };
 use rand::{
     distributions::{Distribution, Uniform},
-    seq::SliceRandom,
     Rng, SeedableRng,
 };
 use rand_pcg::Pcg64;
@@ -26,17 +25,26 @@ use serde::Serialize;
 // cf. ncpus and walltime in scripts/exe_hpc.bash
 // depending on the walltime we timeout; do a test run for the first view sizes and ensure
 // that there's enough time such that the first few sizes definitely find at least one
-// path
-const MAX_SIZE: usize = 50;
+// path (run with cargo run --release --no-default-features to see whether timeouts
+// occur); important: I'm not sure why, but on our cluster each size may take up to 2.5ms
+// longer
+// {{ this here, together with parameters.txt, defines all parameters, which are then all
+// caputered in the output file
+const MAX_SIZE: usize = 2;
 const NUM_AVERAGE: u64 = 1500;
 const NCPUS: u16 = 30;
 const WALLTIME: u64 = 60 * 3600;
+type EdgeDensityTyp = ReziprocalLinear;
+type CorrectionDensityTyp = ReziprocalLinear;
+// }}
 
-const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 = // 10min buffer and in nano seconds
-    (WALLTIME - 600) / NUM_AVERAGE * 1_000_000_000;
+// 5min buffer for timeouts (better to be safe), and in nano seconds
+const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 =
+    (WALLTIME - 5 * 60) * 1_000_000_000 / NUM_AVERAGE;
 const RANGE: Range<usize> = 1..MAX_SIZE + 1;
 
-// increase time quadratically (because that's how the memory scales) with size: require:
+// increase time quadratically (because that's how the everything else scales, more or
+// less) with size:
 // sum_1^{n} a * x^2 = TIMEOUT_PER_SINGLE_SHOT_SWEEP
 // <=> a = TIMEOUT_PER_SINGLE_SHOT_SWEEP / (1/6 n(n+1)(2n+1))
 fn timeouts() -> [Duration; MAX_SIZE + 1] {
@@ -44,25 +52,34 @@ fn timeouts() -> [Duration; MAX_SIZE + 1] {
     let a = TIMEOUT_PER_SINGLE_SHOT_SWEEP as f64
         / (1. / 6. * (MAX_SIZE * (MAX_SIZE + 1) * (2 * MAX_SIZE + 1)) as f64);
     for size in RANGE {
-        ret[size] = Duration::from_nanos((a * (size as f64).powi(2)).round() as u64)
+        ret[size] = Duration::from_nanos(
+            ((a * (size as f64).powi(2)).round() as u64).saturating_sub(2_500_000),
+        )
     }
     ret
 }
 
 fn main() {
     let full_time = Instant::now();
+    tracing_subscriber::fmt::init();
 
     let args = env::args().collect::<Vec<String>>();
     assert_eq!(args.len(), 3, "Usage: <edge_density> <correction_density>");
-    let edge_density = Density::new(args[1].parse::<f64>().unwrap());
-    let correction_density = Density::new(args[2].parse::<f64>().unwrap());
+    let edge_density = Density::<EdgeDensityTyp>::new(args[1].parse::<f64>().unwrap());
+    let correction_density =
+        Density::<CorrectionDensityTyp>::new(args[2].parse::<f64>().unwrap());
 
-    let output_file = format!("output/{}_{}.json", edge_density.0, correction_density.0);
+    let output_file = format!(
+        "output/{}_{}.json",
+        serde_json::to_string(&edge_density).unwrap(),
+        serde_json::to_string(&correction_density).unwrap()
+    )
+    .replace(['{', '"', '}'], "");
 
     // if the number of threads passed to `run` below is 1, then one could replace this
     // seed with the seed in the output_file to reproduce the result, however, the final
-    // results are not produced single threaded, so this is pointless (cf. doc of the run
-    // function)
+    // results are not produced singly threaded, so this is pointless (cf. doc of the run
+    // function; not completely pointless, but there will be deviations)
     let seed = Pcg64::from_entropy().gen();
 
     let mut rng = Pcg64::seed_from_u64(seed);
@@ -154,6 +171,10 @@ fn main() {
     }
 
     let output = Output {
+        max_size: MAX_SIZE,
+        num_average: NUM_AVERAGE,
+        walltime: WALLTIME,
+        ncpus: NCPUS,
         edge_density,
         correction_density,
         seed,
@@ -168,32 +189,70 @@ fn main() {
 
 #[derive(Serialize)]
 struct Output {
-    edge_density: Density,
-    correction_density: Density,
+    max_size: usize,
+    num_average: u64,
+    walltime: u64,
+    ncpus: u16,
+    edge_density: Density<EdgeDensityTyp>,
+    correction_density: Density<CorrectionDensityTyp>,
     seed: u64,
     results: Vec<(usize, Vec<(f64, f64)>)>,
 }
 
 #[derive(Copy, Clone, Debug, Serialize)]
-#[serde(transparent)]
-struct Density(f64);
+pub struct Density<T> {
+    factor: f64,
+    typ: T,
+}
 
-impl Density {
-    fn new(density: f64) -> Self {
+impl<T: Default> Density<T> {
+    pub fn new(factor: f64) -> Self {
         assert!(
-            (0.0..=1.0).contains(&density),
-            "density must be between 0 and 1, but it is: {density}"
+            (0.0..=1.0).contains(&factor),
+            "density must be between 0 and 1, but it is: {factor}"
         );
-        Density(density)
+        Self { factor, typ: T::default() }
     }
 }
 
-fn get_graph(density: Density, size: usize, rng: &mut impl Rng) -> SpacialGraph {
+macro_rules! density_types {
+    ($($density_type:ident,)*) => {
+        $(
+            #[derive(Clone, Copy, Default)]
+            pub struct $density_type;
+            impl Serialize for $density_type {
+                fn serialize<S: serde::Serializer>(
+                    &self, s: S
+                ) -> Result<S::Ok, S::Error> {
+                    s.serialize_str(stringify!($density_type))
+                }
+            }
+        )*
+    };
+}
+density_types!(Constant, ReziprocalLinear,);
+
+impl Density<Constant> {
+    pub fn get(&self, _: usize) -> f64 {
+        self.factor
+    }
+}
+impl Density<ReziprocalLinear> {
+    pub fn get(&self, size: usize) -> f64 {
+        self.factor / (size as f64)
+    }
+}
+
+fn get_graph(
+    density: Density<EdgeDensityTyp>,
+    size: usize,
+    rng: &mut impl Rng,
+) -> SpacialGraph {
     if size == 0 {
         return vec![];
     }
 
-    let density = density.0;
+    let density = density.get(size);
     let unform = Uniform::new(0.0, 1.0);
 
     let mut ret = vec![vec![]; size];
@@ -208,12 +267,17 @@ fn get_graph(density: Density, size: usize, rng: &mut impl Rng) -> SpacialGraph 
     ret
 }
 
-fn get_order(density: Density, size: usize, rng: &mut impl Rng) -> PartialOrderGraph {
+fn get_order(
+    density: Density<CorrectionDensityTyp>,
+    size: usize,
+    rng: &mut impl Rng,
+) -> PartialOrderGraph {
     if size == 0 {
         return vec![];
     }
 
-    let density = density.0;
+    let density = density.get(size);
+    let unform = Uniform::new(0.0, 1.0);
 
     let mut frames = NaiveVector::from(vec![PauliStack::<BitVec>::zeros(size); size]);
     let mut pool = (0..size).collect::<Vec<_>>();
@@ -222,8 +286,12 @@ fn get_order(density: Density, size: usize, rng: &mut impl Rng) -> PartialOrderG
     while !pool.is_empty() {
         let index = rng.gen_range(0..pool.len());
         let bit = pool.swap_remove(index);
-        let corrections =
-            pool.choose_multiple(rng, (density * (pool.len() as f64)).round() as usize);
+        // the rounding errors of the following are too large for small sizes
+        // pool.choose_multiple(rng, (density * (pool.len() as f64)).round() as usize);
+        let corrections = pool
+            .iter()
+            .filter(|_| unform.sample(rng) < density)
+            .collect::<Vec<_>>();
         for &correction in corrections {
             frames.get_mut(correction).unwrap().z.set(map.len(), true);
         }

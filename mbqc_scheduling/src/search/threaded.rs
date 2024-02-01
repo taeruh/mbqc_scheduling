@@ -149,7 +149,7 @@ fn update(
     update_counter: &mut usize,
     timer: &Timer,
 ) -> bool {
-    if *update_counter == 1000 {
+    if *update_counter == 1 {
         best_memory
             .lock()
             .expect("failed to lock best_memory")
@@ -203,6 +203,7 @@ fn do_search(
             },
         }
         if update(best_memory, &mut this_best_mem, &mut update_counter, timer) {
+            tracing::info!("timer: timeout");
             break;
         }
     }
@@ -267,6 +268,7 @@ fn do_probabilistic_search(
                 },
             }
             if update(best_memory, &mut this_best_mem, &mut update_counter, timer) {
+                tracing::info!("timer: timeout");
                 break;
             }
         } else {

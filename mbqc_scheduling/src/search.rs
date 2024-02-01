@@ -140,6 +140,7 @@ fn do_search(
             },
         }
         if timer.finished() {
+            tracing::info!("timer: timeout");
             break;
         }
     }
