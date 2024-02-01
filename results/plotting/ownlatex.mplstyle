@@ -1,0 +1,11 @@
+# Standard latex style sheet
+# The preamble has a strange syntax (no spaces, linebreaks, ...), it can also
+# not handle to complex things, e.g. '\newcommand{\ve}[1]{\boldsymbol{\#1}}',
+# since one can't use '#' --> update the preamble with such commands in the
+# python file, e.g. 'plt.rcParams.update({'<other stuff>',
+# 'text.latex.preamble': (r'\newcommand{\ve}[1]{\boldsymbol{\#1}}')})'
+# however, then one overrides the preamble
+# just make a package and load it
+font.family: lmodern
+text.usetex: True
+text.latex.preamble: \usepackage{only_math}

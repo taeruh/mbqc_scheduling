@@ -22,7 +22,6 @@ use rand::{
 use rand_pcg::Pcg64;
 use serde::Serialize;
 
-// cf. ncpus and walltime in scripts/exe_hpc.bash
 // depending on the walltime we timeout; do a test run for the first view sizes and ensure
 // that there's enough time such that the first few sizes definitely find at least one
 // path (run with cargo run --release --no-default-features to see whether timeouts
@@ -30,12 +29,14 @@ use serde::Serialize;
 // longer
 // {{ this here, together with parameters.txt, defines all parameters, which are then all
 // caputered in the output file
-const MAX_SIZE: usize = 2;
+const MAX_SIZE: usize = 50;
 const NUM_AVERAGE: u64 = 1500;
-const NCPUS: u16 = 30;
-const WALLTIME: u64 = 60 * 3600;
-type EdgeDensityTyp = ReziprocalLinear;
-type CorrectionDensityTyp = ReziprocalLinear;
+const NCPUS: u16 = 30; // cf. ncpus in scripts/exe_hpc.bash
+const WALLTIME: u64 = 60 * 3600; // cf. walltime in scripts/exe_hpc.bash
+// type EdgeDensityTyp = ReziprocalLinear;
+// type CorrectionDensityTyp = ReziprocalLinear;
+type EdgeDensityTyp = Constant;
+type CorrectionDensityTyp = Constant;
 // }}
 
 // 5min buffer for timeouts (better to be safe), and in nano seconds
