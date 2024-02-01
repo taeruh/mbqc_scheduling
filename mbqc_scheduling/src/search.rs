@@ -71,7 +71,6 @@ pub fn search(
     nthreads: u16,
     probabilistic: Option<(AcceptBox, Option<u64>)>,
     task_bound: i64,
-    debug: bool,
 ) -> Vec<Path> {
     let num_bits = spacial_graph.len();
     let mut dependency_buffer = DependencyBuffer::new(num_bits);
@@ -94,15 +93,7 @@ pub fn search(
         };
         result
     } else {
-        threaded::search(
-            nthreads,
-            num_bits,
-            scheduler,
-            task_bound,
-            debug,
-            probabilistic,
-            &timer,
-        )
+        threaded::search(nthreads, num_bits, scheduler, task_bound, probabilistic, &timer)
     };
 
     let mut filtered_results = HashMap::new();

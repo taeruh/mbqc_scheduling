@@ -39,30 +39,30 @@ pub struct Timer {
     handle: Option<JoinHandle<()>>,
     // logically, this information is redundant with pair.0, but since it is not behind a
     // mutex, it can be read without locking
-    time: Arc<AtomicBool>,
+    finished: Arc<AtomicBool>,
 }
 
 impl Timer {
     /// Creates a new timer. Use `start` to start the timer.
     pub fn new() -> Self {
         Self {
-            time: Arc::new(AtomicBool::new(false)),
             pair: Arc::new((Mutex::new(false), Condvar::new())),
             handle: None,
+            finished: Arc::new(AtomicBool::new(false)),
         }
     }
 
-    /// Start the timer with the given timeout.
-    pub fn start(&mut self, timeout: Duration) {
+    /// Start the timer with the given duration.
+    pub fn start(&mut self, duration: Duration) {
         let pair = self.pair.clone();
-        let time = Arc::clone(&self.time);
+        let time = Arc::clone(&self.finished);
 
         self.handle = Some(thread::spawn(move || {
             let (lock, cvar) = &*pair;
             let (_lock, timeout) = cvar
                 .wait_timeout_while(
                     lock.lock().expect("timer: locking at start failed"),
-                    timeout,
+                    duration,
                     |&mut dropping_timer| !dropping_timer,
                 )
                 .expect("timer: re-acquiring lock after timeout/notifaction failed");
@@ -76,7 +76,7 @@ impl Timer {
     ///
     /// If the timer never started, this will always return `false`.
     pub fn finished(&self) -> bool {
-        self.time.load(Ordering::Relaxed)
+        self.finished.load(Ordering::Relaxed)
     }
 }
 
@@ -93,7 +93,7 @@ impl Drop for Timer {
         cvar.notify_all();
         if let Some(handle) = self.handle.take() {
             handle.join().unwrap()
-        } // otherwise never started
+        } // otherwise it never started
     }
 }
 

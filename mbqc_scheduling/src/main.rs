@@ -19,7 +19,7 @@ fn main() {
         probabilistic,
         task_bound,
     } = cli::parse();
-
+    tracing_subscriber::fmt::init();
     interface::run_serialized(
         (spacial_graph, &spacial_graph_format),
         (dependency_graph, &dependency_graph_format),
@@ -32,5 +32,5 @@ fn main() {
         // probabilistic.then_some(AcceptFunc::BuiltinSquaredSpace),
         (paths, &paths_format),
     )
-    .expect("path search failed: ")
+    .expect("path search failed")
 }

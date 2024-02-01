@@ -3,7 +3,6 @@ use std::{
     collections::HashMap,
     ops::Deref,
     sync::{Arc, Mutex},
-    time::Instant,
 };
 
 use rand::{distributions::Uniform, Rng, SeedableRng};
@@ -26,7 +25,6 @@ pub fn search(
     num_bits: usize,
     mut scheduler: Scheduler<Partitioner>,
     task_bound: i64,
-    debug: bool,
     probabilistic: Option<(AcceptBox, Option<u64>)>,
     timer: &Timer,
 ) -> MappedPaths {
@@ -65,7 +63,6 @@ pub fn search(
                     scheduler_focused,
                     ntasks,
                     Some(init_measure),
-                    debug,
                     timer,
                     probabilistic,
                 )
@@ -83,7 +80,7 @@ pub fn search(
             None => None,
         };
         scope.execute(move || {
-            task(best_memory, results, scheduler, -1, None, debug, timer, probabilistic)
+            task(best_memory, results, scheduler, -1, None, timer, probabilistic)
         });
     });
 
@@ -97,19 +94,16 @@ fn task(
     scheduler: Scheduler<Partitioner>,
     ntasks: i64,
     measure: Option<Vec<usize>>,
-    debug: bool,
     timer: &Timer,
     probabilistic: Option<(&Accept, u64)>,
 ) {
-    let start = if debug {
-        println!(
-            "start {ntasks:?}: measure {measure:?}; best_memory {:?}",
-            best_memory.lock().unwrap()
-        );
-        Some(Instant::now())
-    } else {
-        None
-    };
+    let _span = tracing::debug_span!("search task", ntasks).entered();
+
+    tracing::debug!(
+        "START: measure: {:?}; best_memory: {:?}",
+        measure,
+        best_memory.lock().unwrap()
+    );
 
     let (mut new_results, this_best_mem) = if let Some(probabilistic) = probabilistic {
         do_probabilistic_search(
@@ -123,14 +117,7 @@ fn task(
         do_search(scheduler.into_iter(), measure.map(|e| vec![e]), &best_memory, timer)
     };
 
-    if let Some(start) = start {
-        println!(
-            "done {ntasks:?}: time {:?}; results {:?}; best_memory {:?}",
-            Instant::now() - start,
-            new_results,
-            this_best_mem,
-        );
-    }
+    tracing::debug!("DONE: results {:?}; best_memory {:?}", new_results, this_best_mem,);
 
     if new_results.is_empty() {
         return;

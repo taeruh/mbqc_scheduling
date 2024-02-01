@@ -1,4 +1,4 @@
-use std::{env, path, time::Duration};
+use std::{path, time::Duration};
 
 use anyhow::Result;
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
@@ -51,10 +51,10 @@ pub struct Path {
 /// does not ensure reproducibibility (the threads communicate the results with each
 /// other, and depending on that they adjust the search; this communication is not
 /// deterministic (on this level here) since it depends on how the threads are scheduled).
-///
-/// When setting the variable MBQC_SCHEDULING_DEBUG to something, the search will print
-/// some more or less useful debug information (if multithreaded); this is *unstable*
-/// though.
+//
+// When setting the variable MBQC_SCHEDULING_DEBUG to something, the search will print
+// some more or less useful debug information (if multithreaded); this is *unstable*
+// though.
 pub fn run(
     spacial_graph: SpacialGraph,
     time_ordering: PartialOrderGraph,
@@ -74,7 +74,6 @@ pub fn run(
             nthreads,
             probabilistic.map(|(func, seed)| (func.get_accept_func(), seed)),
             task_bound.map(|b| b.into()).unwrap_or(10000),
-            env::var("MBQC_SCHEDULING_DEBUG").is_ok(),
         )
     }
 }
@@ -106,7 +105,7 @@ pub fn run_serialized(
                 timeout,
                 nthreads,
                 task_bound,
-                probablistic.map(|func| (func, None))
+                probablistic.map(|func| (func, None)),
             ),
         )
         .map_err(Into::into)
