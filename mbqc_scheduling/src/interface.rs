@@ -51,10 +51,6 @@ pub struct Path {
 /// does not ensure reproducibibility (the threads communicate the results with each
 /// other, and depending on that they adjust the search; this communication is not
 /// deterministic (on this level here) since it depends on how the threads are scheduled).
-//
-// When setting the variable MBQC_SCHEDULING_DEBUG to something, the search will print
-// some more or less useful debug information (if multithreaded); this is *unstable*
-// though.
 pub fn run(
     spacial_graph: SpacialGraph,
     time_ordering: PartialOrderGraph,

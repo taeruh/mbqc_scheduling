@@ -169,10 +169,6 @@ impl Path {
 /// Returns:
 ///     Paths: A list of the optimal paths. Turn it into the corresponding Python object
 ///     via :meth:`Paths.into_py_paths`.
-///
-/// When setting the variable MBQC_SCHEDULING_DEBUG to something, the search will print
-/// some more or less useful debug information (if multithreaded); this is *unstable*
-/// though.
 #[pyo3::pyfunction]
 #[pyo3(signature = (
     spacial_graph,
