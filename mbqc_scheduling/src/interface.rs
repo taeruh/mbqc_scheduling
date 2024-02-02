@@ -1,6 +1,5 @@
 use std::{path, time::Duration};
 
-use anyhow::Result;
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
 use serde::{Deserialize, Serialize};
 
@@ -74,8 +73,6 @@ pub fn run(
     }
 }
 
-use utils::serialization::Dynamic;
-
 /// Same as [run], but with file paths to the input and output data.
 #[allow(clippy::too_many_arguments)]
 pub fn run_serialized(
@@ -87,22 +84,27 @@ pub fn run_serialized(
     task_bound: Option<u32>,
     probablistic: Option<AcceptFunc>,
     paths: (impl AsRef<path::Path>, &str),
-) -> Result<()> {
-    let spacial_graph = Dynamic::try_from(spacial_graph.1)?.read_file(spacial_graph.0)?;
-    let dependency_graph =
-        Dynamic::try_from(dependency_graph.1)?.read_file(dependency_graph.0)?;
-    Dynamic::try_from(paths.1)?
-        .write_file(
-            paths.0,
-            &run(
-                spacial_graph,
-                dependency_graph,
-                do_search,
-                timeout,
-                nthreads,
-                task_bound,
-                probablistic.map(|func| (func, None)),
-            ),
-        )
-        .map_err(Into::into)
+) -> Result<(), Box<dyn std::error::Error>> {
+    // let spacial_graph = Dynamic::try_from(spacial_graph.1)?.read_file(spacial_graph.0)?;
+    let spacial_graph =
+        utils::serialization::deserialize_from_file(spacial_graph.0, spacial_graph.1)?;
+    // let dependency_graph =
+    //     Dynamic::try_from(dependency_graph.1)?.read_file(dependency_graph.0)?;
+    let dependency_graph = utils::serialization::deserialize_from_file(
+        dependency_graph.0,
+        dependency_graph.1,
+    )?;
+    utils::serialization::serialize_to_file(
+        paths.0,
+        &run(
+            spacial_graph,
+            dependency_graph,
+            do_search,
+            timeout,
+            nthreads,
+            task_bound,
+            probablistic.map(|func| (func, None)),
+        ),
+        paths.1,
+    )
 }
