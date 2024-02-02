@@ -149,7 +149,7 @@ fn update(
     update_counter: &mut usize,
     timer: &Timer,
 ) -> bool {
-    if *update_counter == 1 {
+    if *update_counter == 1000 {
         best_memory
             .lock()
             .expect("failed to lock best_memory")
@@ -160,7 +160,7 @@ fn update(
                 Ordering::Less => *shared_mem = *this_mem,
                 Ordering::Equal => {},
             });
-        *update_counter = 0;
+        *update_counter = 1; // zero means we never updated; NEVER SET IT TO 0!!!!!!!!
         timer.finished()
     } else {
         *update_counter += 1;
