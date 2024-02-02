@@ -10,17 +10,20 @@
 
 #PBS -l ncpus=30
 #PBS -l mem=3GB
-#PBS -l walltime=60:00:00
+#PBS -l walltime=50:00:00
 
 # this is relative to the final workdir which is ./=${PBS_O_WORKDIR}, so we don't have
 # to move it from the scratch
 #PBS -e ./log/
 #PBS -o ./log/
 
+task="node"
+# task="density"
+
 cd ${PBS_O_WORKDIR}
 mkdir -p log
 mkdir -p output
-readarray -t parameters < parameters.dat
+readarray -t parameters < "parameters/${task}.dat"
 
 scratch="/scratch/${USER}_${PBS_JOBID%.*}"
 mkdir -p ${scratch}/output
@@ -28,7 +31,7 @@ cp target/release/results ${scratch}
 
 cd ${scratch}
 
-./results ${parameters[${PBS_ARRAY_INDEX}-1]}
+./results "$task" ${parameters[${PBS_ARRAY_INDEX}-1]}
 # NOTE: `cd ${PBS_O_WORKDIR}; mv ${scratch}/output/* output` doesn't work; it's the wild
 # card that makes problems in this case, but I don't know why (maybe the ${scratch} name
 # is too weird)?

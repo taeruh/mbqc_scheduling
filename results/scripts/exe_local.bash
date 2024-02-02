@@ -1,12 +1,17 @@
 #!/usr/bin/bash
 
-jobs=$(seq 1 9)
+# task="node"
+# jobs=$(seq 1 9)
 
-readarray -t parameters < parameters.dat
+task="density"
+jobs=$(seq 1 10)
+
+
+readarray -t parameters < "parameters/${task}.dat"
 
 mkdir -p output
 
 for p in "${parameters[@]}"; do
   echo $p
-  ./target/release/results $p
+  ./target/release/results "$task" $p
 done

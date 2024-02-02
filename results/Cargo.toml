@@ -7,7 +7,10 @@ edition = "2021"
 default = ["mbqc_scheduling/no_release_log"]
 
 [dependencies]
-pauli_tracker = { version = "0.4.0-alpha.2", features = ["serde", "bitvec"], git = "https://github.com/taeruh/pauli_tracker" }
+pauli_tracker = { version = "0.4.0-alpha.2", features = [
+  "serde",
+  "bitvec",
+], git = "https://github.com/taeruh/pauli_tracker" }
 # mbqc_scheduling = { version = "0.1.0", default-features = false, path = "../mbqc_scheduling" }
 mbqc_scheduling = { version = "0.1.0", default-features = false, git = "https://github.com/taeruh/mbqc_scheduling" }
 rand = { version = "0.8.5", default-features = false }
@@ -15,4 +18,8 @@ rand_pcg = { version = "0.3.1", default-features = false }
 bitvec = { version = "1.0.1", default-features = false }
 serde = { version = "1.0.196", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.113", default-features = false }
-tracing-subscriber = { version = "0.3.18", default-features = false, features = ["ansi", "fmt"] }
+tracing-subscriber = { version = "0.3.18", default-features = false, features = [
+  "ansi",
+  "fmt",
+] }
+clap = { version = "4.4.18", default-features = false }

@@ -225,7 +225,7 @@ checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
 [[package]]
 name = "mbqc_scheduling"
 version = "0.1.0"
-source = "git+https://github.com/taeruh/mbqc_scheduling#c33137f8e178bc9e4545224bafb94f3c6607894b"
+source = "git+https://github.com/taeruh/mbqc_scheduling#9bb6b46d91763ffc40e4c9e8f7489d0cae634c7b"
 dependencies = [
  "anyhow",
  "bitvec",
@@ -269,7 +269,7 @@ checksum = "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
 [[package]]
 name = "pauli_tracker"
 version = "0.4.0-alpha.2"
-source = "git+https://github.com/taeruh/pauli_tracker#4f1ab6a3d98f6f3e4c98bbbc6b2215f5de872b05"
+source = "git+https://github.com/taeruh/pauli_tracker#813da35eaf8fedd74f6895439851f5fafa57e500"
 dependencies = [
  "bit-vec",
  "bitvec",
@@ -360,6 +360,7 @@ name = "results"
 version = "0.1.0"
 dependencies = [
  "bitvec",
+ "clap",
  "mbqc_scheduling",
  "pauli_tracker",
  "rand",
@@ -544,7 +545,7 @@ checksum = "711b9620af191e0cdc7468a8d14e709c3dcdb115b36f838e601583af800a370a"
 [[package]]
 name = "utils"
 version = "0.1.0"
-source = "git+https://github.com/taeruh/pauli_tracker#4f1ab6a3d98f6f3e4c98bbbc6b2215f5de872b05"
+source = "git+https://github.com/taeruh/pauli_tracker#813da35eaf8fedd74f6895439851f5fafa57e500"
 dependencies = [
  "bincode",
  "serde",
