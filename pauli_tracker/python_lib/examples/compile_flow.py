@@ -9,7 +9,7 @@
 # using PythonCall
 # using CondaPkg
 # CondaPkg.add_pip(
-#     "pauli_tracker";
+#     "mbqc_scheduling";
 #     version="@ ./path/to/the/pauli_tracker/whl-file"
 # )
 # ```
@@ -31,10 +31,10 @@
 
 # please have a look at the simple.py example first
 
-from pauli_tracker.frames.map import Frames
-from pauli_tracker import scheduling
-from pauli_tracker.scheduling import SpacialGraph
-from pauli_tracker.pauli import PauliStack, PauliTuple
+from mbqc_scheduling.frames.map import Frames
+from mbqc_scheduling import scheduling
+from mbqc_scheduling.scheduling import SpacialGraph
+from mbqc_scheduling.pauli import PauliStack, PauliTuple
 
 
 def main():
@@ -76,6 +76,8 @@ def main():
     # tracker to capture potential corrections which based on the corrections that are on
     # the output qubits of widget_a
     buffer = buffer_tracker(3)  # 3, since we have 3 output (input) in a (b)
+
+    # stitching with buffer tracking
 
     # now as before:
     tracker, frame_flags, graph, local_clifford_corrections = compile_widget_b(buffer)

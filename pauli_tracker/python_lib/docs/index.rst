@@ -1,11 +1,8 @@
 Welcome to the documentation of mbqc_scheduling
 ===============================================
 
-**This library is a Python wrapper around the** `mbqc_scheduling crate`_ **(Rust
-library).**
-
-**It is an extension of the** `pauli_tracker package`_ ** if you already use the**
-`pauli_tracker package`_, **uninstall it. This package here is a superset of it.**
+**This library extends the** `pauli_tracker package`_ **with a wrapper around the**
+`mbqc_scheduling crate`_.
 
 How to read this documentation
 ------------------------------
@@ -32,7 +29,7 @@ sparsely documented since they are documented in the `pauli_tracker crate docume
    :template: custom_module.rst
    :recursive:
 
-   pauli_tracker
+   mbqc_scheduling
 
 Indices and tables
 ==================

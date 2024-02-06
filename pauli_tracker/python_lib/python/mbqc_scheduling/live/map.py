@@ -5,4 +5,4 @@
 <https://docs.rs/pauli_tracker/latest/pauli_tracker/collection/type.Map.html>`_>
 """
 
-from pauli_tracker._lib.live.map import Live
+from mbqc_scheduling._lib.live.map import Live

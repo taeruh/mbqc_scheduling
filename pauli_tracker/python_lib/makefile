@@ -4,7 +4,7 @@ SHELL := /usr/bin/dash
 
 rust_source := $(shell find rust/src -type f -name "*") \
 							 rust/Cargo.toml rust/Cargo.lock
-python_source := $(shell find python/pauli_tracker -type f -name "*.py" -o -name "*.pyi")
+python_source := $(shell find python/mbqc_scheduling -type f -name "*.py" -o -name "*.pyi")
 source := $(rust_source) $(python_source)
 
 package: dist/.stamp

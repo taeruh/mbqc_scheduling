@@ -39,7 +39,7 @@ type BitVec = bitvec::vec::BitVec<u64, Lsb0>;
 fn _lib(py: Python, module: &PyModule) -> PyResult<()> {
     let module = Module {
         pymodule: module,
-        path: "pauli_tracker._lib".to_string(),
+        path: "mbqc_scheduling._lib".to_string(),
     };
     live::add_module(py, &module)?;
     frames::add_module(py, &module)?;

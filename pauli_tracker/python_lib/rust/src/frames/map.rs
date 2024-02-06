@@ -52,7 +52,7 @@ impl Frames {
 
     #[doc = doc::transform!()]
     ///
-    /// Returns: cf. :obj:`~pauli_tracker.pauli.PauliStack`
+    /// Returns: cf. :obj:`~mbqc_scheduling.pauli.PauliStack`
     ///     dict[int, tuple[list[int], list[int]]]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_dict_recursive(&self) -> HashMap<usize, (Vec<u64>, Vec<u64>)> {

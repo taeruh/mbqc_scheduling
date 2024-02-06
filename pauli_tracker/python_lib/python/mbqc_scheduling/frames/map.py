@@ -5,4 +5,4 @@
 <https://docs.rs/pauli_tracker/latest/pauli_tracker/collection/type.Map.html>`_>
 """
 
-from pauli_tracker._lib.frames.map import Frames
+from mbqc_scheduling._lib.frames.map import Frames

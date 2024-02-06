@@ -3,11 +3,11 @@ requires = ["maturin>=1.4,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "pauli_tracker"
+name = "mbqc_scheduling"
 version = "0.1.0"
 authors = [{name="Jannis Ruh", email="ruh.j81@gmail.com"}]
 
-description = "A library to track Pauli gates through a Clifford circuit."
+description = "A library to calculate measurement patterns for MBQC based on Pauli tracking"
 
 readme = "README.md"
 
@@ -18,11 +18,11 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/taeruh/pauli_tracker"
+Repository = "https://github.com/taeruh/mbqc_scheduling"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "pauli_tracker._lib"
+module-name = "mbqc_scheduling._lib"
 manifest-path = "rust/Cargo.toml"
 python-source = "python"
 

@@ -40,7 +40,7 @@ impl Frames {
 
     #[doc = doc::transform!()]
     ///
-    /// Returns: cf. :obj:`~pauli_tracker.pauli.PauliStack`
+    /// Returns: cf. :obj:`~mbqc_scheduling.pauli.PauliStack`
     ///     list[tuple[list[int], list[int]]]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_array_recursive(&self) -> Vec<(Vec<u64>, Vec<u64>)> {

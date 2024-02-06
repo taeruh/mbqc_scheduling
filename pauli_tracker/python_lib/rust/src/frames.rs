@@ -187,7 +187,7 @@ macro_rules! impl_frames {
             /// If you directly want to turn it into a Python type, use
             /// :func:`get_py_order`, because this avoids cloning the
             /// graph (which would happen when calling
-            /// :func:`~pauli_tracker.frames.PartialOrderGraph.into_py_graph`).
+            /// :func:`~mbqc_scheduling.frames.PartialOrderGraph.into_py_graph`).
             ///
             /// Returns:
             ///     PartialOrderGraph:

@@ -8,7 +8,7 @@ rust-version = "1.65.0" # needed for pauli_vector (1.56 for pyo3)
 
 license = "MIT OR Apache-2.0"
 
-repository = "https://github.com/taeruh/pauli_tracker"
+repository = "https://github.com/taeruh/mbqc_scheduling"
 
 description = "PyO3 wrapper for the pauli_tracker crate."
 keywords = ["quantum", "clifford", "pauli", "mbqc"]

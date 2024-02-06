@@ -82,7 +82,7 @@ impl PauliTuple {
 ///
 /// The Pauli Z and X stacks are bitvectors where each chunk consists of 64 bits. In the
 /// chunk the bits are ordered from least to most significant. You can use
-/// :func:`~pauli_tracker.bitvector_to_boolvector` to convert the bitvector to a list of
+/// :func:`~mbqc_scheduling.bitvector_to_boolvector` to convert the bitvector to a list of
 /// booleans.
 #[derive(Clone)]
 pub struct PauliStack(pub pauli::PauliStack<BitVec>);

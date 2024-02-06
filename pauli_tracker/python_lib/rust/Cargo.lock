@@ -50,9 +50,9 @@ dependencies = [
 
 [[package]]
 name = "anstyle"
-version = "1.0.5"
+version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2faccea4cc4ab4a667ce676a30e8ec13922a692c99bb8f5b11f1502c72e04220"
+checksum = "8901269c6307e8d93993578286ac0edf7f195079ffff5ebdeea6a59ffb7e36bc"
 
 [[package]]
 name = "anstyle-parse"
@@ -273,7 +273,7 @@ dependencies = [
 [[package]]
 name = "mbqc_scheduling"
 version = "0.1.0"
-source = "git+https://github.com/taeruh/mbqc_scheduling#5f2f8650f755483a8f2fd740b99e239601b6a11d"
+source = "git+https://github.com/taeruh/mbqc_scheduling#891a671324d0a1abc66dfe730d56463f7bcbeb77"
 dependencies = [
  "bitvec",
  "clap",

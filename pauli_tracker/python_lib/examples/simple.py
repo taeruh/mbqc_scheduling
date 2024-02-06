@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from pauli_tracker.frames.map import Frames
-from pauli_tracker import scheduling
-from pauli_tracker.scheduling import SpacialGraph
+from mbqc_scheduling.frames.map import Frames
+from mbqc_scheduling import scheduling
+from mbqc_scheduling.scheduling import SpacialGraph
 
 
 def main():

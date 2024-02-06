@@ -1,6 +1,6 @@
 import os
 
-project = "pauli_tracker"
+project = "mbqc_scheduling"
 copyright = "2023, Jannis Ruh"
 author = "Jannis Ruh"
 release = "0.1.0"
