@@ -1,7 +1,7 @@
-use std::time::Duration;
+use std::{mem, time::Duration};
 
 use lib::interface::{self};
-use pauli_tracker_pyo3::{frames::PartialOrderGraph, serde, transform, Module};
+use pauli_tracker_pyo3::{frames::PartialOrderGraph, Module};
 use probabilistic::AcceptFunc;
 use pyo3::{exceptions::PyValueError, types::PyModule, PyAny, PyRef, PyResult, Python};
 
@@ -29,7 +29,7 @@ impl SpacialGraph {
     #[pyo3(text_signature = "(self, graph)")]
     fn __init__(&self, _graph: interface::SpacialGraph) {}
 
-    #[doc = transform!()]
+    #[doc = pauli_tracker_pyo3::transform!()]
     ///
     /// Returns:
     ///     list[list[int]]:
@@ -37,9 +37,17 @@ impl SpacialGraph {
     fn into_py_graph(&self) -> interface::SpacialGraph {
         self.0.clone()
     }
+
+    #[doc = pauli_tracker_pyo3::take_transform!()]
+    ///
+    /// Returns:
+    ///     list[list[int]]:
+    fn take_into_py_graph(&mut self) -> interface::SpacialGraph {
+        mem::take(&mut self.0)
+    }
 }
 
-serde!(SpacialGraph);
+pauli_tracker_pyo3::serde!(SpacialGraph);
 
 #[pyo3::pyclass(subclass)]
 /// Opaque Rust object. The information returned from the scheduling algorithm (`run`)
@@ -69,21 +77,35 @@ impl Paths {
     #[pyo3(text_signature = "(self, paths)")]
     fn __init__(&self, _paths: Vec<Path>) {}
 
-    #[doc = transform!()]
+    #[doc = pauli_tracker_pyo3::transform!()]
     ///
     /// Returns:
     ///    list[Path]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_paths(&self) -> Vec<Path> {
-        self.0
-            .clone()
+        Self::transformation(self.0.clone())
+    }
+
+    #[doc = pauli_tracker_pyo3::take_transform!()]
+    ///
+    /// Returns:
+    ///    list[Path]:
+    #[allow(clippy::wrong_self_convention)]
+    fn take_into_py_paths(&mut self) -> Vec<Path> {
+        Self::transformation(mem::take(&mut self.0))
+    }
+}
+
+impl Paths {
+    fn transformation(paths: Vec<interface::Path>) -> Vec<Path> {
+        paths
             .into_iter()
             .map(|interface::Path { time, space, steps }| Path { time, space, steps })
             .collect()
     }
 }
 
-serde!(Paths);
+pauli_tracker_pyo3::serde!(Paths);
 
 #[pyo3::pyclass(subclass)]
 /// The information describing a valid initalization-measurement path.
@@ -201,6 +223,7 @@ fn run(
             ));
         }
     }
+
 
     let mut _cloned: Vec<Vec<(usize, Vec<usize>)>>;
     let mut _by_ref: PyRef<'_, PartialOrderGraph>;

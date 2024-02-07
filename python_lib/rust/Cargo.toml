@@ -23,10 +23,13 @@ name = "_lib"
 crate-type = ["cdylib"]
 
 [dependencies]
-# lib = { package = "mbqc_scheduling", version = "0.1.0", git = "https://github.com/taeruh/mbqc_scheduling" }
-lib = { package = "mbqc_scheduling", version = "0.1.0", path = "../../mbqc_scheduling" }
-pyo3 = { version = "0.20.0", features = ["multiple-pymethods"] }
-pauli_tracker_pyo3 = { path = "../../../../pauli_tracker/python_lib/rust" }
+lib = { package = "mbqc_scheduling", version = "0.1.0", git = "https://github.com/taeruh/mbqc_scheduling" }
+# lib = { package = "mbqc_scheduling", version = "0.1.0", path = "../../mbqc_scheduling" }
+pyo3 = { version = "0.20.0", default-features = false, features = [
+  "macros",
+  "multiple-pymethods",
+] }
+pauli_tracker_pyo3 = { version = "0.1.0", git = "https://github.com/taeruh/pauli_tracker" }
 rustc-hash = "1.1.0"
 bitvec = "1.0.1"
 serde_json = "1.0.113"

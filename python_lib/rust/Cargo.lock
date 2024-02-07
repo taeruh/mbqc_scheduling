@@ -137,9 +137,9 @@ dependencies = [
 
 [[package]]
 name = "bytemuck"
-version = "1.14.1"
+version = "1.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed2490600f404f2b94c167e31d3ed1d5f3c225a0f3b80230053b3e0b7b962bd9"
+checksum = "ea31d69bda4949c1c1562c1e6f042a1caefac98cdc8a298260a2ff41c1e2d42b"
 
 [[package]]
 name = "cfg-if"
@@ -272,6 +272,7 @@ dependencies = [
 [[package]]
 name = "mbqc_scheduling"
 version = "0.1.0"
+source = "git+https://github.com/taeruh/mbqc_scheduling#459c0975bda51a56b1ea56a68c50ce2880626ecf"
 dependencies = [
  "bincode",
  "bitvec",
@@ -347,7 +348,7 @@ dependencies = [
 [[package]]
 name = "pauli_tracker"
 version = "0.4.0-alpha.2"
-source = "git+https://github.com/taeruh/pauli_tracker#2f4489adcab1384e096f14f0a855e47f16079011"
+source = "git+https://github.com/taeruh/pauli_tracker#8b2ba0d037ecfcaceca28289b6a3a52e57bb64ac"
 dependencies = [
  "bit-vec",
  "bitvec",
@@ -361,6 +362,7 @@ dependencies = [
 [[package]]
 name = "pauli_tracker_pyo3"
 version = "0.1.0"
+source = "git+https://github.com/taeruh/pauli_tracker#8b2ba0d037ecfcaceca28289b6a3a52e57bb64ac"
 dependencies = [
  "bincode",
  "bitvec",

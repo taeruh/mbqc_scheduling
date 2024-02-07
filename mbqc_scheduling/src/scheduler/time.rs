@@ -155,8 +155,6 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
             graph
         };
 
-        println!("{:?}", graph);
-
         fn resolve(bit: usize, rest: &[Vec<(usize, Vec<usize>)>], look: &mut Dependents) {
             let mut dependents = Vec::new();
             for layer in rest {
