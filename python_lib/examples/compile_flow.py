@@ -10,6 +10,10 @@
 # using CondaPkg
 # CondaPkg.add_pip(
 #     "mbqc_scheduling";
+#     version="@ ./path/to/the/mbqc_scheduling/whl-file"
+# )
+# CondaPkg.add_pip(
+#     "pauli_tracker";
 #     version="@ ./path/to/the/pauli_tracker/whl-file"
 # )
 # ```
@@ -31,10 +35,10 @@
 
 # please have a look at the simple.py example first
 
-from mbqc_scheduling.frames.map import Frames
-from mbqc_scheduling import scheduling
-from mbqc_scheduling.scheduling import SpacialGraph
-from mbqc_scheduling.pauli import PauliStack, PauliTuple
+from pauli_tracker.frames.map import Frames
+import mbqc_scheduling
+from mbqc_scheduling import SpacialGraph, PartialOrderGraph
+from pauli_tracker.pauli import PauliStack, PauliTuple
 
 
 def main():
@@ -43,11 +47,11 @@ def main():
     # do ruby_slippers or jabalizer with integrated pauli tracking
     tracker, frame_flags, graph, local_clifford_corrections = compile_widget_a()
     # get the graph that describes the partial (time) order of the measurements
-    time_order = tracker.get_order(frame_flags)
+    time_order = PartialOrderGraph(tracker.get_order(frame_flags).take_into_py_graph())
     # get the time optimal initialization-measurement pattern; at the moment we don't care
     # about space optimality, but when we care, the `run` function also has some other
     # parameters to get that (cf. its docs)
-    path = scheduling.run(SpacialGraph(graph), time_order).into_py_paths()[0]
+    path = mbqc_scheduling.run(SpacialGraph(graph), time_order).into_py_paths()[0]
     # interesting for resource estimation:
     # print(f"time: {path.time}, space: {path.space}, steps: {path.steps}")
 
@@ -81,8 +85,9 @@ def main():
 
     # now as before:
     tracker, frame_flags, graph, local_clifford_corrections = compile_widget_b(buffer)
-    path = scheduling.run(
-        SpacialGraph(graph), tracker.get_order(frame_flags)
+    path = mbqc_scheduling.run(
+        SpacialGraph(graph),
+        PartialOrderGraph(tracker.get_order(frame_flags).take_into_py_graph()),
     ).into_py_paths()[0]
     storage_b = Storage(
         tracker.stacked_transpose(len(graph)),

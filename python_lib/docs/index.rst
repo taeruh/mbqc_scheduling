@@ -1,18 +1,14 @@
 Welcome to the documentation of mbqc_scheduling
 ===============================================
 
-**This library extends the** `pauli_tracker package`_ **with a wrapper around the**
-`mbqc_scheduling crate`_.
+**This is a wrapper around the** `mbqc_scheduling crate`_.
 
 How to read this documentation
 ------------------------------
 
 Since this is just a wrapper the documentation is sometimes very sparse and we mostly
 refer to the documentation of the underlying `mbqc_scheduling crate`_. If something is not
-documented here, it's probably documented there. However, most of the things regarding
-scheduling should be documented here and only the things regarding the Pauli tracker are
-sparsely documented since they are documented in the `pauli_tracker crate documentation`_
-(cf. `this documentation`_).
+documented here, it's probably documented there..
 
 
 .. _mbqc_scheduling crate:

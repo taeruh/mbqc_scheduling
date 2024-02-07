@@ -201,9 +201,11 @@ fn run(
         _by_ref = time_order.extract()?;
         &_by_ref.0
     } else {
+        // a line number would be nice here ...
         eprintln!(
-            r"warning: time_order is not the type `PartialOrderGraph' defined in the
-    mbqc_scheduling package; trying to get the graph via 'into_py_graph' method"
+            r"warning: calling mbqc_scheduling.run with a time_order that is not of the
+    type `PartialOrderGraph' defined in the mbqc_scheduling package; trying to get the
+    graph via 'into_py_graph' method"
         );
         _cloned = time_order.call_method("into_py_graph", (), None)?.extract()?;
         eprintln!(
