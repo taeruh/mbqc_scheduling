@@ -1,7 +1,0 @@
-Package                  Version
------------------------- -------
-maturin                  1.4.0
-pip                      24.0
-setuptools               69.0.3
-sphinx-autodoc-typehints 1.25.3
-sphinx-rtd-theme         2.0.0

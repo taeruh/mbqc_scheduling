@@ -21,6 +21,7 @@ use super::{
     tree::{Focus, FocusIterator, Step, Sweep},
     Partition,
 };
+use crate::interface::RefPartialOrderGraph;
 
 type DepsCounters = HashMap<usize, usize, BuildHasherDefault<FxHasher>>;
 type Dependents = Vec<Vec<usize>>;
@@ -122,7 +123,7 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
     /// Panics if the dependency_buffer has a length smaller than the number of qubits
     /// in the `graph`
     pub fn from_dependency_graph(
-        mut graph: PartialOrderGraph,
+        graph: &RefPartialOrderGraph,
         dependency_buffer: &'l mut DependencyBuffer,
         bit_mapping: Option<&HashMap<usize, usize>>,
     ) -> Self {
@@ -138,8 +139,10 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
 
         // one could/should? do some similar macro stuff as in super::space to get rid
         // of one loop run ...
-        if let Some(bit_mapping) = bit_mapping {
-            for layer in graph.iter_mut() {
+        let mut cloned_graph: PartialOrderGraph;
+        let graph = if let Some(bit_mapping) = bit_mapping {
+            cloned_graph = graph.to_vec();
+            for layer in cloned_graph.iter_mut() {
                 for (bit, deps) in layer {
                     update!(bit; bit_mapping);
                     for dep in deps.iter_mut() {
@@ -147,7 +150,12 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
                     }
                 }
             }
-        }
+            &cloned_graph
+        } else {
+            graph
+        };
+
+        println!("{:?}", graph);
 
         fn resolve(bit: usize, rest: &[Vec<(usize, Vec<usize>)>], look: &mut Dependents) {
             let mut dependents = Vec::new();
@@ -164,20 +172,20 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
         let mut measureable = Vec::new();
         let mut deps = HashMap::default();
 
-        let mut graph_iter = graph.into_iter();
+        let mut graph_iter = graph.iter();
 
         let first = graph_iter.next().unwrap();
         let rest = graph_iter.as_ref();
         for (bit, _) in first {
-            resolve(bit, rest, dependents);
-            measureable.push(bit);
+            resolve(*bit, rest, dependents);
+            measureable.push(*bit);
         }
 
         while let Some(layer) = graph_iter.next() {
             let rest = graph_iter.as_ref();
             for (bit, dependency) in layer {
-                resolve(bit, rest, dependents);
-                deps.insert(bit, dependency.len());
+                resolve(*bit, rest, dependents);
+                deps.insert(*bit, dependency.len());
             }
         }
 
@@ -401,7 +409,7 @@ mod tests {
     fn simple_paths() {
         let mut buffer = DependencyBuffer::new(5);
         let time = PathGenerator::<Partitioner>::from_dependency_graph(
-            example_ordering(),
+            &example_ordering(),
             &mut buffer,
             None,
         );
@@ -429,7 +437,7 @@ mod tests {
 
         for (n, &result) in ORDERED_BELL_NUMBERS.iter().enumerate().skip(1) {
             let time = PathGenerator::<Partitioner>::from_dependency_graph(
-                vec![(0..n).map(|i| (i, vec![])).collect()],
+                &[(0..n).map(|i| (i, vec![])).collect()],
                 &mut buffer,
                 None,
             );
@@ -452,7 +460,7 @@ mod tests {
             panic::catch_unwind(|| {
                 let mut buffer = buffer.clone();
                 let _ = PathGenerator::<Partitioner>::from_dependency_graph(
-                    dependency_graph.clone(),
+                    &dependency_graph.clone(),
                     &mut buffer,
                     None,
                 );
@@ -467,7 +475,7 @@ mod tests {
             .collect::<HashMap<_, _>>();
 
         let mut time = PathGenerator::<Partitioner>::from_dependency_graph(
-            dependency_graph,
+            &dependency_graph,
             &mut buffer,
             Some(&map),
         );

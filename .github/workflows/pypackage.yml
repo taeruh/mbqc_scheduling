@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 defaults:
   run:
-    working-directory: ./pauli_tracker/python_lib
+    working-directory: ./python_lib
 permissions:
   contents: read
   id-token: write
@@ -40,7 +40,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: mbqc_scheduling-manylinux_2_28_x86_64-3.${{ matrix.version }}-wheel
-          path: pauli_tracker/python_lib/target/wheels/*
+          path: python_lib/target/wheels/*
 
   linux-abi-wheel:
     runs-on: ubuntu-latest
@@ -64,7 +64,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: mbqc_scheduling-manylinux_2_28_x86_64-3.8_abi3-wheel
-          path: pauli_tracker/python_lib/target/wheels/*
+          path: python_lib/target/wheels/*
 
   sdist:
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: mbqc_scheduling-source-dist
-          path: pauli_tracker/python_lib/target/wheels/*
+          path: python_lib/target/wheels/*
 
 
   osx-and-windows-wheels:
@@ -110,7 +110,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: mbqc_scheduling-${{ matrix.os }}-3.${{ matrix.python-version }}-wheel
-          path: pauli_tracker/python_lib/target/wheels/*
+          path: python_lib/target/wheels/*
 
   docs:
     runs-on: ubuntu-latest
@@ -132,6 +132,6 @@ jobs:
           make update_docs
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: "pauli_tracker/python_lib/dist/docs"
+          path: "python_lib/dist/docs"
       - name: Deploy to pages
         uses: actions/deploy-pages@v4

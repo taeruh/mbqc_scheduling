@@ -8,7 +8,6 @@ with pauli tracking anymore, except that we take the [DependencyGraph] as input.
 
 use std::{cmp, collections::HashMap, time::Duration};
 
-use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
 use rand::{
     distributions::{Distribution, Uniform},
     SeedableRng,
@@ -16,10 +15,10 @@ use rand::{
 use rand_pcg::Pcg64;
 
 use crate::{
-    interface::Path,
+    interface::{Path, RefPartialOrderGraph},
     probabilistic::{Accept, AcceptBox},
     scheduler::{
-        space::{Graph, GraphBuffer},
+        space::Graph,
         time::{DependencyBuffer, Partitioner, PathGenerator},
         tree::{Focus, FocusIterator, Step, Sweep},
         Partition, Scheduler,
@@ -29,17 +28,19 @@ use crate::{
 
 mod threaded;
 pub type SpacialGraph = Vec<Vec<usize>>;
+pub type RefSpacialGraph = [Vec<usize>];
 
 pub fn get_time_optimal(
-    spacial_graph: SpacialGraph,
-    time_ordering: PartialOrderGraph,
+    spacial_graph: &RefSpacialGraph,
+    time_ordering: &RefPartialOrderGraph,
 ) -> Vec<Path> {
     let mut dependency_buffer = DependencyBuffer::new(spacial_graph.len());
-    let graph_buffer = GraphBuffer::from_sparse(spacial_graph);
+    // let graph_buffer = GraphBuffer::from_sparse(spacial_graph);
+    let graph_buffer = spacial_graph;
 
     let mut scheduler = Scheduler::<Vec<usize>>::new(
         PathGenerator::from_dependency_graph(time_ordering, &mut dependency_buffer, None),
-        Graph::new(&graph_buffer),
+        Graph::new(graph_buffer),
     );
 
     let mut path = Vec::new();
@@ -65,8 +66,8 @@ type OnePath = Vec<Vec<usize>>;
 type MappedPaths = HashMap<usize, (usize, Vec<Vec<usize>>)>;
 
 pub fn search(
-    spacial_graph: SpacialGraph,
-    time_ordering: PartialOrderGraph,
+    spacial_graph: &RefSpacialGraph,
+    time_ordering: &RefPartialOrderGraph,
     timeout: Option<Duration>,
     nthreads: u16,
     probabilistic: Option<(AcceptBox, Option<u64>)>,
@@ -74,10 +75,11 @@ pub fn search(
 ) -> Vec<Path> {
     let num_bits = spacial_graph.len();
     let mut dependency_buffer = DependencyBuffer::new(num_bits);
-    let graph_buffer = GraphBuffer::from_sparse(spacial_graph);
+    // let graph_buffer = GraphBuffer::from_sparse(spacial_graph);
+    let graph_buffer = spacial_graph;
     let scheduler = Scheduler::<Partitioner>::new(
         PathGenerator::from_dependency_graph(time_ordering, &mut dependency_buffer, None),
-        Graph::new(&graph_buffer),
+        Graph::new(graph_buffer),
     );
 
     let mut timer = Timer::new();

@@ -101,9 +101,9 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
 
     let mut buffer = DependencyBuffer::new(num_nodes);
     let path_generator =
-        PathGenerator::from_dependency_graph(dependency_graph, &mut buffer, None);
+        PathGenerator::from_dependency_graph(&dependency_graph, &mut buffer, None);
     let graph_buffer = GraphBuffer::new(&edges, num_nodes, None, true);
-    let graph = Graph::new(&graph_buffer);
+    let graph = Graph::new(graph_buffer.as_buffer());
     #[allow(clippy::redundant_clone)]
     let _graph = graph.clone();
 

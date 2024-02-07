@@ -1,10 +1,13 @@
-use std::{path, time::Duration};
+use std::{error, fmt, fs, fs::File, io, path, time::Duration};
 
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 pub use crate::search::SpacialGraph;
-use crate::{probabilistic::AcceptFunc, search};
+use crate::{
+    probabilistic::AcceptFunc,
+    search::{self, RefSpacialGraph},
+};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Path {
@@ -12,6 +15,8 @@ pub struct Path {
     pub space: usize,
     pub steps: Vec<Vec<usize>>,
 }
+
+pub type RefPartialOrderGraph = [Vec<(usize, Vec<usize>)>];
 
 /// Searching for optimal initialization-measurement paths.
 ///
@@ -51,8 +56,9 @@ pub struct Path {
 /// other, and depending on that they adjust the search; this communication is not
 /// deterministic (on this level here) since it depends on how the threads are scheduled).
 pub fn run(
-    spacial_graph: SpacialGraph,
-    time_ordering: PartialOrderGraph,
+    spacial_graph: &RefSpacialGraph,
+    // time_ordering: PartialOrderGraph,
+    time_ordering: &RefPartialOrderGraph,
     do_search: bool,
     timeout: Option<Duration>,
     nthreads: u16,
@@ -73,6 +79,8 @@ pub fn run(
     }
 }
 
+type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
+
 /// Same as [run], but with file paths to the input and output data.
 #[allow(clippy::too_many_arguments)]
 pub fn run_serialized(
@@ -84,21 +92,16 @@ pub fn run_serialized(
     task_bound: Option<u32>,
     probablistic: Option<AcceptFunc>,
     paths: (impl AsRef<path::Path>, &str),
-) -> Result<(), Box<dyn std::error::Error>> {
-    // let spacial_graph = Dynamic::try_from(spacial_graph.1)?.read_file(spacial_graph.0)?;
-    let spacial_graph =
-        utils::serialization::deserialize_from_file(spacial_graph.0, spacial_graph.1)?;
-    // let dependency_graph =
-    //     Dynamic::try_from(dependency_graph.1)?.read_file(dependency_graph.0)?;
-    let dependency_graph = utils::serialization::deserialize_from_file(
-        dependency_graph.0,
-        dependency_graph.1,
-    )?;
-    utils::serialization::serialize_to_file(
+) -> Result<()> {
+    let spacial_graph: SpacialGraph =
+        deserialize_from_file(spacial_graph.0, spacial_graph.1)?;
+    let dependency_graph: PartialOrderGraph =
+        deserialize_from_file(dependency_graph.0, dependency_graph.1)?;
+    serialize_to_file(
         paths.0,
         &run(
-            spacial_graph,
-            dependency_graph,
+            &spacial_graph,
+            &dependency_graph,
             do_search,
             timeout,
             nthreads,
@@ -107,4 +110,50 @@ pub fn run_serialized(
         ),
         paths.1,
     )
+}
+
+fn open(path: impl AsRef<path::Path>) -> io::Result<File> {
+    File::open(path)
+}
+
+fn create(path: impl AsRef<path::Path>) -> io::Result<File> {
+    if let Some(parent) = path.as_ref().parent() {
+        fs::create_dir_all(parent)?;
+    }
+    File::create(path)
+}
+
+#[derive(Debug)]
+struct UnknownFormat(String);
+
+impl fmt::Display for UnknownFormat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "unknown format: {}", self.0)
+    }
+}
+
+impl error::Error for UnknownFormat {}
+
+fn serialize_to_file<T: Serialize, P: AsRef<path::Path>>(
+    path: P,
+    value: &T,
+    format: &str,
+) -> Result<()> {
+    match format {
+        "serde_json" => serde_json::to_writer(create(path)?, value)?,
+        "bincode" => bincode::serialize_into(create(path)?, value)?,
+        _ => return Err(UnknownFormat(format.to_owned()).into()),
+    };
+    Ok(())
+}
+
+fn deserialize_from_file<T: DeserializeOwned, P: AsRef<path::Path>>(
+    path: P,
+    format: &str,
+) -> Result<T> {
+    Ok(match format {
+        "serde_json" => serde_json::from_reader(open(path)?)?,
+        "bincode" => bincode::deserialize_from(open(path)?)?,
+        _ => return Err(UnknownFormat(format.to_owned()).into()),
+    })
 }
