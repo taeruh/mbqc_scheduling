@@ -42,7 +42,7 @@ commands is in the `dist` directory.
 
 ## Versioning
 
-The Python package follows SemVer, however, the underlying Rust crate is unstable.
+The Python package follows [SemVer], however, the underlying Rust crate is unstable.
 
 [examples/simple.py]: https://github.com/taeruh/mbqc_scheduling/blob/main/pauli_tracker/python_lib/examples/simple.py
 [examples/compile_flow.py]: https://github.com/taeruh/mbqc_scheduling/blob/main/pauli_tracker/python_lib/examples/compile_flow.py
@@ -51,5 +51,6 @@ The Python package follows SemVer, however, the underlying Rust crate is unstabl
 [mbqc_scheduling crate]: https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling
 [pauli_tracker crate's documentation]: https://docs.rs/pauli_tracker/latest/pauli_tracker/
 [Pauli tracker package]: https://github.com/taeruh/pauli_tracker/tree/main/python_lib#readme
+[SemVer]: https://semver.org/
 [To the docs]: https://taeruh.github.io/mbqc_scheduling/
 [#1444]: https://github.com/PyO3/pyo3/issues/1444

@@ -7,7 +7,7 @@ name = "mbqc_scheduling"
 version = "0.1.2"
 authors = [{name="Jannis Ruh", email="ruh.j81@gmail.com"}]
 
-description = "A library to calculate measurement patterns for MBQC based on Pauli tracking"
+description = "Qubit scheduling in Measurement-Based Quantum Computing (MBQC)."
 
 readme = "README.md"
 

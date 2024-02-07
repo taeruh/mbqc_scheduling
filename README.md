@@ -1,11 +1,14 @@
 # MBQC Scheduling
 
+Qubit scheduling in Measurement-Based Quantum Computing (MBQC).
+
 In this project we tackle the task of finding optimal initialization-measurement patterns
-for MBQC, on an abstract level. The problem is the following: We have a *spacial graph*
-that represents where the nodes represent qubits and the edges represent entanglement. The
-nodes can be in three states: *uninitialized*, *initialized* and *measured*. The goal is
-to consume the whole graph, i.e., to put all nodes into the *measured* states. However,
-there are certain rules that have to be followed:
+for MBQC, on an abstract level (not caring about the hardware and error correction). The
+problem is the following: We have a *spacial graph* that represents where the nodes
+represent qubits and the edges represent entanglement. The nodes can be in three states:
+*uninitialized*, *initialized* and *measured*. The goal is to consume the whole graph,
+i.e., to put all nodes into the *measured* states. However, there are certain rules that
+have to be followed:
 1. A node can only be measured if it is initialized.
 2. A node can only be measured if all its neighbors are initialized.
 3. Additionally to the graph, we have a *partial time ordering* with respect to measuring
@@ -36,9 +39,9 @@ of nodes in the graph.
 The wording of the implementation is oriented at MBQC and Pauli tracking - the latter
 defines the partial time ordering - since this is the application we had in mind. In the
 [mbqc_scheduling crate] is the implementation as a Rust library (however without any
-guarantees regarding API stability). You probably want to use it through this [Python
-package], which is an extension of the [Pauli tracker package] including an interface to
-the [mbqc_scheduling crate].
+guarantees regarding API stability (if there are enough users of the Rust API, I might
+consider stabilizing it; it also has a CLI). You probably want to use it through this
+[Python package] (probably in connection with the [Pauli tracker package]).
 
 [mbqc_scheduling crate]: https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling
 [Python package]: https://github.com/taeruh/mbqc_scheduling/tree/main/pauli_tracker/python_lib#readme
@@ -46,5 +49,5 @@ the [mbqc_scheduling crate].
 
 ## License
 
-MBQC Scheduling is distributed under the terms of both the MIT license and the
+The MBQC Scheduling project is distributed under the terms of both the MIT license and the
 Apache License (Version 2.0).
