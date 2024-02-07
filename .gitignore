@@ -3,7 +3,7 @@ target
 dist
 .venv*
 __pycache__
-pauli_tracker/python_lib/python/**/*.so
+python_lib/python/**/*.so
 _build
 _autosummary
 !docs/_autosummary

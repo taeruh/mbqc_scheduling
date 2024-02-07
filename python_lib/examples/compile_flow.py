@@ -47,7 +47,7 @@ def main():
     # do ruby_slippers or jabalizer with integrated pauli tracking
     tracker, frame_flags, graph, local_clifford_corrections = compile_widget_a()
     # get the graph that describes the partial (time) order of the measurements
-    time_order = PartialOrderGraph(tracker.get_order(frame_flags).take_into_py_graph())
+    time_order = PartialOrderGraph(tracker.get_py_order(frame_flags))
     # get the time optimal initialization-measurement pattern; at the moment we don't care
     # about space optimality, but when we care, the `run` function also has some other
     # parameters to get that (cf. its docs)
@@ -87,7 +87,7 @@ def main():
     tracker, frame_flags, graph, local_clifford_corrections = compile_widget_b(buffer)
     path = mbqc_scheduling.run(
         SpacialGraph(graph),
-        PartialOrderGraph(tracker.get_order(frame_flags).take_into_py_graph()),
+        PartialOrderGraph(tracker.get_py_order(frame_flags)),
     ).into_py_paths()[0]
     storage_b = Storage(
         tracker.stacked_transpose(len(graph)),

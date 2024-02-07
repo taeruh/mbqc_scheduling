@@ -3,6 +3,9 @@ Welcome to the documentation of mbqc_scheduling
 
 **This is a wrapper around the** `mbqc_scheduling crate`_.
 
+This package is usually used to further analyze Pauli tracking results, provided with the
+`pauli_tracker`_ package, in the context of Measurement Based Quantum Computing (MBQC).
+
 How to read this documentation
 ------------------------------
 
@@ -13,12 +16,8 @@ documented here, it's probably documented there..
 
 .. _mbqc_scheduling crate:
    https://github.com/taeruh/mbqc_scheduling/blob/main/mbqc_scheduling
-.. _pauli_tracker package:
+.. _pauli_tracker:
    https://github.com/taeruh/pauli_tracker/tree/main/python_lib#readme
-.. _pauli_tracker crate documentation:
-   https://docs.rs/pauli_tracker/latest/pauli_tracker
-.. _this documentation:
-   https://taeruh.github.io/pauli_tracker/
 
 .. autosummary::
    :toctree: _autosummary

@@ -125,7 +125,9 @@ impl Path {
 ///
 /// Args:
 ///     spacial_graph (SpacialGraph): The spacial graph.
-///     time_order (PartialOrderGraph): The dependency graph on the measurements.
+///     time_order (PartialOrderGraph): The dependency graph on the measurements. This is
+///         usually calculated from a Pauli `Frames`_ via the `get(_py)_order`; cf. the
+///         `pauli_tracker`_ package.
 ///     do_search (bool): Whether to search for all best paths or just take the first
 ///         one, which is the time optimal path. Searching for all best paths may take
 ///         some time ...
@@ -161,6 +163,11 @@ impl Path {
 /// Returns:
 ///     Paths: A list of the optimal paths. Turn it into the corresponding Python object
 ///     via :meth:`Paths.into_py_paths`.
+///
+/// .. _Frames:
+///    https://taeruh.github.io/pauli_tracker/_autosummary/pauli_tracker.frames.html#module-pauli_tracker.frames
+/// .. _pauli_tracker:
+///    https://github.com/taeruh/pauli_tracker/tree/main/python_lib#readme
 #[pyo3::pyfunction]
 #[pyo3(signature = (
     spacial_graph,
@@ -212,7 +219,8 @@ fn run(
             "    -> 'into_py_graph' succeeded, however, consider wrapping time_order
     into the correct type (to reduce potentially redundant cloning), e.g., if the object
     comes from the pauli_tracker package, replace `time_order` with
-    `PartialOrderGraph(time_order.take_into_py_graphs())`"
+    `PartialOrderGraph(time_order.(take_)into_py_graphs())` - in that case consider
+    creating the time_order with `get_py_order` instead of `get_order`"
         );
         &_cloned
     };
