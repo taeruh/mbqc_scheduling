@@ -1,5 +1,6 @@
 output
 target
+Cargo.lock
 dist
 .venv*
 __pycache__
