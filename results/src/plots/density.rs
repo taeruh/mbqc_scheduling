@@ -71,7 +71,7 @@ pub fn run(args: Args) {
         let correction_density = density(correction_density_multiplier as f64);
         let timeout = timeouts[size];
         let total_time = Instant::now();
-        let (result, _, approx_time, _) = super::do_it(
+        let (result, times) = super::do_it(
             size,
             edge_density,
             correction_density,
@@ -83,7 +83,7 @@ pub fn run(args: Args) {
             "density={:<3}: total time: {:?}; per shot: {:?} from {:?}",
             correction_density.get(size),
             total_time.elapsed(),
-            approx_time,
+            times.space_optimal_approximated,
             timeout
         );
         for (i, result) in result.iter().enumerate() {

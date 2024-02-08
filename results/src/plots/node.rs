@@ -9,7 +9,8 @@ use rand_pcg::Pcg64;
 use serde::Serialize;
 
 use crate::{
-    plots::DensityEnum, NCPUS, NUM_AVERAGE, TIMEOUT_PER_SINGLE_SHOT_SWEEP, WALLTIME,
+    plots::{DensityEnum, Times},
+    NCPUS, NUM_AVERAGE, TIMEOUT_PER_SINGLE_SHOT_SWEEP, WALLTIME,
 };
 
 // depending on the walltime we timeout; do a test run for the first view sizes and ensure
@@ -18,8 +19,8 @@ use crate::{
 // occur); important: I'm not sure why, but on our cluster each size may take up to 2.5ms
 // longer
 
-const MAX_SIZE: usize = 2;
-const MAX_EXACT_SIZE: usize = 1;
+const MAX_SIZE: usize = 3;
+const MAX_EXACT_SIZE: usize = 2;
 // account for exact search; rough (pessimistic; better be safe than sorry) guess here;
 // depends on densities; for p_e = 0.5, p_c = 0.5, both reziprocal_square_root
 const TIMEOUT_PER_SINGLE_SHOT_EXACT_SWEEP: u64 = 3_000_000_000;
@@ -75,6 +76,7 @@ pub fn run(args: Args) {
 
     let mut rng = Pcg64::seed_from_u64(seed);
     let mut results: [Vec<f64>; 16] = Default::default();
+    let mut time_results: Vec<Times> = Vec::with_capacity(MAX_SIZE);
 
     let timeouts = timeouts();
 
@@ -88,7 +90,7 @@ pub fn run(args: Args) {
     for size in RANGE {
         let timeout = timeouts[size];
         let total_time = Instant::now();
-        let (result, _, approx_time, full_time) = super::do_it(
+        let (result, times) = super::do_it(
             size,
             edge_density,
             correction_density,
@@ -100,15 +102,16 @@ pub fn run(args: Args) {
             "size={size:<3}: total time: {:?}; per shot: {:?} from {:?};; full time: \
              {:?}",
             total_time.elapsed(),
-            approx_time,
+            times.space_optimal_approximated,
             timeout,
-            full_time
+            times.full
         );
         // results.push((size, result));
         for (i, result) in result.iter().enumerate() {
             results[2 * i].push(result.0);
             results[2 * i + 1].push(result.1);
         }
+        time_results.push(times);
     }
 
     let output = Output {
@@ -120,6 +123,7 @@ pub fn run(args: Args) {
         correction_density,
         seed,
         results,
+        time_results,
     };
 
     fs::create_dir_all("output").unwrap();
@@ -138,4 +142,5 @@ struct Output {
     correction_density: DensityEnum,
     seed: u64,
     results: [Vec<f64>; 16],
+    time_results: Vec<Times>,
 }

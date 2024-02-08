@@ -30,7 +30,7 @@ fn do_it(
     timeout: Duration,
     rng: &mut impl Rng,
     get_full: bool,
-) -> (Vec<(f64, f64)>, Duration, Duration, Option<Duration>) {
+) -> (Vec<(f64, f64)>, Times) {
     let num_res = if get_full { 8 } else { 4 };
     let mut results = vec![Vec::with_capacity(NUM_AVERAGE); num_res];
     let mut means = vec![0.0; num_res];
@@ -109,24 +109,37 @@ fn do_it(
 
     (
         ret,
-        Duration::from_nanos(
-            (time_optimal_time.as_nanos() / NUM_AVERAGE as u128)
-                .try_into()
-                .unwrap(),
+        Times::from_total(
+            time_optimal_time,
+            space_optimal_approximated_time,
+            if get_full { Some(full_time) } else { None },
         ),
-        Duration::from_nanos(
-            (space_optimal_approximated_time.as_nanos() / NUM_AVERAGE as u128)
-                .try_into()
-                .unwrap(),
-        ),
-        if get_full {
-            Some(Duration::from_nanos(
-                (full_time.as_nanos() / NUM_AVERAGE as u128).try_into().unwrap(),
-            ))
-        } else {
-            None
-        },
     )
+}
+
+#[derive(Serialize)]
+struct Times {
+    time_optimal: Duration,
+    space_optimal_approximated: Duration,
+    full: Option<Duration>,
+}
+
+impl Times {
+    fn from_total(
+        time_optimal: Duration,
+        space_optimal_approximated: Duration,
+        full: Option<Duration>,
+    ) -> Self {
+        Self {
+            time_optimal: Times::average(time_optimal),
+            space_optimal_approximated: Times::average(space_optimal_approximated),
+            full: full.map(Times::average),
+        }
+    }
+
+    fn average(time: Duration) -> Duration {
+        Duration::from_nanos((time.as_nanos() / NUM_AVERAGE as u128).try_into().unwrap())
+    }
 }
 
 trait Density: Copy {
