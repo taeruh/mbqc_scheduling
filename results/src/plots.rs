@@ -29,37 +29,59 @@ fn do_it(
     correction_density: impl Density,
     timeout: Duration,
     rng: &mut impl Rng,
-) -> ([(f64, f64); 4], Duration) {
-    let mut results = vec![Vec::with_capacity(NUM_AVERAGE); 4];
-    let mut means = [0.0; 4];
+    get_full: bool,
+) -> (Vec<(f64, f64)>, Duration, Duration, Option<Duration>) {
+    let num_res = if get_full { 8 } else { 4 };
+    let mut results = vec![Vec::with_capacity(NUM_AVERAGE); num_res];
+    let mut means = vec![0.0; num_res];
 
-    let mut averaged_time = Duration::default();
+    let mut time_optimal_time = Duration::default();
+    let mut full_time = Duration::default();
+    let mut space_optimal_approximated_time = Duration::default();
     for _ in 0..NUM_AVERAGE {
         let graph = get_graph(edge_density, size, rng);
         let order = get_order(correction_density, size, rng);
 
-        let time_optimal =
-            interface::run(graph.clone(), order.clone(), false, None, 1, None, None);
-        let time = Instant::now();
+        let mut time = Instant::now();
+        let time_optimal = interface::run(&graph, &order, false, None, 1, None, None);
+        time_optimal_time += time.elapsed();
+        time = Instant::now();
         let space_optimal_approx = interface::run(
-            graph,
-            order,
+            &graph,
+            &order,
             true,
             Some(timeout),
             NCPUS,
             None,
             Some((AcceptFunc::BuiltinHeavyside, Some(rng.gen()))),
         );
-        averaged_time += time.elapsed();
+        space_optimal_approximated_time += time.elapsed();
+        let full = if get_full {
+            time = Instant::now();
+            let full = interface::run(&graph, &order, true, None, NCPUS, None, None);
+            full_time += time.elapsed();
+            Some(full)
+        } else {
+            None
+        };
 
+        let time_optimal = time_optimal.first().unwrap();
+        results[0].push(time_optimal.time);
+        results[1].push(time_optimal.space);
         // if the accept function was to aggressive we may not have a path at all
-        if let Some(time_optimal) = time_optimal.first() {
-            results[0].push(time_optimal.time);
-            results[1].push(time_optimal.space);
-        }
         if let Some(space_optimal_approx) = space_optimal_approx.last() {
             results[2].push(space_optimal_approx.time);
             results[3].push(space_optimal_approx.space);
+        }
+        if let Some(full) = full {
+            if let Some(time_optimal) = full.first() {
+                results[4].push(time_optimal.time);
+                results[5].push(time_optimal.space);
+            }
+            if let Some(space_optimal) = full.last() {
+                results[6].push(space_optimal.time);
+                results[7].push(space_optimal.space);
+            }
         }
 
         for (result, mean) in results.iter_mut().zip(means.iter_mut()) {
@@ -67,13 +89,14 @@ fn do_it(
         }
     }
 
-    let mut ret = [Default::default(); 4];
+    let mut ret = vec![Default::default(); num_res];
     for (i, (result, mut mean)) in results.into_iter().zip(means.into_iter()).enumerate()
     {
         let actual_num_average = result.len();
         if actual_num_average as f64 / (NUM_AVERAGE as f64) < 0.9 {
             println!(
-                "Warning: less 90% results for size {}; only {} results instead of {}",
+                "Warning: less 90% results for size {}, search {i}; only {} results \
+                 instead of {}",
                 size, actual_num_average, NUM_AVERAGE
             );
         }
@@ -87,8 +110,22 @@ fn do_it(
     (
         ret,
         Duration::from_nanos(
-            (averaged_time.as_nanos() / NUM_AVERAGE as u128).try_into().unwrap(),
+            (time_optimal_time.as_nanos() / NUM_AVERAGE as u128)
+                .try_into()
+                .unwrap(),
         ),
+        Duration::from_nanos(
+            (space_optimal_approximated_time.as_nanos() / NUM_AVERAGE as u128)
+                .try_into()
+                .unwrap(),
+        ),
+        if get_full {
+            Some(Duration::from_nanos(
+                (full_time.as_nanos() / NUM_AVERAGE as u128).try_into().unwrap(),
+            ))
+        } else {
+            None
+        },
     )
 }
 
@@ -119,6 +156,7 @@ macro_rules! density_types {
 density_types!(
     (ConstantDensity, "constant"),
     (ReziprocalLinearDensity, "reziprocal_linear"),
+    (ReziprocalSquareRootDensity, "reziprocal_square_root"),
 );
 
 impl Density for ConstantDensity {
@@ -129,6 +167,44 @@ impl Density for ConstantDensity {
 impl Density for ReziprocalLinearDensity {
     fn get(&self, size: usize) -> f64 {
         self.factor / (size as f64)
+    }
+}
+impl Density for ReziprocalSquareRootDensity {
+    fn get(&self, size: usize) -> f64 {
+        self.factor / (size as f64).sqrt()
+    }
+}
+
+#[derive(Copy, Clone, Debug, Serialize)]
+#[serde(untagged)]
+enum DensityEnum {
+    Constant(ConstantDensity),
+    ReziprocalLinear(ReziprocalLinearDensity),
+    ReziprocalSquareRoot(ReziprocalSquareRootDensity),
+}
+
+impl DensityEnum {
+    fn new(density_type: &str, factor: f64) -> Self {
+        match density_type {
+            "constant" => Self::Constant(ConstantDensity::new(factor)),
+            "reziprocal_linear" => {
+                Self::ReziprocalLinear(ReziprocalLinearDensity::new(factor))
+            },
+            "reziprocal_square_root" => {
+                Self::ReziprocalSquareRoot(ReziprocalSquareRootDensity::new(factor))
+            },
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl Density for DensityEnum {
+    fn get(&self, size: usize) -> f64 {
+        match self {
+            Self::Constant(density) => density.get(size),
+            Self::ReziprocalLinear(density) => density.get(size),
+            Self::ReziprocalSquareRoot(density) => density.get(size),
+        }
     }
 }
 
