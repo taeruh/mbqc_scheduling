@@ -248,6 +248,7 @@ fn do_probabilistic_search(
             break;
         }
         if timer.finished() {
+            tracing::info!("timer: timeout");
             break;
         }
     }

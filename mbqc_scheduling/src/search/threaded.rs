@@ -150,6 +150,7 @@ fn update(
     timer: &Timer,
 ) -> bool {
     if *update_counter == 1000 {
+    // if *update_counter == 10 {
         best_memory
             .lock()
             .expect("failed to lock best_memory")

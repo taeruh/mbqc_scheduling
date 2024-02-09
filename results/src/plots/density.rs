@@ -8,16 +8,17 @@ use rand::{Rng, SeedableRng};
 use rand_pcg::Pcg64;
 use serde::Serialize;
 
-use super::ConstantDensity;
-use crate::{
-    plots::Density, NCPUS, NUM_AVERAGE, TIMEOUT_PER_SINGLE_SHOT_SWEEP, WALLTIME,
-};
+use super::{ConstantDensity, Times};
+use crate::{plots::Density, NCPUS, NUM_AVERAGE};
 
 // depending on the walltime we timeout; do a test run for the first view sizes and ensure
 // that there's enough time such that the first few sizes definitely find at least one
 // path (run with cargo run --release --no-default-features to see whether timeouts
 // occur); important: I'm not sure why, but on our cluster each size may take up to 2.5ms
 // longer
+
+const WALLTIME: u64 = 60; // cf. walltime in scripts/exe_hpc.bash
+const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 = crate::timeout_per_single_shot_sweep(WALLTIME);
 
 const NUM_DENSITIES: usize = 10;
 const RANGE: Range<usize> = 1..NUM_DENSITIES + 1;
@@ -49,14 +50,17 @@ pub fn run(args: Args) {
     let edge_density_multiplier = args.edge_density_multiplier;
     let edge_density = density(edge_density_multiplier);
 
-    let output_file =
-        format!("output/density-size:{size}_density:{edge_density_multiplier}.json",);
+    let output_file = format!(
+        "output/density-numnodes:{}_numdensities:{}_density:{}.json",
+        size, NUM_DENSITIES, edge_density_multiplier
+    );
 
-    // cf node plot
+    // cf. node plot
     let seed = Pcg64::from_entropy().gen();
 
     let mut rng = Pcg64::seed_from_u64(seed);
     let mut results: [Vec<f64>; 8] = Default::default();
+    let mut time_results = Vec::with_capacity(NUM_DENSITIES);
 
     let timeouts = timeouts();
 
@@ -69,7 +73,7 @@ pub fn run(args: Args) {
 
     for correction_density_multiplier in RANGE {
         let correction_density = density(correction_density_multiplier as f64);
-        let timeout = timeouts[size];
+        let timeout = timeouts[correction_density_multiplier];
         let total_time = Instant::now();
         let (result, times) = super::do_it(
             size,
@@ -90,6 +94,7 @@ pub fn run(args: Args) {
             results[2 * i].push(result.0);
             results[2 * i + 1].push(result.1);
         }
+        time_results.push(times);
     }
 
     let output = Output {
@@ -101,6 +106,7 @@ pub fn run(args: Args) {
         num_density: NUM_DENSITIES,
         seed,
         results,
+        time_results,
     };
 
     fs::create_dir_all("output").unwrap();
@@ -119,4 +125,5 @@ struct Output {
     num_density: usize,
     seed: u64,
     results: [Vec<f64>; 8],
+    time_results: Vec<Times>,
 }

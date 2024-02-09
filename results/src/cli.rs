@@ -27,8 +27,8 @@ fn build() -> Command {
         .subcommand(
             Command::new("node")
                 .arg(edge_density.clone())
-                .arg(edge_density_type.clone())
                 .arg(correction_density.clone())
+                .arg(edge_density_type.clone())
                 .arg(correction_density_type.clone()),
         )
         .subcommand(Command::new("density").arg(num_nodes).arg(edge_density))

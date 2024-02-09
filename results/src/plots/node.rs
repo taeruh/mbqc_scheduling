@@ -10,36 +10,43 @@ use serde::Serialize;
 
 use crate::{
     plots::{DensityEnum, Times},
-    NCPUS, NUM_AVERAGE, TIMEOUT_PER_SINGLE_SHOT_SWEEP, WALLTIME,
+    NCPUS, NUM_AVERAGE,
 };
 
 // depending on the walltime we timeout; do a test run for the first view sizes and ensure
 // that there's enough time such that the first few sizes definitely find at least one
 // path (run with cargo run --release --no-default-features to see whether timeouts
-// occur); important: I'm not sure why, but on our cluster each size may take up to 2.5ms
+// occur); important: I'm not sure why, but on our cluster each size may take up to 5ms
 // longer
 
-const MAX_SIZE: usize = 3;
-const MAX_EXACT_SIZE: usize = 2;
-// account for exact search; rough (pessimistic; better be safe than sorry) guess here;
-// depends on densities; for p_e = 0.5, p_c = 0.5, both reziprocal_square_root
-const TIMEOUT_PER_SINGLE_SHOT_EXACT_SWEEP: u64 = 3_000_000_000;
+const WALLTIME: u64 = 120; // cf. walltime in scripts/exe_hpc.bash
+const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 = crate::timeout_per_single_shot_sweep(WALLTIME);
 
-const RANGE: Range<usize> = 1..MAX_SIZE + 1;
+const MAX_SIZE: usize = 50;
+const MAX_EXACT_SIZE: usize = 20;
+
+
+// account for additional exact search; rough (pessimistic; better be safe than sorry)
+// guess here; depends on densities; for p_e = 0.5, p_c = 0.5, both reziprocal_square_root
+const TIMEOUT_PER_SINGLE_SHOT_EXACT_SWEEP: u64 = 5_000_000_000;
+
+const RANGE: Range<usize> = 2..MAX_SIZE + 1;
+const RANGE_LEN: usize = MAX_SIZE - 1;
 const REAL_TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 =
     TIMEOUT_PER_SINGLE_SHOT_SWEEP - TIMEOUT_PER_SINGLE_SHOT_EXACT_SWEEP;
 
 // increase time quadratically (because that's how the everything else scales, more or
 // less) with size:
-// sum_1^{n} a * x^2 = TIMEOUT_PER_SINGLE_SHOT_SWEEP
-// <=> a = TIMEOUT_PER_SINGLE_SHOT_SWEEP / (1/6 n(n+1)(2n+1))
+// sum_2^{n} a * x^2 = TIMEOUT_PER_SINGLE_SHOT_SWEEP
+// <=> a = TIMEOUT_PER_SINGLE_SHOT_SWEEP / (1/6 n(n+1)(2n+1) - 1)
 fn timeouts() -> [Duration; MAX_SIZE + 1] {
     let mut ret = [Duration::default(); MAX_SIZE + 1];
     let a = REAL_TIMEOUT_PER_SINGLE_SHOT_SWEEP as f64
-        / (1. / 6. * (MAX_SIZE * (MAX_SIZE + 1) * (2 * MAX_SIZE + 1)) as f64);
+        / (1. / 6. * (MAX_SIZE * (MAX_SIZE + 1) * (2 * MAX_SIZE + 1)) as f64 - 1.);
     for size in RANGE {
         ret[size] = Duration::from_nanos(
-            ((a * (size as f64).powi(2)).round() as u64).saturating_sub(2_500_000),
+            ((a * (size as f64).powi(2)).round() as u64).saturating_sub(5_000_000),
+            // 100_000_000,
         )
     }
     ret
@@ -76,7 +83,7 @@ pub fn run(args: Args) {
 
     let mut rng = Pcg64::seed_from_u64(seed);
     let mut results: [Vec<f64>; 16] = Default::default();
-    let mut time_results: Vec<Times> = Vec::with_capacity(MAX_SIZE);
+    let mut time_results: Vec<Times> = Vec::with_capacity(RANGE_LEN);
 
     let timeouts = timeouts();
 

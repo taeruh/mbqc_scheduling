@@ -68,24 +68,28 @@ fn do_it(
         let time_optimal = time_optimal.first().unwrap();
         results[0].push(time_optimal.time);
         results[1].push(time_optimal.space);
+        means[0] += time_optimal.time as f64;
+        means[1] += time_optimal.space as f64;
         // if the accept function was to aggressive we may not have a path at all
         if let Some(space_optimal_approx) = space_optimal_approx.last() {
             results[2].push(space_optimal_approx.time);
             results[3].push(space_optimal_approx.space);
+            means[2] += space_optimal_approx.time as f64;
+            means[3] += space_optimal_approx.space as f64;
         }
         if let Some(full) = full {
             if let Some(time_optimal) = full.first() {
                 results[4].push(time_optimal.time);
                 results[5].push(time_optimal.space);
+                means[4] += time_optimal.time as f64;
+                means[5] += time_optimal.space as f64;
             }
             if let Some(space_optimal) = full.last() {
                 results[6].push(space_optimal.time);
                 results[7].push(space_optimal.space);
+                means[6] += space_optimal.time as f64;
+                means[7] += space_optimal.space as f64;
             }
-        }
-
-        for (result, mean) in results.iter_mut().zip(means.iter_mut()) {
-            *mean += *result.last().unwrap() as f64;
         }
     }
 
@@ -179,12 +183,16 @@ impl Density for ConstantDensity {
 }
 impl Density for ReziprocalLinearDensity {
     fn get(&self, size: usize) -> f64 {
-        self.factor / (size as f64)
+        // - 1 so that the node degree is (n-1)*factor/(n-1) = factor
+        assert!(size > 1, "size must be greater than 1");
+        self.factor / (size as f64 - 1.)
     }
 }
 impl Density for ReziprocalSquareRootDensity {
     fn get(&self, size: usize) -> f64 {
-        self.factor / (size as f64).sqrt()
+        // - 1 so that the node degree is (n-1)*factor/sqrt(n-1) = factor/sqrt(n-1)
+        assert!(size > 1, "size must be greater than 1");
+        self.factor / (size as f64 - 1.).sqrt()
     }
 }
 
