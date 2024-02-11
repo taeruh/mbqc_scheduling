@@ -1,5 +1,9 @@
 # MBQC Scheduling
 
+[![PyPI.org](https://img.shields.io/pypi/v/mbqc-scheduling.svg)](https://pypi.org/project/mbqc-scheduling/)
+[docs](https://taeruh.github.io/mbqc_scheduling/)
+(Python package)
+
 Qubit scheduling in Measurement-Based Quantum Computing (MBQC).
 
 In this project we tackle the task of finding optimal initialization-measurement patterns
