@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "mbqc_scheduling"
-version = "0.1.2"
+version = "0.1.0"
 authors = [{name="Jannis Ruh", email="ruh.j81@gmail.com"}]
 
 description = "Qubit scheduling in Measurement-Based Quantum Computing (MBQC)."
@@ -19,6 +19,7 @@ classifiers = [
 
 [project.urls]
 Repository = "https://github.com/taeruh/mbqc_scheduling"
+Documentation = "https://taeruh.github.io/mbqc_scheduling/"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]

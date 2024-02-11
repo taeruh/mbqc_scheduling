@@ -14,11 +14,11 @@ clap = "4.4.11"
 hashbrown = "0.14.3"
 itertools = "0.12.0"
 # clap = "~4.2.7" # higher requires rustc 1.70
-# pauli_tracker = { version = "0.3.2", features = ["serde", "bitvec"] }
-pauli_tracker = { version = "0.4.0-alpha.2", features = [
-  "serde",
-  "bitvec",
-], git = "https://github.com/taeruh/pauli_tracker" }
+pauli_tracker = { version = "0.4.0", features = ["serde", "bitvec"] }
+# pauli_tracker = { version = "0.4.1-alpha.1", features = [
+#   "serde",
+#   "bitvec",
+# ], git = "https://github.com/taeruh/pauli_tracker" }
 rand = "0.8.5"
 rand_pcg = "0.3.1"
 rustc-hash = "1.1.0"
@@ -34,9 +34,5 @@ tracing-subscriber = { version = "0.3.18", default-features = false, features = 
 
 [dev-dependencies]
 proptest = "1.2.0"
-pauli_tracker = { version = "0.4.0-alpha.2", features = [
-  "circuit",
-  "bit-vec",
-], git = "https://github.com/taeruh/pauli_tracker" }
 bit-vec = "0.6.3"
 # rand_pcg = "0.3.1"
