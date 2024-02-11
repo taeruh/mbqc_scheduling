@@ -10,7 +10,7 @@ from mbqc_scheduling.probabilistic import AcceptFunc, HeavysideParameters
 def main():
     tracker, graph, frame_flags = data()
     time_order = PartialOrderGraph(tracker.get_order(frame_flags).take_into_py_graph())
-    # time_order = tracker.get_order(frame_flags)
+    time_order = tracker.get_order(frame_flags)
     # time_order = tracker.get_order(frame_flags).into_py_graph()
     paths = mbqc_scheduling.run(
         graph,

@@ -3,7 +3,11 @@ use std::{mem, time::Duration};
 use lib::interface::{self};
 use pauli_tracker_pyo3::{frames::PartialOrderGraph, Module};
 use probabilistic::AcceptFunc;
-use pyo3::{exceptions::PyValueError, types::PyModule, PyAny, PyRef, PyResult, Python};
+use pyo3::{
+    exceptions::{PyValueError, PyWarning},
+    types::PyModule,
+    PyAny, PyErr, PyRef, PyResult, Python,
+};
 
 use self::probabilistic::AcceptFuncBase;
 
@@ -224,27 +228,29 @@ fn run(
         }
     }
 
-
     let mut _cloned: Vec<Vec<(usize, Vec<usize>)>>;
     let mut _by_ref: PyRef<'_, PartialOrderGraph>;
     let time_order = if time_order.is_instance_of::<PartialOrderGraph>() {
         _by_ref = time_order.extract()?;
         &_by_ref.0
     } else {
-        // a line number would be nice here ...
-        eprintln!(
-            r"warning: calling mbqc_scheduling.run with a time_order that is not of the
-    type `PartialOrderGraph' defined in the mbqc_scheduling package; trying to get the
-    graph via 'into_py_graph' method"
-        );
+        Python::with_gil(|py| {
+            PyErr::warn(
+                py,
+                py.get_type::<PyWarning>(),
+                r"
+    calling mbqc_scheduling.run with a time_order that is not of the type
+    `PartialOrderGraph' defined in the mbqc_scheduling package; trying to get the graph
+    via 'into_py_graph' method; consider wrapping time_order into the correct type (to
+    reduce potentially redundant cloning), e.g., if the object comes from the
+    pauli_tracker package, replace `time_order` with
+    `PartialOrderGraph(time_order.(take_)into_py_graphs())` - in that case, consider
+    creating the time_order with `get_py_order` instead of `get_order`",
+                0,
+            )?;
+            PyResult::Ok(())
+        })?;
         _cloned = time_order.call_method("into_py_graph", (), None)?.extract()?;
-        eprintln!(
-            "    -> 'into_py_graph' succeeded, however, consider wrapping time_order
-    into the correct type (to reduce potentially redundant cloning), e.g., if the object
-    comes from the pauli_tracker package, replace `time_order` with
-    `PartialOrderGraph(time_order.(take_)into_py_graphs())` - in that case consider
-    creating the time_order with `get_py_order` instead of `get_order`"
-        );
         &_cloned
     };
 
