@@ -4,7 +4,7 @@
 
 #PBS -m eba
 #PBS -M jannis.ruh@student.uts.edu.au
-#PBS -N mbqc_scheduling
+#PBS -N mbqc_scheduling_densities
 
 #PBS -J 1-20
 
@@ -32,7 +32,7 @@ cd ${scratch}
 # NOTE: `cd ${PBS_O_WORKDIR}; mv ${scratch}/output/* output` doesn't work; it's the wild
 # card that makes problems in this case, but I don't know why (maybe the ${scratch} name
 # is too weird)?
-mv output/* ${PBS_O_WORKDIR}/output
+mv output/* ${PBS_O_WORKDIR}/output/*
 
 cd ${PBS_O_WORKDIR}
 rm -rf ${scratch}
