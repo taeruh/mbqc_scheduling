@@ -19,7 +19,7 @@ def paper_setup():
     )
     plt.rcParams.update(
         {
-            # "figure.figsize": [*set_size()],
+            "figure.figsize": [*set_size()],
             "font.size": 10,
             "lines.linewidth": 1.5,
         }
