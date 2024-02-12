@@ -12,7 +12,7 @@ CorrectionDensityType = root
 
 
 def node():
-    fig = plt.figure()
+    fig = plt.figure(figsize=utils.set_size(height_in_width=0.6))
     gs = fig.add_gridspec(1, 2)
     acs = []
     for i in range(2):
@@ -20,12 +20,19 @@ def node():
     # gs.update(hspace=0.02, wspace=0.21)
     gs.update(wspace=0.21)
 
-    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"][0:4]
-    labels = ["time trivial", "space search", "full search time", "full search space"]
+    labels = [
+        "time optimal (trivial)",
+        "space optimal (approx)",
+        "time optimal",
+        "space optimal",
+    ]
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    colors = [colors[4], colors[3], colors[0], colors[2]]
+    linestyles = ["solid", "dotted", "dashed", "dashdot"]
 
     # acs[0].plot([1, 2], [1, 2], color="white", label="$p_E$\hphantom{x}$p_C$")
 
-    parameters = utils.get_parameters("nodes")
+    parameters = utils.get_parameters("node")
 
     para = parameters[0]
     data = get_data(para)["results"]
@@ -33,23 +40,24 @@ def node():
     max_x = 0
 
     for i in range(4):
-        color = colors[i]
         label = labels[i]
+        color = colors[i]
+        linestyle = linestyles[i]
         time = data[i * 4]
         space = data[i * 4 + 2]
         length = len(time)
         max_x = max(max_x, length)
         for j, dat in enumerate([time, space]):
             acs[j].plot(
-                range(2, length + 1),
+                range(2, length + 2),
                 dat,
                 label=label,
                 color=color,
-                # linestyle=linestyle,
+                linestyle=linestyle,
             )
 
     for ac in acs:
-        ac.set_xlim(1, max_x)
+        ac.set_xlim(2, max_x)
         ac.set_xlabel("num nodes")
 
     acs[0].set_ylabel("time")
@@ -82,13 +90,13 @@ def node():
     handles, labels = acs[0].get_legend_handles_labels()
     acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
 
-    plt.subplots_adjust(top=0.95, bottom=0.06, left=0.07, right=0.97)
+    plt.subplots_adjust(top=0.95, bottom=0.10, left=0.07, right=0.97)
     plt.savefig(f"output/nodes.pdf")
 
 
 def get_data(parameter: tuple[float, float]):
     file = (
-        f"output/nodes-{EdgeDensityType}:{parameter[0]}_"
+        f"output/node-{EdgeDensityType}:{parameter[0]}_"
         f"{CorrectionDensityType}:{parameter[1]}.json"
     )
     with open(file, "r") as f:
