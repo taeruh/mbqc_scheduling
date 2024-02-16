@@ -1,16 +1,17 @@
 use plots::Args;
 
-const NCPUS: u16 = 10;
+// const NCPUS: u16 = 9;
 // const NCPUS: u16 = 1;
-// const NCPUS: u16 = 30; // cf. ncpus in scripts/exe_hpc.bash
+const NCPUS: u16 = 30; // cf. ncpus in scripts/exe_hpc.bash
 
-const NUM_AVERAGE: usize = 3000;
+// const NUM_AVERAGE: usize = 3000;
+const NUM_AVERAGE: usize = 1000;
 // const NUM_AVERAGE: usize = 50;
 
-/// timeout per single shot sweep in nano seconds; walltime is in hours
+/// timeout per single shot sweep in nano seconds; walltime is in hours, buffer in minutes
 // 5min buffer for timeouts (better to be safe)
-const fn timeout_per_single_shot_sweep(walltime: u64) -> u64 {
-    (walltime * 3600 - 5 * 60) * 1_000_000_000 / NUM_AVERAGE as u64
+const fn timeout_per_single_shot_sweep(walltime: u64, buffer: u64) -> u64 {
+    (walltime * 3600 - buffer * 60) * 1_000_000_000 / NUM_AVERAGE as u64
 }
 
 pub fn run(args: Args) {

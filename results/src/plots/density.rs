@@ -17,10 +17,12 @@ use crate::{plots::Density, NCPUS, NUM_AVERAGE};
 // occur); important: I'm not sure why, but on our cluster each size may take up to 2.5ms
 // longer
 
-const WALLTIME: u64 = 60; // cf. walltime in scripts/exe_hpc.bash
-const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 = crate::timeout_per_single_shot_sweep(WALLTIME);
+// const WALLTIME: u64 = 10; // cf. walltime in scripts/exe_hpc.bash
+const WALLTIME: u64 = 3; // cf. walltime in scripts/exe_hpc.bash
+const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 =
+    crate::timeout_per_single_shot_sweep(WALLTIME, 20);
 
-const NUM_DENSITIES: usize = 10;
+const NUM_DENSITIES: usize = 20;
 const RANGE: Range<usize> = 1..NUM_DENSITIES + 1;
 
 fn density(multiplier: f64) -> ConstantDensity {
@@ -73,6 +75,7 @@ pub fn run(args: Args) {
 
     for correction_density_multiplier in RANGE {
         let correction_density = density(correction_density_multiplier as f64);
+        println!("{:?}", correction_density);
         let timeout = timeouts[correction_density_multiplier];
         let total_time = Instant::now();
         let (result, times) = super::do_it(

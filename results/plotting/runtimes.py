@@ -53,7 +53,7 @@ def appendix():
     acs[1].imshow(density_data["space_optimal"], origin="lower", cmap=cmap)
     acs[1].set_xlabel("correction density")
     acs[1].set_ylabel("edge density")
-    acs[1].set_title("normalized runtime", pad=6)
+    acs[1].set_title("normalized runtime (log)", pad=6)
 
     draw_colorbar(fig, cac, cmap)
 

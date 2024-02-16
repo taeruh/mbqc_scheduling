@@ -8,7 +8,7 @@
 
 #PBS -l ncpus=30
 #PBS -l mem=5GB
-#PBS -l walltime=120:00:00
+#PBS -l walltime=40:00:00
 
 # this is relative to the final workdir which is ./=${PBS_O_WORKDIR}, so we don't have
 # to move it from the scratch

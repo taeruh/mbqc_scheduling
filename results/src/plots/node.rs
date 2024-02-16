@@ -19,12 +19,13 @@ use crate::{
 // occur); important: I'm not sure why, but on our cluster each size may take up to 5ms
 // longer
 
-const WALLTIME: u64 = 120; // cf. walltime in scripts/exe_hpc.bash
-const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 = crate::timeout_per_single_shot_sweep(WALLTIME);
+// const WALLTIME: u64 = 120; // cf. walltime in scripts/exe_hpc.bash
+const WALLTIME: u64 = 40; // cf. walltime in scripts/exe_hpc.bash
+const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 =
+    crate::timeout_per_single_shot_sweep(WALLTIME, 120);
 
-const MAX_SIZE: usize = 50;
+const MAX_SIZE: usize = 40;
 const MAX_EXACT_SIZE: usize = 20;
-
 
 // account for additional exact search; rough (pessimistic; better be safe than sorry)
 // guess here; depends on densities; for p_e = 0.5, p_c = 0.5, both reziprocal_square_root

@@ -74,7 +74,7 @@ pub fn run(
             timeout,
             nthreads,
             probabilistic.map(|(func, seed)| (func.get_accept_func(), seed)),
-            task_bound.map(|b| b.into()).unwrap_or(10000),
+            task_bound.map(|b| b.into()).unwrap_or(100000),
         )
     }
 }
