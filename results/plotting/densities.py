@@ -1,4 +1,3 @@
-import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
@@ -20,8 +19,8 @@ para_end = 20
 
 
 def density():
-    main()
-    # appendix()
+    # main()
+    appendix()
 
 
 def main():

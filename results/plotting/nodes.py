@@ -12,6 +12,11 @@ CorrectionDensityType = root
 
 
 def node():
+    # main()
+    appendix()
+
+
+def main():
     fig = plt.figure(figsize=utils.set_size(height_in_width=0.6))
     gs = fig.add_gridspec(1, 2)
     acs = []
@@ -63,35 +68,76 @@ def node():
     acs[0].set_ylabel("time")
     acs[1].set_ylabel("space")
 
-    # time_up_lim = max(acs[0].get_ylim()[1], acs[1].get_ylim()[1])
-    # space_up_lim = max(acs[2].get_ylim()[1], acs[3].get_ylim()[1])
-    # # ticks = [i * 10 for i in range(1, 6)]
-    # for i in range(4):
-    #     acs[i].set_xlim(1, max_x)
-    #     # acs[j].set_yticks(ticks)
-    #     # acs[j].set_yticks(ticks)
-    #     acs[i].tick_params(axis="y", which="both", right=True)
-    #     if i > 1:
-    #         acs[i].set_xlabel("num nodes")
-    #         acs[i].set_ylim(1, space_up_lim)
-    #     else:
-    #         acs[i].set_xticklabels([])
-    #         acs[i].set_ylim(1, time_up_lim)
-    #     if i % 2 != 0:
-    #         acs[i].set_yticklabels([])
-    #     if i == 0:
-    #         acs[i].set_ylabel("time")
-    #         acs[i].set_title("time optimal")
-    #     if i == 1:
-    #         acs[i].set_title("space optimal (approx)")
-    #     if i == 2:
-    #         acs[i].set_ylabel("space")
+    handles, labels = acs[0].get_legend_handles_labels()
+    acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
+
+    plt.subplots_adjust(top=0.95, bottom=0.10, left=0.07, right=0.97)
+    plt.savefig(f"output/nodes_main.pdf")
+
+
+def appendix():
+    fig = plt.figure(figsize=utils.set_size(height_in_width=0.6))
+    gs = fig.add_gridspec(1, 2)
+    acs = []
+    for i in range(2):
+        acs.append(fig.add_subplot(gs[0, i]))
+    # gs.update(hspace=0.02, wspace=0.21)
+    gs.update(wspace=0.28)
+
+    labels = [
+        "time optimal (trivial)",
+        "space optimal (approx)",
+        "time optimal",
+        "space optimal",
+    ]
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    colors = [colors[4], colors[3], colors[0], colors[2]]
+    linestyles = ["solid", "dotted", "dashed", "dashdot"]
+
+    parameters = utils.get_parameters("node")
+
+    para = parameters[0]
+    data = get_data(para)["results"]
+
+    max_x = 0
+
+    for i in range(4):
+        label = labels[i]
+        color = colors[i]
+        linestyle = linestyles[i]
+        time = data[i * 4]
+        time_deviation = data[i * 4 + 1]
+        space = data[i * 4 + 2]
+        space_deviation = data[i * 4 + 3]
+        length = len(time)
+        max_x = max(max_x, length)
+        for j, (mean, deviation) in enumerate(
+            zip([time, space], [time_deviation, space_deviation])
+        ):
+            acs[j].errorbar(
+                range(2, length + 2),
+                mean,
+                deviation,
+                elinewidth=0.8,
+                capsize=2,
+                capthick=0.8,
+                label=label,
+                color=color,
+                linestyle=linestyle,
+            )
+
+    for ac in acs:
+        ac.set_xlim(2, max_x)
+        ac.set_xlabel("num nodes")
+
+    acs[0].set_ylabel("time")
+    acs[1].set_ylabel("space")
 
     handles, labels = acs[0].get_legend_handles_labels()
     acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
 
     plt.subplots_adjust(top=0.95, bottom=0.10, left=0.07, right=0.97)
-    plt.savefig(f"output/nodes.pdf")
+    plt.savefig(f"output/nodes_appendix.pdf")
 
 
 def get_data(parameter: tuple[float, float]):
