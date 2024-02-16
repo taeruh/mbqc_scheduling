@@ -68,6 +68,9 @@ def main():
     acs[0].set_ylabel("time")
     acs[1].set_ylabel("space")
 
+    utils.subplotlabel(acs[0], "a")
+    utils.subplotlabel(acs[1], "b")
+
     handles, labels = acs[0].get_legend_handles_labels()
     acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
 
@@ -133,7 +136,14 @@ def appendix():
     acs[0].set_ylabel("time")
     acs[1].set_ylabel("space")
 
+    utils.subplotlabel(acs[0], "a")
+    utils.subplotlabel(acs[1], "b")
+
     handles, labels = acs[0].get_legend_handles_labels()
+    acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
+
+    handles, labels = acs[0].get_legend_handles_labels()
+    handles = [h[0] for h in handles]
     acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
 
     plt.subplots_adjust(top=0.95, bottom=0.10, left=0.07, right=0.97)

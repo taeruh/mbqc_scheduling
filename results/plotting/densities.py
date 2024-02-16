@@ -12,21 +12,19 @@ import utils
 
 numnodes = 20
 numdensity = 10
-para_start = 10
-para_end = 20
 
 # getting the correct spacing is really f**ked up; playing with figsize helps
 
 
 def density():
-    # main()
-    appendix()
+    main()
+    # appendix()
 
 
 def main():
     fig = plt.figure(figsize=utils.set_size(height_in_width=0.67))
     nrows = 11
-    nusedrows = 10
+    nusedrows = nrows - 1
     gs = fig.add_gridspec(nrows, 2)
     acs = []
     for i in range(2):
@@ -41,11 +39,18 @@ def main():
 
     for i in range(2):
         acs[i].grid(False)
-        acs[i].set_xlabel("correction density")
-    acs[0].set_ylabel("edge density")
-    acs[1].set_yticklabels([])
+        acs[i].set_xticks([])
+        acs[i].set_yticks([])
+        acs[i].set_xlabel("correction density", labelpad=17)
+        xticks(acs[i], -0.6)
+
+    acs[0].set_ylabel("edge density", labelpad=20)
+    yticks(acs[0], -0.08)
     acs[0].set_title("time cost for time optimal (trivial)")
     acs[1].set_title("space cost for space optimal (approx)")
+
+    utils.subplotlabel(acs[0], "a", -0.06, 1.06)
+    utils.subplotlabel(acs[1], "b", -0.06, 1.06)
 
     draw_colorbar(fig, cac, cmap)
 
@@ -54,45 +59,59 @@ def main():
 
 
 def appendix():
-    fig = plt.figure(figsize=utils.set_size(height_in_width=1.04))
-    rowsfactor = 10
-    nrows = 2 * rowsfactor + 2
+    # fig = plt.figure(figsize=utils.set_size(height_in_width=1.04))
+    fig = plt.figure(figsize=utils.set_size(height_in_width=0.67))
+    # rowsfactor = 10
+    # nrows = 2 * rowsfactor + 2
+    # nusedrows = nrows - 1
+    nrows = 11
     nusedrows = nrows - 1
     gs = fig.add_gridspec(nrows, 2)
     acs = []
-    for i, j in [(i, j) for i in range(2) for j in range(2)]:
-        acs.append(fig.add_subplot(gs[i * rowsfactor : rowsfactor * (i + 1), j]))
+    # for i, j in [(i, j) for i in range(2) for j in range(2)]:
+        # acs.append(fig.add_subplot(gs[i * rowsfactor : rowsfactor * (i + 1), j]))
+    for i in range(2):
+        acs.append(fig.add_subplot(gs[:nusedrows, i]))
     cac = fig.add_subplot(gs[nusedrows:, :])
-    map = [0, 2, 1, 3]
-    gs.update(wspace=0.1, hspace=0.4)
+    # map = [0, 2, 1, 3]
+    map = [1, 2]
+    # gs.update(wspace=0.1, hspace=0.4)
+    gs.update(wspace=0.1, hspace=0.3)
 
     cmap = plt.get_cmap("viridis").reversed()
 
     draw_images(acs, map, cmap)
 
-    for i in range(4):
+    # for i in range(4):
+    for i in range(2):
         acs[i].grid(False)
-        if i > 1:
-            acs[i].set_xlabel("correction density")
-        else:
-            acs[i].set_xticklabels([])
+        acs[i].set_xticks([])
+        acs[i].set_yticks([])
+        # if i > 1:
+        acs[i].set_xlabel("correction density", labelpad=17)
+        xticks(acs[i], -0.6)
         if i % 2 == 0:
-            acs[i].set_ylabel("edge density")
-        else:
-            acs[i].set_yticklabels([])
-        if i == 0:
-            acs[i].set_title("time optimal")
-        if i == 1:
-            acs[i].set_title("space optimal (approx)")
-            acs[i].text(1.05, 0.5, "time cost", transform=acs[i].transAxes, rotation=45)
-        if i == 3:
-            acs[i].text(
-                1.05, 0.5, "space cost", transform=acs[i].transAxes, rotation=45
-            )
+            acs[i].set_ylabel("edge density", labelpad=20)
+            yticks(acs[i], -0.08)
+        # if i == 0:
+        #     acs[i].set_title("time optimal")
+        # if i == 1:
+        #     acs[i].set_title("space optimal (approx)")
+        #     acs[i].text(1.05, 0.5, "time cost", transform=acs[i].transAxes, rotation=45)
+        # if i == 3:
+        #     acs[i].text(
+        #         1.05, 0.5, "space cost", transform=acs[i].transAxes, rotation=45
+        #     )
+    acs[0].set_title("space cost for time optimal (trivial)")
+    acs[1].set_title("time cost for space optimal (approx)")
+
+    utils.subplotlabel(acs[0], "a", -0.06, 1.06)
+    utils.subplotlabel(acs[1], "b", -0.06, 1.06)
 
     draw_colorbar(fig, cac, cmap)
 
-    plt.subplots_adjust(top=0.96, bottom=0.05, left=0.06, right=0.897)
+    # plt.subplots_adjust(top=0.96, bottom=0.05, left=0.06, right=0.897)
+    plt.subplots_adjust(top=0.98, bottom=0.10, left=0.06, right=0.97)
     plt.savefig(f"output/density_appendix-{numnodes}.pdf")
 
 
@@ -114,13 +133,61 @@ def draw_images(acs, map, cmap):
     len_data = len(map)
     data = [[] for _ in range(len_data)]
     parameters = utils.get_parameters("density")
-    for para in parameters[para_start:para_end]:
+    for para in parameters[:10]:
         dat = get_data(para)["results"]
         for i in range(len_data):
             data[i].append(dat[2 * map[i]])
 
     for i, dat in enumerate(data):
         acs[i].imshow(dat, origin="lower", cmap=cmap)
+
+
+def xticks(ac, shift):
+    ac.text(
+        0.0,
+        -0.06,
+        "0.0",
+        transform=ac.transAxes,
+        horizontalalignment="left",
+    )
+    ac.text(
+        0.5,
+        -0.06,
+        "0.5",
+        transform=ac.transAxes,
+        horizontalalignment="center",
+    )
+    ac.text(
+        1.0,
+        -0.06,
+        "1.0",
+        transform=ac.transAxes,
+        horizontalalignment="right",
+    )
+
+
+def yticks(ac, shift):
+    ac.text(
+        shift,
+        0.0,
+        "0.0",
+        transform=ac.transAxes,
+        verticalalignment="bottom",
+    )
+    ac.text(
+        shift,
+        0.5,
+        "0.5",
+        transform=ac.transAxes,
+        verticalalignment="center",
+    )
+    ac.text(
+        shift,
+        1.0,
+        "1.0",
+        transform=ac.transAxes,
+        verticalalignment="top",
+    )
 
 
 def draw_colorbar(fig, cac, cmap):

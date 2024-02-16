@@ -6,7 +6,7 @@
 #PBS -M jannis.ruh@student.uts.edu.au
 #PBS -N mbqc_scheduling_densities
 
-#PBS -J 1-1
+#PBS -J 1-20
 
 #PBS -l ncpus=30
 #PBS -l mem=3GB

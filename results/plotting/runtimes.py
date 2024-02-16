@@ -13,16 +13,18 @@ def runtime():
 def appendix():
     fig = plt.figure(figsize=utils.set_size(height_in_width=0.50))
     ncols_factor = 8
-    ncols = 2 * ncols_factor + 2
+    ncols = 2 * ncols_factor + 3
     nusedcols = ncols - 1
     gs = fig.add_gridspec(1, ncols)
     acs = []
     for i in range(2):
         acs.append(
-            fig.add_subplot(gs[0, i * ncols_factor + i : (i + 1) * ncols_factor + i])
+            fig.add_subplot(
+                gs[0, i * ncols_factor + i * 2 : (i + 1) * ncols_factor + i * 2]
+            )
         )
     cac = fig.add_subplot(gs[0, nusedcols:])
-    gs.update(wspace=0.2)
+    gs.update(wspace=0.3)
 
     data = get_data()
 
@@ -51,11 +53,21 @@ def appendix():
     cmap = densities.get_cmap()
 
     acs[1].imshow(density_data["space_optimal"], origin="lower", cmap=cmap)
-    acs[1].set_xlabel("correction density")
-    acs[1].set_ylabel("edge density")
-    acs[1].set_title("normalized runtime (log)", pad=6)
+    acs[1].set_xlabel("correction density", labelpad=17)
+    acs[1].set_ylabel("edge density", labelpad=22)
+    acs[1].set_title("normalized runtime (log; approx)", pad=6)
+    acs[1].set_xticks([])
+    acs[1].set_yticks([])
+    densities.xticks(acs[1], -0.6)
+    densities.yticks(acs[1], -0.1)
+
+    utils.subplotlabel(acs[0], "a", -0.10, 1.05)
+    utils.subplotlabel(acs[1], "b", -0.10, 1.05)
 
     draw_colorbar(fig, cac, cmap)
+
+    handles, labels = acs[0].get_legend_handles_labels()
+    acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
 
     plt.subplots_adjust(top=0.93, bottom=0.11, left=0.07, right=0.95)
     plt.savefig(f"output/runtime_appendix.pdf")
@@ -81,9 +93,7 @@ def get_data():
         "full": full,
     }
 
-    density_parameters = utils.get_parameters("density")[
-        densities.para_start : densities.para_end
-    ]
+    density_parameters = utils.get_parameters("density")[:10]
 
     # density_parameters = [
     #     density_parameters[1],

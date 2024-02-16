@@ -30,3 +30,13 @@ def paper_setup():
 def set_size(width_in_pt=510.0, height_in_width=1.0, scale=1.0):
     width_in_in = width_in_pt * scale / 72.27
     return (width_in_in, width_in_in * height_in_width)
+
+
+def subplotlabel(ac, label, x=-0.138, y=1.01):
+    labels = {
+        "a": r"\textbf{(a)}",
+        "b": r"\textbf{(b)}",
+        "c": r"\textbf{(c)}",
+        "d": r"\textbf{(d)}",
+    }
+    ac.text(x, y, labels[label], ha="left", va="center", transform=ac.transAxes)
