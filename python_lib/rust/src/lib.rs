@@ -149,6 +149,9 @@ impl Path {
 
 /// Search for optimal initalization-measurement paths.
 ///
+/// Note that the algorithm always first tries the more time optimal patterns, however,
+/// whether they are accepted can be controlled with the `probabilistic` accept function.
+///
 /// Args:
 ///     spacial_graph (SpacialGraph): The spacial graph.
 ///     time_order (PartialOrderGraph): The dependency graph on the measurements. This is

@@ -55,6 +55,9 @@ pub type RefPartialOrderGraph = [Vec<(usize, Vec<usize>)>];
 /// does not ensure reproducibibility (the threads communicate the results with each
 /// other, and depending on that they adjust the search; this communication is not
 /// deterministic (on this level here) since it depends on how the threads are scheduled).
+///
+/// Note that the algorithm always first tries the more time optimal patterns, however,
+/// whether they are accepted can be controlled with the `probabilistic` accept function.
 pub fn run(
     spacial_graph: &RefSpacialGraph,
     // time_ordering: PartialOrderGraph,
