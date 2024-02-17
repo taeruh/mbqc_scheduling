@@ -10,6 +10,17 @@ root = "reziprocal_square_root"
 EdgeDensityType = root
 CorrectionDensityType = root
 
+labels = [
+    r"$S_{tt}$",
+    r"$S_{sa}$",
+    r"$S_{te}$",
+    r"$S_{se}$",
+]
+
+xlabel = r"number of nodes $\abs{G}$"
+ytlabel = r"time cost $\mathrm{tc}$"
+yslabel = r"space cost $\mathrm{sc}$"
+
 
 def node():
     # main()
@@ -25,12 +36,6 @@ def main():
     # gs.update(hspace=0.02, wspace=0.21)
     gs.update(wspace=0.21)
 
-    labels = [
-        "time optimal (trivial)",
-        "space optimal (approx)",
-        "time optimal",
-        "space optimal",
-    ]
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     colors = [colors[4], colors[3], colors[0], colors[2]]
     linestyles = ["solid", "dotted", "dashed", "dashdot"]
@@ -63,16 +68,16 @@ def main():
 
     for ac in acs:
         ac.set_xlim(2, max_x)
-        ac.set_xlabel("num nodes")
+        ac.set_xlabel(xlabel)
 
-    acs[0].set_ylabel("time")
-    acs[1].set_ylabel("space")
+    acs[0].set_ylabel(ytlabel)
+    acs[1].set_ylabel(yslabel)
 
     utils.subplotlabel(acs[0], "a")
     utils.subplotlabel(acs[1], "b")
 
-    handles, labels = acs[0].get_legend_handles_labels()
-    acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
+    handles, leg_labels = acs[0].get_legend_handles_labels()
+    acs[0].legend(handles, leg_labels, loc="upper left", labelspacing=0.25)
 
     plt.subplots_adjust(top=0.95, bottom=0.10, left=0.07, right=0.97)
     plt.savefig(f"output/nodes_main.pdf")
@@ -87,12 +92,6 @@ def appendix():
     # gs.update(hspace=0.02, wspace=0.21)
     gs.update(wspace=0.28)
 
-    labels = [
-        "time optimal (trivial)",
-        "space optimal (approx)",
-        "time optimal",
-        "space optimal",
-    ]
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     colors = [colors[4], colors[3], colors[0], colors[2]]
     linestyles = ["solid", "dotted", "dashed", "dashdot"]
@@ -131,20 +130,17 @@ def appendix():
 
     for ac in acs:
         ac.set_xlim(2, max_x)
-        ac.set_xlabel("num nodes")
+        ac.set_xlabel(xlabel)
 
-    acs[0].set_ylabel("time")
-    acs[1].set_ylabel("space")
+    acs[0].set_ylabel(ytlabel)
+    acs[1].set_ylabel(yslabel)
 
     utils.subplotlabel(acs[0], "a")
     utils.subplotlabel(acs[1], "b")
 
-    handles, labels = acs[0].get_legend_handles_labels()
-    acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
-
-    handles, labels = acs[0].get_legend_handles_labels()
+    handles, leg_labels = acs[0].get_legend_handles_labels()
     handles = [h[0] for h in handles]
-    acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
+    acs[0].legend(handles, leg_labels, loc="upper left", labelspacing=0.25)
 
     plt.subplots_adjust(top=0.95, bottom=0.10, left=0.07, right=0.97)
     plt.savefig(f"output/nodes_appendix.pdf")

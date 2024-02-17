@@ -12,6 +12,9 @@ numdensity = 20
 
 # getting the correct spacing is really f**ked up; playing with figsize helps
 
+xlabel = r"correction density $p_c$"
+ylabel = r"edge density $p_e$"
+
 
 def density():
     # main()
@@ -38,13 +41,13 @@ def main():
         acs[i].grid(False)
         acs[i].set_xticks([])
         acs[i].set_yticks([])
-        acs[i].set_xlabel("correction density", labelpad=16)
+        acs[i].set_xlabel(xlabel, labelpad=16)
         xticks(acs[i], -0.06)
 
-    acs[0].set_ylabel("edge density", labelpad=20)
+    acs[0].set_ylabel(ylabel, labelpad=20)
     yticks(acs[0], -0.08)
-    acs[0].set_title("time cost for time optimal (trivial)")
-    acs[1].set_title("space cost for space optimal (approx)")
+    acs[0].set_title(r"time cost $\mathrm{tc}(S_{tt})$")
+    acs[1].set_title(r"space cost $\mathrm{sc}(S_{sa})$")
 
     utils.subplotlabel(acs[0], "a", -0.06, 1.06)
     utils.subplotlabel(acs[1], "b", -0.06, 1.06)
@@ -91,10 +94,10 @@ def appendix():
         acs[i].set_xticks([])
         acs[i].set_yticks([])
         # if i > 1:
-        acs[i].set_xlabel("correction density", labelpad=16)
+        acs[i].set_xlabel(xlabel, labelpad=16)
         xticks(acs[i], -0.06)
         if i % 2 == 0:
-            acs[i].set_ylabel("edge density", labelpad=20)
+            acs[i].set_ylabel(ylabel, labelpad=20)
             yticks(acs[i], -0.08)
         # if i == 0:
         #     acs[i].set_title("time optimal")
@@ -105,8 +108,8 @@ def appendix():
         #     acs[i].text(
         #         1.05, 0.5, "space cost", transform=acs[i].transAxes, rotation=45
         #     )
-    acs[0].set_title("space cost for time optimal (trivial)")
-    acs[1].set_title("time cost for space optimal (approx)")
+    acs[0].set_title(r"space cost $\mathrm{sc}(S_{tt})$")
+    acs[1].set_title(r"time cost $\mathrm{tc}(S_{sa})$")
 
     utils.subplotlabel(acs[0], "a", -0.06, 1.06)
     utils.subplotlabel(acs[1], "b", -0.06, 1.06)
