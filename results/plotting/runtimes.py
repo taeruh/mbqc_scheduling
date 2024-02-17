@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Normalize
+from matplotlib.colors import Normalize, LogNorm
 import math
 import utils
 import densities, nodes
@@ -11,20 +11,20 @@ def runtime():
 
 
 def appendix():
-    fig = plt.figure(figsize=utils.set_size(height_in_width=0.50))
+    fig = plt.figure(figsize=utils.set_size(height_in_width=0.5))
     ncols_factor = 8
-    ncols = 2 * ncols_factor + 3
+    ncols = 2 * ncols_factor + 5
     nusedcols = ncols - 1
     gs = fig.add_gridspec(1, ncols)
     acs = []
     for i in range(2):
         acs.append(
             fig.add_subplot(
-                gs[0, i * ncols_factor + i * 2 : (i + 1) * ncols_factor + i * 2]
+                gs[0, i * ncols_factor + i * 2 : (i + 1) * ncols_factor + i * 4]
             )
         )
     cac = fig.add_subplot(gs[0, nusedcols:])
-    gs.update(wspace=0.3)
+    gs.update(wspace=0.7)
 
     data = get_data()
 
@@ -52,10 +52,16 @@ def appendix():
 
     cmap = densities.get_cmap()
 
-    acs[1].imshow(density_data["space_optimal"], origin="lower", cmap=cmap)
+    print(density_data["min"], density_data["max"])
+    im = acs[1].imshow(
+        density_data["space_optimal"],
+        origin="lower",
+        cmap=cmap,
+        norm=LogNorm(vmin=density_data["min"], vmax=density_data["max"]),
+    )
     acs[1].set_xlabel("correction density", labelpad=17)
     acs[1].set_ylabel("edge density", labelpad=22)
-    acs[1].set_title("normalized runtime (log; approx)", pad=6)
+    acs[1].set_title("runtime [nanoseconds] (approx)", pad=6)
     acs[1].set_xticks([])
     acs[1].set_yticks([])
     densities.xticks(acs[1], -0.6)
@@ -64,7 +70,12 @@ def appendix():
     utils.subplotlabel(acs[0], "a", -0.10, 1.05)
     utils.subplotlabel(acs[1], "b", -0.10, 1.05)
 
-    draw_colorbar(fig, cac, cmap)
+    fig.colorbar(
+        im,
+        cax=cac,
+        orientation="vertical",
+    )
+    cac.grid(False)
 
     handles, labels = acs[0].get_legend_handles_labels()
     acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
@@ -93,7 +104,7 @@ def get_data():
         "full": full,
     }
 
-    density_parameters = utils.get_parameters("density")[:10]
+    density_parameters = utils.get_parameters("density")
 
     # density_parameters = [
     #     density_parameters[1],
@@ -106,27 +117,25 @@ def get_data():
 
     space_optimal = []
     keys = ["space_optimal_approximated"]
+    min = 999 * 60 * 1000000000  # 999 hours
+    max = 0
     for para in density_parameters:
         runtime = densities.get_data(para)["time_results"]
         space_optimal_ = []
-        for time in runtime[1:]:
+        for time in runtime[0:]:
             for dat, key in zip([space_optimal_], keys):
                 t = time.get(key)
                 if t is None:
                     continue
-                dat.append(math.log(t["secs"] * 1000000000 + t["nanos"], 2))
-                # dat.append(t["secs"] * 1000000000 + t["nanos"])
+                nanos = t["secs"] * 1000000000 + t["nanos"]
+                if nanos < min:
+                    min = nanos
+                if nanos > max:
+                    max = nanos
+                # dat.append(math.log(nanos, 2))
+                dat.append(nanos)
         space_optimal.append(space_optimal_)
 
-    density_data = {"space_optimal": space_optimal}
+    density_data = {"space_optimal": space_optimal, "min": min, "max": max}
 
     return {"node": node_data, "density": density_data}
-
-
-def draw_colorbar(fig, cac, cmap):
-    fig.colorbar(
-        ScalarMappable(norm=Normalize(vmin=0, vmax=1), cmap=cmap),
-        cax=cac,
-        orientation="vertical",
-    )
-    cac.grid(False)

@@ -5,20 +5,17 @@ import json
 
 import utils
 
-# numnodes = 10
-# numdensity = 10
-# para_start = 0
-# para_end = 10
 
 numnodes = 20
-numdensity = 10
+numdensity = 20
+# numdensity = 10
 
 # getting the correct spacing is really f**ked up; playing with figsize helps
 
 
 def density():
-    main()
-    # appendix()
+    # main()
+    appendix()
 
 
 def main():
@@ -35,14 +32,14 @@ def main():
 
     cmap = get_cmap()
 
-    draw_images(acs, map, cmap)
+    im = draw_images(acs, map, cmap)
 
     for i in range(2):
         acs[i].grid(False)
         acs[i].set_xticks([])
         acs[i].set_yticks([])
-        acs[i].set_xlabel("correction density", labelpad=17)
-        xticks(acs[i], -0.6)
+        acs[i].set_xlabel("correction density", labelpad=16)
+        xticks(acs[i], -0.06)
 
     acs[0].set_ylabel("edge density", labelpad=20)
     yticks(acs[0], -0.08)
@@ -52,7 +49,13 @@ def main():
     utils.subplotlabel(acs[0], "a", -0.06, 1.06)
     utils.subplotlabel(acs[1], "b", -0.06, 1.06)
 
-    draw_colorbar(fig, cac, cmap)
+    fig.colorbar(
+        im,
+        cax=cac,
+        orientation="horizontal",
+    )
+    cac.grid(False)
+    cac.set_xlabel(r"time cost \hspace{1em}|\hspace{1em} space cost", labelpad=1)
 
     plt.subplots_adjust(top=0.98, bottom=0.10, left=0.06, right=0.97)
     plt.savefig(f"output/density_main-{numnodes}.pdf")
@@ -69,7 +72,7 @@ def appendix():
     gs = fig.add_gridspec(nrows, 2)
     acs = []
     # for i, j in [(i, j) for i in range(2) for j in range(2)]:
-        # acs.append(fig.add_subplot(gs[i * rowsfactor : rowsfactor * (i + 1), j]))
+    # acs.append(fig.add_subplot(gs[i * rowsfactor : rowsfactor * (i + 1), j]))
     for i in range(2):
         acs.append(fig.add_subplot(gs[:nusedrows, i]))
     cac = fig.add_subplot(gs[nusedrows:, :])
@@ -80,7 +83,7 @@ def appendix():
 
     cmap = plt.get_cmap("viridis").reversed()
 
-    draw_images(acs, map, cmap)
+    im = draw_images(acs, map, cmap)
 
     # for i in range(4):
     for i in range(2):
@@ -88,8 +91,8 @@ def appendix():
         acs[i].set_xticks([])
         acs[i].set_yticks([])
         # if i > 1:
-        acs[i].set_xlabel("correction density", labelpad=17)
-        xticks(acs[i], -0.6)
+        acs[i].set_xlabel("correction density", labelpad=16)
+        xticks(acs[i], -0.06)
         if i % 2 == 0:
             acs[i].set_ylabel("edge density", labelpad=20)
             yticks(acs[i], -0.08)
@@ -108,7 +111,13 @@ def appendix():
     utils.subplotlabel(acs[0], "a", -0.06, 1.06)
     utils.subplotlabel(acs[1], "b", -0.06, 1.06)
 
-    draw_colorbar(fig, cac, cmap)
+    fig.colorbar(
+        im,
+        cax=cac,
+        orientation="horizontal",
+    )
+    cac.grid(False)
+    cac.set_xlabel(r"space cost \hspace{1em}|\hspace{1em} time cost", labelpad=1)
 
     # plt.subplots_adjust(top=0.96, bottom=0.05, left=0.06, right=0.897)
     plt.subplots_adjust(top=0.98, bottom=0.10, left=0.06, right=0.97)
@@ -133,33 +142,45 @@ def draw_images(acs, map, cmap):
     len_data = len(map)
     data = [[] for _ in range(len_data)]
     parameters = utils.get_parameters("density")
-    for para in parameters[:10]:
+    min = numnodes
+    max = 0
+    for para in parameters:
         dat = get_data(para)["results"]
         for i in range(len_data):
             data[i].append(dat[2 * map[i]])
+            for d in dat[2 * map[i]]:
+                if d < min:
+                    min = d
+                if d > max:
+                    max = d
 
     for i, dat in enumerate(data):
-        acs[i].imshow(dat, origin="lower", cmap=cmap)
+        if i == 0:
+            im = acs[i].imshow(dat, origin="lower", cmap=cmap, vmin=min, vmax=max)
+        else:
+            acs[i].imshow(dat, origin="lower", cmap=cmap, vmin=min, vmax=max)
+
+    return im  # pyright: ignore
 
 
 def xticks(ac, shift):
     ac.text(
         0.0,
-        -0.06,
+        shift,
         "0.0",
         transform=ac.transAxes,
         horizontalalignment="left",
     )
     ac.text(
         0.5,
-        -0.06,
+        shift,
         "0.5",
         transform=ac.transAxes,
         horizontalalignment="center",
     )
     ac.text(
         1.0,
-        -0.06,
+        shift,
         "1.0",
         transform=ac.transAxes,
         horizontalalignment="right",
@@ -188,13 +209,3 @@ def yticks(ac, shift):
         transform=ac.transAxes,
         verticalalignment="top",
     )
-
-
-def draw_colorbar(fig, cac, cmap):
-    fig.colorbar(
-        ScalarMappable(norm=Normalize(vmin=0, vmax=1), cmap=cmap),
-        cax=cac,
-        orientation="horizontal",
-    )
-    cac.grid(False)
-    cac.set_xlabel("cost / num nodes", labelpad=1)
