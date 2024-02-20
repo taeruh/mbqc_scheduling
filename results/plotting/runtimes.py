@@ -10,7 +10,7 @@ def runtime():
     appendix()
 
 
-xllabel = r"number of nodes $\abs{G}$"
+xllabel = r"number of nodes $\abs{V}$"
 xrlabel = r"correction density $p_c$"
 yrlabel = r"edge density $p_e$"
 

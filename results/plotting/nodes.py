@@ -17,7 +17,7 @@ labels = [
     r"$S_{se}$",
 ]
 
-xlabel = r"number of nodes $\abs{G}$"
+xlabel = r"number of nodes $\abs{V}$"
 ytlabel = r"time cost $\mathrm{tc}$"
 yslabel = r"space cost $\mathrm{sc}$"
 
