@@ -247,8 +247,8 @@ fn run(
     via the 'into_py_graph' method; consider wrapping `time_order` into the correct type
     (to reduce potentially redundant cloning), e.g., if the object comes from the
     pauli_tracker package, replace `time_order` with
-    `PartialOrderGraph(time_order.(take_)into_py_graphs())` - in that case, consider
-    creating the `time_order` with `get_py_order` instead of `get_order`",
+    `mbqc_scheduling.PartialOrderGraph(time_order.(take_)into_py_graphs())` - in that
+    case, consider creating the `time_order` with `get_py_order` instead of `get_order`",
                 0,
             )?;
             PyResult::Ok(())
