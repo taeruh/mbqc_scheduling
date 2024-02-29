@@ -48,7 +48,7 @@ consider stabilizing it; it also has a CLI). You probably want to use it through
 [Python package] (probably in connection with the [Pauli tracker package]).
 
 [mbqc_scheduling crate]: https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling
-[Python package]: https://github.com/taeruh/mbqc_scheduling/tree/main/pauli_tracker/python_lib#readme
+[Python package]: https://github.com/taeruh/mbqc_scheduling/tree/main/python_lib#readme
 [Pauli tracker package]: https://github.com/taeruh/pauli_tracker/tree/main/python_lib#readme
 
 ## License
