@@ -8,6 +8,7 @@ use pyo3::{
     types::PyModule,
     PyAny, PyErr, PyRef, PyResult, Python,
 };
+use serde::{Deserialize, Serialize};
 
 use self::probabilistic::AcceptFuncBase;
 
@@ -113,7 +114,7 @@ pauli_tracker_pyo3::serde!(Paths);
 
 #[pyo3::pyclass(subclass)]
 /// The information describing a valid initalization-measurement path.
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Path {
     #[pyo3(get)]
     /// The number of (parallel) :attr:`steps`.
@@ -146,6 +147,8 @@ impl Path {
     #[pyo3(text_signature = "(self, time, space, steps)")]
     fn __init__(&self, _time: usize, _space: usize, _steps: Vec<Vec<usize>>) {}
 }
+
+pauli_tracker_pyo3::serde!(Path, plain);
 
 /// Search for optimal initalization-measurement paths.
 ///

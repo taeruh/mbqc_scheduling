@@ -21,13 +21,16 @@ def main():
 
     # get a time-optimal initialization-measurement pattern/path (cf. docs for other
     # things you can do with this function)
-    path = mbqc_scheduling.run(graph, time_order).into_py_paths()[0]
+    paths = mbqc_scheduling.run(graph, time_order)
+    path = paths.into_py_paths()[0]
 
     # `time` is the number of parallel measurements that is needed (it's just the length
     # of `steps`; `space` is the number of qubits required to execute the pattern (taking
     # into account, that when a qubit is measured, all its neighbors have to be
     # initialized); `steps` is the list of these parallel measurements
     print(f"time: {path.time}, space: {path.space}, steps: {path.steps}")
+    print(path.serialize_to_string())
+    print(paths.serialize_to_string())
 
 
 # A block box that returns the data for our simple example.
