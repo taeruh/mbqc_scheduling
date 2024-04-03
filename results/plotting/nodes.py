@@ -11,10 +11,10 @@ EdgeDensityType = root
 CorrectionDensityType = root
 
 labels = [
-    r"$S_{tt}$",
-    r"$S_{sa}$",
-    r"$S_{te}$",
-    r"$S_{se}$",
+    r"$S_{\text{trivial,time}}$",
+    r"$S_{\text{approx,space}}$",
+    r"$S_{\text{exact,time}}$",
+    r"$S_{\text{exact,space}}$",
 ]
 
 xlabel = r"number of nodes $\abs{V}$"
@@ -23,7 +23,7 @@ yslabel = r"space cost $\mathrm{sc}$"
 
 
 def node():
-    # main()
+    main()
     appendix()
 
 

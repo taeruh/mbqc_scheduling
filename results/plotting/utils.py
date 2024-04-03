@@ -34,9 +34,9 @@ def set_size(width_in_pt=510.0, height_in_width=1.0, scale=1.0):
 
 def subplotlabel(ac, label, x=-0.138, y=1.01):
     labels = {
-        "a": r"\textbf{(a)}",
-        "b": r"\textbf{(b)}",
-        "c": r"\textbf{(c)}",
-        "d": r"\textbf{(d)}",
+        "a": r"(a)",
+        "b": r"(b)",
+        "c": r"(c)",
+        "d": r"(d)",
     }
     ac.text(x, y, labels[label], ha="left", va="center", transform=ac.transAxes)

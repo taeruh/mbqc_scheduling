@@ -9,6 +9,7 @@ import densities, nodes
 def runtime():
     appendix()
 
+numnodes = densities.numnodes
 
 xllabel = r"number of nodes $\abs{V}$"
 xrlabel = r"correction density $p_c$"
@@ -85,7 +86,7 @@ def appendix():
     acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
 
     plt.subplots_adjust(top=0.93, bottom=0.11, left=0.07, right=0.95)
-    plt.savefig(f"output/runtime_appendix.pdf")
+    plt.savefig(f"output/runtime_appendix-{numnodes}.pdf")
 
 
 def get_data():

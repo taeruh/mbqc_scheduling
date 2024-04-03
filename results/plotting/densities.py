@@ -1,14 +1,16 @@
 from matplotlib import pyplot as plt
-from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Normalize
+
+# from matplotlib.cm import ScalarMappable
+# from matplotlib.colors import Normalize
 import json
 
 import utils
 
 
-numnodes = 20
-numdensity = 20
-# numdensity = 10
+# numnodes = 20
+# numdensity = 20
+numnodes = 13
+numdensity = 13
 
 # getting the correct spacing is really f**ked up; playing with figsize helps
 
@@ -17,102 +19,52 @@ ylabel = r"edge density $p_e$"
 
 
 def density():
-    # main()
-    appendix()
-
-
-def main():
-    fig = plt.figure(figsize=utils.set_size(height_in_width=0.67))
-    nrows = 11
+    fig = plt.figure(figsize=utils.set_size(height_in_width=1.04))
+    # fig = plt.figure(figsize=utils.set_size(height_in_width=0.67))
+    rowsfactor = 10
+    nrows = 2 * rowsfactor + 2
     nusedrows = nrows - 1
-    gs = fig.add_gridspec(nrows, 2)
-    acs = []
-    for i in range(2):
-        acs.append(fig.add_subplot(gs[:nusedrows, i]))
-    cac = fig.add_subplot(gs[nusedrows:, :])
-    map = [0, 3]
-    gs.update(wspace=0.1, hspace=0.3)
-
-    cmap = get_cmap()
-
-    im = draw_images(acs, map, cmap)
-
-    for i in range(2):
-        acs[i].grid(False)
-        acs[i].set_xticks([])
-        acs[i].set_yticks([])
-        acs[i].set_xlabel(xlabel, labelpad=16)
-        xticks(acs[i], -0.06)
-
-    acs[0].set_ylabel(ylabel, labelpad=20)
-    yticks(acs[0], -0.08)
-    acs[0].set_title(r"time cost $\mathrm{tc}(S_{tt})$")
-    acs[1].set_title(r"space cost $\mathrm{sc}(S_{sa})$")
-
-    utils.subplotlabel(acs[0], "a", -0.06, 1.06)
-    utils.subplotlabel(acs[1], "b", -0.06, 1.06)
-
-    fig.colorbar(
-        im,
-        cax=cac,
-        orientation="horizontal",
-    )
-    cac.grid(False)
-    cac.set_xlabel(r"time cost \hspace{1em}|\hspace{1em} space cost", labelpad=1)
-
-    plt.subplots_adjust(top=0.98, bottom=0.10, left=0.06, right=0.97)
-    plt.savefig(f"output/density_main-{numnodes}.pdf")
-
-
-def appendix():
-    # fig = plt.figure(figsize=utils.set_size(height_in_width=1.04))
-    fig = plt.figure(figsize=utils.set_size(height_in_width=0.67))
-    # rowsfactor = 10
-    # nrows = 2 * rowsfactor + 2
+    # nrows = 11
     # nusedrows = nrows - 1
-    nrows = 11
-    nusedrows = nrows - 1
     gs = fig.add_gridspec(nrows, 2)
     acs = []
-    # for i, j in [(i, j) for i in range(2) for j in range(2)]:
-    # acs.append(fig.add_subplot(gs[i * rowsfactor : rowsfactor * (i + 1), j]))
-    for i in range(2):
-        acs.append(fig.add_subplot(gs[:nusedrows, i]))
+    for i, j in [(i, j) for i in range(2) for j in range(2)]:
+        acs.append(fig.add_subplot(gs[i * rowsfactor : rowsfactor * (i + 1), j]))
     cac = fig.add_subplot(gs[nusedrows:, :])
-    # map = [0, 2, 1, 3]
-    map = [1, 2]
-    # gs.update(wspace=0.1, hspace=0.4)
+    map = [0, 1, 2, 3]
+    gs.update(wspace=0.1, hspace=0.4)
     gs.update(wspace=0.1, hspace=0.3)
 
     cmap = plt.get_cmap("viridis").reversed()
 
     im = draw_images(acs, map, cmap)
 
-    # for i in range(4):
-    for i in range(2):
+    figlabels = ["a", "b", "c", "d"]
+
+    def rowlabel(i, a, b, c):
+        acs[i].text(1.02, 0.54, a, transform=acs[i].transAxes, rotation=45)
+        acs[i].text(1.02, 0.46, b, transform=acs[i].transAxes, rotation=45)
+        acs[i].text(1.06, 0.42, c, transform=acs[i].transAxes, rotation=45)
+
+    for i in range(4):
         acs[i].grid(False)
         acs[i].set_xticks([])
         acs[i].set_yticks([])
-        # if i > 1:
-        acs[i].set_xlabel(xlabel, labelpad=16)
-        xticks(acs[i], -0.06)
+        utils.subplotlabel(acs[i], figlabels[i], -0.045, 1.035)
+        if i > 1:
+            acs[i].set_xlabel(xlabel, labelpad=16)
+            xticks(acs[i], -0.06)
         if i % 2 == 0:
             acs[i].set_ylabel(ylabel, labelpad=20)
             yticks(acs[i], -0.08)
-        # if i == 0:
-        #     acs[i].set_title("time optimal")
-        # if i == 1:
-        #     acs[i].set_title("space optimal (approx)")
-        #     acs[i].text(1.05, 0.5, "time cost", transform=acs[i].transAxes, rotation=45)
-        # if i == 3:
-        #     acs[i].text(
-        #         1.05, 0.5, "space cost", transform=acs[i].transAxes, rotation=45
-        #     )
-    acs[0].set_title(r"space cost $\mathrm{sc}(S_{tt})$")
-    acs[1].set_title(r"time cost $\mathrm{tc}(S_{sa})$")
+        if i == 1:
+            acs[i].set_title("space optimal (approx)")
+            rowlabel(i, "time optimal,", "trivial schedule", r"$S_{\text{trivial,time}}$")
+        if i == 3:
+            rowlabel(i, "space optimal,", "appr. schedule", r"$S_{\text{approx,space}}$")
 
-    utils.subplotlabel(acs[0], "a", -0.06, 1.06)
-    utils.subplotlabel(acs[1], "b", -0.06, 1.06)
+    acs[0].set_title(r"time cost $\mathrm{tc}(S)$")
+    acs[1].set_title(r"space cost $\mathrm{sc}(S)$")
 
     fig.colorbar(
         im,
@@ -120,11 +72,11 @@ def appendix():
         orientation="horizontal",
     )
     cac.grid(False)
-    cac.set_xlabel(r"space cost \hspace{1em}|\hspace{1em} time cost", labelpad=1)
+    # cac.set_xlabel(r"time cost \hspace{2.5em}|\hspace{2.5em} space cost", labelpad=1)
+    cac.set_xlabel(r"time cost \& space cost (cf. Def. 7)", labelpad=1)
 
-    # plt.subplots_adjust(top=0.96, bottom=0.05, left=0.06, right=0.897)
-    plt.subplots_adjust(top=0.98, bottom=0.10, left=0.06, right=0.97)
-    plt.savefig(f"output/density_appendix-{numnodes}.pdf")
+    plt.subplots_adjust(top=0.96, bottom=0.05, left=0.06, right=0.888)
+    plt.savefig(f"output/density-{numnodes}.pdf")
 
 
 def get_data(parameter: tuple[float, float]):
@@ -145,8 +97,11 @@ def draw_images(acs, map, cmap):
     len_data = len(map)
     data = [[] for _ in range(len_data)]
     parameters = utils.get_parameters("density")
+
+    # get global min and max, to set the same color scale for all images
     min = numnodes
     max = 0
+
     for para in parameters:
         dat = get_data(para)["results"]
         for i in range(len_data):

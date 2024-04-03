@@ -1,8 +1,8 @@
 use plots::Args;
 
-// const NCPUS: u16 = 9;
+const NCPUS: u16 = 9;
 // const NCPUS: u16 = 1;
-const NCPUS: u16 = 30; // cf. ncpus in scripts/exe_hpc.bash
+// const NCPUS: u16 = 30; // cf. ncpus in scripts/exe_hpc.bash
 
 // const NUM_AVERAGE: usize = 3000;
 const NUM_AVERAGE: usize = 1000;
