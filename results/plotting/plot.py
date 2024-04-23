@@ -5,7 +5,7 @@ import utils
 
 def main():
     utils.paper_setup()
-    # node()
+    node()
     density()
     runtime()
 

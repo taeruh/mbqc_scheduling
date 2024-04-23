@@ -7,10 +7,10 @@ import json
 import utils
 
 
-# numnodes = 20
-# numdensity = 20
-numnodes = 13
-numdensity = 13
+numnodes = 20
+numdensity = 20
+# numnodes = 13
+# numdensity = 13
 
 # getting the correct spacing is really f**ked up; playing with figsize helps
 
@@ -35,7 +35,7 @@ def density():
     gs.update(wspace=0.1, hspace=0.4)
     gs.update(wspace=0.1, hspace=0.3)
 
-    cmap = plt.get_cmap("viridis").reversed()
+    cmap = get_cmap()
 
     im = draw_images(acs, map, cmap)
 
@@ -59,9 +59,13 @@ def density():
             yticks(acs[i], -0.08)
         if i == 1:
             acs[i].set_title("space optimal (approx)")
-            rowlabel(i, "time optimal,", "trivial schedule", r"$S_{\text{trivial,time}}$")
+            rowlabel(
+                i, "time optimal,", "trivial schedule", r"$S_{\text{trivial,time}}$"
+            )
         if i == 3:
-            rowlabel(i, "space optimal,", "appr. schedule", r"$S_{\text{approx,space}}$")
+            rowlabel(
+                i, "space optimal,", "appr. schedule", r"$S_{\text{approx,space}}$"
+            )
 
     acs[0].set_title(r"time cost $\mathrm{tc}(S)$")
     acs[1].set_title(r"space cost $\mathrm{sc}(S)$")
@@ -75,7 +79,7 @@ def density():
     # cac.set_xlabel(r"time cost \hspace{2.5em}|\hspace{2.5em} space cost", labelpad=1)
     cac.set_xlabel(r"time cost \& space cost (cf. Def. 7)", labelpad=1)
 
-    plt.subplots_adjust(top=0.96, bottom=0.05, left=0.06, right=0.888)
+    plt.subplots_adjust(top=0.97, bottom=0.05, left=0.07, right=0.885)
     plt.savefig(f"output/density-{numnodes}.pdf")
 
 
@@ -90,7 +94,7 @@ def get_data(parameter: tuple[float, float]):
 
 
 def get_cmap():
-    return plt.get_cmap("viridis").reversed()
+    return plt.get_cmap("turbo").reversed()  # "jet"
 
 
 def draw_images(acs, map, cmap):

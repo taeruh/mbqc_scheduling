@@ -56,6 +56,7 @@ def appendix():
     density_data = data["density"]
 
     cmap = densities.get_cmap()
+    cmap = plt.get_cmap("viridis").reversed()
 
     print(density_data["min"], density_data["max"])
     im = acs[1].imshow(
