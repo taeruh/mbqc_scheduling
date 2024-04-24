@@ -19,12 +19,12 @@ use crate::{
 // occur); important: I'm not sure why, but on our cluster each size may take up to 5ms
 // longer
 
-// const WALLTIME: u64 = 120; // cf. walltime in scripts/exe_hpc.bash
-const WALLTIME: u64 = 40; // cf. walltime in scripts/exe_hpc.bash
+const WALLTIME: u64 = 192; // cf. walltime in scripts/exe_hpc.bash
+// 2h buffer (better to be safe)
 const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 =
     crate::timeout_per_single_shot_sweep(WALLTIME, 120);
 
-const MAX_SIZE: usize = 40;
+const MAX_SIZE: usize = 45;
 const MAX_EXACT_SIZE: usize = 20;
 
 // account for additional exact search; rough (pessimistic; better be safe than sorry)
@@ -46,8 +46,8 @@ fn timeouts() -> [Duration; MAX_SIZE + 1] {
         / (1. / 6. * (MAX_SIZE * (MAX_SIZE + 1) * (2 * MAX_SIZE + 1)) as f64 - 1.);
     for size in RANGE {
         ret[size] = Duration::from_nanos(
+            // additional buffer time for starting the job
             ((a * (size as f64).powi(2)).round() as u64).saturating_sub(5_000_000),
-            // 100_000_000,
         )
     }
     ret

@@ -11,17 +11,11 @@ use serde::Serialize;
 use super::{ConstantDensity, Times};
 use crate::{plots::Density, NCPUS, NUM_AVERAGE};
 
-// depending on the walltime we timeout; do a test run for the first view sizes and ensure
-// that there's enough time such that the first few sizes definitely find at least one
-// path (run with cargo run --release --no-default-features to see whether timeouts
-// occur); important: I'm not sure why, but on our cluster each size may take up to 2.5ms
-// longer
-
-const WALLTIME: u64 = 3; // cf. walltime in scripts/exe_hpc.bash
+const WALLTIME: u64 = 10; // cf. walltime in scripts/exe_hpc.bash
 const TIMEOUT_PER_SINGLE_SHOT_SWEEP: u64 =
-    crate::timeout_per_single_shot_sweep(WALLTIME, 20);
+    crate::timeout_per_single_shot_sweep(WALLTIME, 30);
 
-const NUM_DENSITIES: usize = 13;
+const NUM_DENSITIES: usize = 21;
 const RANGE: Range<usize> = 1..NUM_DENSITIES + 1;
 
 fn density(multiplier: f64) -> ConstantDensity {
