@@ -11,9 +11,9 @@ def runtime():
 
 numnodes = densities.numnodes
 
-xllabel = r"number of nodes $\abs{V}$"
-xrlabel = r"correction density $p_c$"
-yrlabel = r"edge density $p_e$"
+xllabel = r"Number of vertices $\abs{V}$"
+xrlabel = r"Correction density $p_c$"
+yrlabel = r"Edge density $p_e$"
 
 def appendix():
     fig = plt.figure(figsize=utils.set_size(height_in_width=0.5))
@@ -33,7 +33,7 @@ def appendix():
 
     data = get_data()
 
-    labels = ["approx. search", "exact optimization"]
+    labels = ["Approx. search", "Exact optimization"]
 
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     colors = [colors[3], colors[2]]
@@ -50,7 +50,7 @@ def appendix():
             linestyle=linestyles[i],
         )
     acs[0].set_yscale("log")
-    acs[0].set_ylabel("run-time [nanoseconds]")
+    acs[0].set_ylabel("Run-time [nanoseconds]")
     acs[0].set_xlabel(xllabel)
 
     density_data = data["density"]
@@ -67,7 +67,7 @@ def appendix():
     )
     acs[1].set_xlabel(xrlabel, labelpad=17)
     acs[1].set_ylabel(yrlabel, labelpad=22)
-    acs[1].set_title("run-time [nanoseconds] (approx. search)", pad=6)
+    acs[1].set_title("Run-time [nanoseconds] (approx. search)", pad=6)
     acs[1].set_xticks([])
     acs[1].set_yticks([])
     densities.xticks(acs[1], -0.06)
@@ -86,7 +86,7 @@ def appendix():
     handles, labels = acs[0].get_legend_handles_labels()
     acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
 
-    plt.subplots_adjust(top=0.93, bottom=0.11, left=0.07, right=0.95)
+    plt.subplots_adjust(top=0.93, bottom=0.11, left=0.072, right=0.962)
     plt.savefig(f"output/runtime_appendix-{numnodes}.pdf")
 
 

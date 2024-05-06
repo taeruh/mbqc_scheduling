@@ -15,12 +15,13 @@ def paper_setup():
         [
             "./plotting/styles/ownstandard.mplstyle",
             "./plotting/styles/ownlatex.mplstyle",
+            # "./plotting/styles/owndark.mplstyle",
         ]
     )
     plt.rcParams.update(
         {
             "figure.figsize": [*set_size()],
-            "font.size": 10,
+            "font.size": 9,
             "lines.linewidth": 1.5,
         }
     )

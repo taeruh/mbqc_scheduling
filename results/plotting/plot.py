@@ -2,6 +2,9 @@
 
 import utils
 
+# output = "output"
+output = "data"
+
 
 def main():
     utils.paper_setup()

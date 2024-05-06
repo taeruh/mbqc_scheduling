@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 import json
 
 import utils
+import plot
 
 con = "constant"
 lin = "reziprocal_linear"
@@ -17,14 +18,14 @@ labels = [
     r"$S_{\text{exact,space}}$",
 ]
 
-xlabel = r"number of nodes $\abs{V}$"
-ytlabel = r"time cost $\mathrm{tc}$"
-yslabel = r"space cost $\mathrm{sc}$"
+xlabel = r"Number of vertices $\abs{V}$"
+ytlabel = r"Time cost $\mathrm{tc}$"
+yslabel = r"Space cost $\mathrm{sc}$"
 
 
 def node():
     main()
-    appendix()
+    # appendix()
 
 
 def main():
@@ -74,12 +75,12 @@ def main():
     acs[1].set_ylabel(yslabel)
 
     utils.subplotlabel(acs[0], "a")
-    utils.subplotlabel(acs[1], "b")
+    utils.subplotlabel(acs[1], "b", x=-0.11)
 
     handles, leg_labels = acs[0].get_legend_handles_labels()
     acs[0].legend(handles, leg_labels, loc="upper left", labelspacing=0.25)
 
-    plt.subplots_adjust(top=0.95, bottom=0.10, left=0.07, right=0.97)
+    plt.subplots_adjust(top=0.96, bottom=0.09, left=0.060, right=0.99)
     plt.savefig(f"output/nodes_main.pdf")
 
 
@@ -148,7 +149,7 @@ def appendix():
 
 def get_data(parameter: tuple[float, float]):
     file = (
-        f"output/node-{EdgeDensityType}:{parameter[0]}_"
+        f"{plot.output}/node-{EdgeDensityType}:{parameter[0]}_"
         f"{CorrectionDensityType}:{parameter[1]}.json"
     )
     with open(file, "r") as f:

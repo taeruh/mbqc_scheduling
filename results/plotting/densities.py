@@ -1,21 +1,25 @@
+import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib import cm
+from matplotlib.colors import LinearSegmentedColormap
 
 # from matplotlib.cm import ScalarMappable
 # from matplotlib.colors import Normalize
 import json
 
 import utils
+import plot
 
 
 numnodes = 20
-numdensity = 20
+numdensity = 21
 # numnodes = 13
 # numdensity = 13
 
 # getting the correct spacing is really f**ked up; playing with figsize helps
 
-xlabel = r"correction density $p_c$"
-ylabel = r"edge density $p_e$"
+xlabel = r"Correction density $p_c$"
+ylabel = r"Edge density $p_e$"
 
 
 def density():
@@ -60,15 +64,15 @@ def density():
         if i == 1:
             acs[i].set_title("space optimal (approx)")
             rowlabel(
-                i, "time optimal,", "trivial schedule", r"$S_{\text{trivial,time}}$"
+                i, "Time-optimal,", "trivial schedule", r"$S_{\text{trivial,time}}$"
             )
         if i == 3:
             rowlabel(
-                i, "space optimal,", "appr. schedule", r"$S_{\text{approx,space}}$"
+                i, "Space-optimal,", "approx. schedule", r"$S_{\text{approx,space}}$"
             )
 
-    acs[0].set_title(r"time cost $\mathrm{tc}(S)$")
-    acs[1].set_title(r"space cost $\mathrm{sc}(S)$")
+    acs[0].set_title(r"Time cost $\mathrm{tc}(S)$")
+    acs[1].set_title(r"Space cost $\mathrm{sc}(S)$")
 
     fig.colorbar(
         im,
@@ -77,15 +81,15 @@ def density():
     )
     cac.grid(False)
     # cac.set_xlabel(r"time cost \hspace{2.5em}|\hspace{2.5em} space cost", labelpad=1)
-    cac.set_xlabel(r"time cost \& space cost (cf. Def. 7)", labelpad=1)
+    cac.set_xlabel(r"Time cost \& space cost (cf. Def. 7)", labelpad=1)
 
-    plt.subplots_adjust(top=0.97, bottom=0.05, left=0.07, right=0.885)
+    plt.subplots_adjust(top=0.97, bottom=0.05, left=0.064, right=0.882)
     plt.savefig(f"output/density-{numnodes}.pdf")
 
 
 def get_data(parameter: tuple[float, float]):
     file = (
-        f"output/density-numnodes:{numnodes}_numdensities:{numdensity}_"
+        f"{plot.output}/density-numnodes:{numnodes}_numdensities:{numdensity}_"
         f"density:{int(parameter[1])}.json"
     )
     with open(file, "r") as f:
@@ -94,7 +98,11 @@ def get_data(parameter: tuple[float, float]):
 
 
 def get_cmap():
-    return plt.get_cmap("turbo").reversed()  # "jet"
+    cmap = cm.get_cmap("viridis").reversed()
+    cmap = LinearSegmentedColormap.from_list(
+        "cut_cmap", cmap(np.linspace(0.0, 0.95, 1000))
+    )
+    return cmap
 
 
 def draw_images(acs, map, cmap):
