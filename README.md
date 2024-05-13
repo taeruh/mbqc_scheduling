@@ -51,6 +51,29 @@ consider stabilizing it; it also has a CLI). You probably want to use it through
 [Python package]: https://github.com/taeruh/mbqc_scheduling/tree/main/python_lib#readme
 [Pauli tracker package]: https://github.com/taeruh/pauli_tracker/tree/main/python_lib#readme
 
+## How to cite
+
+When you use this library in research, please cite [this paper](https://arxiv.org/abs/2405.03970):
+```bibtex
+@misc{ruh2024quantum,
+  title={Quantum Circuit Optimisation and {MBQC} Scheduling with a {Pauli} Tracking Library}, 
+  author={Jannis Ruh and Simon Devitt},
+  year={2024},
+  eprint={2405.03970},
+  archivePrefix={arXiv},
+  primaryClass={quant-ph}
+}
+```
+and/or this project:
+```bibtex
+@misc{mbqc_scheduling_software,
+  author = {{MBQC-Scheduling contributors}},
+  title = {{MBQC} Scheduling: Scheduling in measurement-based quantum computing},
+  note = {available at \url{https://github.com/taeruh/mbqc_scheduling}},
+  year = {2024},
+}
+```
+
 ## License
 
 The MBQC Scheduling project is distributed under the terms of both the MIT license and the
