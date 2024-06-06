@@ -406,14 +406,14 @@ impl Measurements<TrackedCircuit<DummyCircuit, Frames<Storage>, Storage>>
         self.0.push(bit)
     }
 }
-struct ResultMeasured(Vec<bool>);
-impl Measurements<TrackedCircuit<RandomMeasurementCircuit, Live<PauliTuple>, ()>>
-    for ResultMeasured
-{
-    fn store(&mut self, _: usize, result: bool) {
-        self.0.push(result);
-    }
-}
+// struct ResultMeasured(Vec<bool>);
+// impl Measurements<TrackedCircuit<RandomMeasurementCircuit, Live<PauliTuple>, ()>>
+//     for ResultMeasured
+// {
+//     fn store(&mut self, _: usize, result: bool) {
+//         self.0.push(result);
+//     }
+// }
 
 pub trait ExtendCircuit {
     type Output;

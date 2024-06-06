@@ -8,8 +8,6 @@ and data structures are described in terms of a tree.
 
 use std::mem;
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 /// A trait which acts a little bit like a [zipper](https://wiki.haskell.org/Zipper).

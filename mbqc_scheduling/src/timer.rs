@@ -1,3 +1,7 @@
+/*!
+Basic timing functionality (not precise).
+*/
+
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},

@@ -1,3 +1,10 @@
+// TODO: This was originally written to be a generic part of a library, so that one can do
+// automatic scheduling and manual scheduling. I don't think that we need this
+// flexibiblity anymore, but only do the automatic scheduling. So we should simplify the
+// API and make it more consice and possibly more efficient.
+// EDIT: Actully, I might be a good idea to keep it generic, because I think we might want
+// to change the automatic scheduling in the future (and be flexible with it).
+
 #![doc = include_str!("../xdocs/scheduler.md")]
 
 mod combinatoric;

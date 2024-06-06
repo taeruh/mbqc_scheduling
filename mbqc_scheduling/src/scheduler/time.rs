@@ -1,8 +1,8 @@
 /*!
-Given a [DependencyGraph], there are only specific allowed sequences of measuring
+Given a [PartialOrderGraph], there are only specific allowed sequences of measuring
 qubits. This module provides a [PathGenerator] that can generate all allowed paths.
 
-The time ordering defined by the [DependencyGraph] is often induced by non-determinism
+The time ordering defined by the [PartialOrderGraph] is often induced by non-determinism
 introduced by quantum measurements, e.g., as in MBQC, and captured by a Pauli tracker
 (cf. [README]).
 
@@ -21,13 +21,15 @@ use super::{
     tree::{Focus, FocusIterator, Step, Sweep},
     Partition,
 };
-use crate::interface::RefPartialOrderGraph;
+
+pub type RefPartialOrderGraph<'l> = &'l [Vec<(usize, Vec<usize>)>];
 
 type DepsCounters = HashMap<usize, usize, BuildHasherDefault<FxHasher>>;
 type Dependents = Vec<Vec<usize>>;
 
 /// A buffer that holds the dependency structure implied by a [PartialOrderGraph], in a
-/// form that is more efficient for the [PathGenerator]
+/// form that is more efficient for the [PathGenerator]. It will be initialized once and
+/// then only ever accessed by references.
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DependencyBuffer {
     dependents: Dependents,
@@ -53,7 +55,7 @@ type Set = Vec<usize>;
 pub type Partitioner = Partition<Set>;
 
 /// A generator to create a scheduling path - initialization and measuring of qubits -
-/// allowed by a [DependencyGraph].
+/// allowed by a [PartialOrderGraph].
 ///
 /// The generator can be used with a [Partitioner] as generic parameter T, which allows
 /// to iterate through all possible paths, or with a [`Vec<usize>`] to choose the path
@@ -63,7 +65,7 @@ pub struct PathGenerator<'l, T /* Measurable */> {
     // one could also put the dependents with the bit into the partition set and in deps
     // have values of the form (dependents, dependencies), however, the Partition clones
     // the set multiple times, therefore we don't want the dependents in there (also it
-    // makes the from(DependencyGraph) function and the step function simpler if it is
+    // makes the from(PartialOrderGraph) function and the step function simpler if it is
     // separated)
     measurable: T,
     deps_counter: DepsCounters,
@@ -92,13 +94,13 @@ impl<'l, T> PathGenerator<'l, T> {
         }
     }
 
-    /// Get a reference to currently the measurable set of qubits.
-    #[deprecated(since = "0.3.1", note = "use `measurable` instead")]
+    /// Get a reference to the currently measurable set of qubits.
+    #[deprecated(since = "0.1.1", note = "use `measurable` instead")]
     pub fn measureable(&self) -> &T {
         self.measurable()
     }
 
-    /// Get a reference to currently the measurable set of qubits.
+    /// Get a reference to the currently measurable set of qubits.
     pub fn measurable(&self) -> &T {
         &self.measurable
     }
@@ -115,7 +117,7 @@ impl<'l, T> PathGenerator<'l, T> {
 }
 
 impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
-    /// Create a new [PathGenerator] from a [DependencyGraph]. `dependency_buffer` is
+    /// Create a new [PathGenerator] from a [PartialOrderGraph]. `dependency_buffer` is
     /// going to own the dependency structure implied by the `graph`, so that it can be
     /// reused again.
     ///
@@ -123,7 +125,7 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
     /// Panics if the dependency_buffer has a length smaller than the number of qubits
     /// in the `graph`
     pub fn from_dependency_graph(
-        graph: &RefPartialOrderGraph,
+        graph: RefPartialOrderGraph,
         dependency_buffer: &'l mut DependencyBuffer,
         bit_mapping: Option<&HashMap<usize, usize>>,
     ) -> Self {

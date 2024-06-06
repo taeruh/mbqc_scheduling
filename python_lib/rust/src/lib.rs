@@ -117,13 +117,15 @@ pauli_tracker_pyo3::serde!(Paths);
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Path {
     #[pyo3(get)]
-    /// The number of (parallel) :attr:`steps`.
+    /// The time cost, i.e., the number of parallel measurement :attr:`steps` (it's just
+    /// `len(steps)`)
     pub time: usize,
     #[pyo3(get)]
-    /// The number of required qubits.
+    /// The space cost, i.e., the maximum number of qubits that have been in memory at a
+    /// certain point in time.
     pub space: usize,
     #[pyo3(get)]
-    /// The initialization-measurement steps.
+    /// The measurement pattern, consisting of a list of parallel measurement steps.
     pub steps: Vec<Vec<usize>>,
 }
 
@@ -137,10 +139,9 @@ impl Path {
     /// Create a new Path object.
     ///
     /// Args:
-    ///     time (int): The number of (parallel) steps (should be the length of
-    ///         :attr:`steps`).
-    ///     space (int): The number of required qubits.
-    ///     steps (list[list[int]]): The initialization-measurement steps.
+    ///     time (int): :attr:`time`
+    ///     space (int): :attr:`space`
+    ///     steps (list[list[int]]): :attr:`steps`
     ///
     /// Returns:
     ///     Path:

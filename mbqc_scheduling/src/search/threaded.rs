@@ -1,3 +1,16 @@
+// We do the same as in [super], but multi-thread it. This is done with a threadpool. The
+// search run the same search algorithms as in [super], and update the shared
+// `best_memory(_per_time_cost)` periodically. We share the `best_memory` so that the
+// search threads do not perform searches for paths for we already know that we have a
+// better path.
+// PERF: The shared `best_memory` is locked for each update, and I have a feeling that we
+// are not fully using the CPU cores. Maybe there is better way to share this information
+// (we basically need to ensure, that when mutiple threads write at the same "time" the
+// smallest memory is inserted); mabye we can even do somting directly with atomics, but
+// that will require some extra care.
+// (We also lock the results, but I don't think this is a problem, because it is not often
+// updated)
+
 use std::{
     cmp::Ordering,
     collections::HashMap,
@@ -9,7 +22,7 @@ use rand::{distributions::Uniform, Rng, SeedableRng};
 use rand_pcg::Pcg64;
 use scoped_threadpool::Pool;
 
-use super::{MappedPaths, OnePath};
+use super::{MappedPaths, Steps};
 use crate::{
     probabilistic::{Accept, AcceptBox},
     scheduler::{
@@ -19,6 +32,10 @@ use crate::{
     },
     timer::Timer,
 };
+
+// after that many steps, the `best_memory` is updated
+// (this is rather a random constant at the moment)
+const UPDATE_INTERVAL: usize = 1000;
 
 pub fn search(
     nthreads: u16,
@@ -46,6 +63,8 @@ pub fn search(
 
     let mut ntasks = 0;
     pool.scoped(|scope| {
+        // we parallelize by splitting the search in the first layer of the tree
+        //
         // if probabilistic is true, one should maybe already skip here according to
         // the accept_func; but maybe it is actually good to not do it, because this
         // increases the probability that we get at least some results
@@ -149,8 +168,8 @@ fn update(
     update_counter: &mut usize,
     timer: &Timer,
 ) -> bool {
-    if *update_counter == 1000 {
-    // if *update_counter == 10 {
+    //
+    if *update_counter == UPDATE_INTERVAL {
         best_memory
             .lock()
             .expect("failed to lock best_memory")
@@ -171,7 +190,7 @@ fn update(
 
 fn do_search(
     mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
-    init_path: Option<OnePath>,
+    init_path: Option<Steps>,
     best_memory: &Arc<Mutex<Vec<usize>>>,
     timer: &Timer,
 ) -> (MappedPaths, Vec<usize>) {
@@ -180,6 +199,9 @@ fn do_search(
     let mut current_path = init_path.unwrap_or_default();
     let mut this_best_mem =
         best_memory.lock().expect("failed to lock predicates").to_vec();
+    // we usually start counting at 1, however, for the first round we have the special
+    // case that we may not update at all, and we want to catch that case, which is
+    // "encoded" by 0 here; cf. the conditional ...==0 below
     let mut update_counter = 0;
 
     while let Some(step) = scheduler.next() {
@@ -223,7 +245,7 @@ fn do_search(
 
 fn do_probabilistic_search(
     mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
-    init_path: Option<OnePath>,
+    init_path: Option<Steps>,
     best_memory: &Arc<Mutex<Vec<usize>>>,
     timer: &Timer,
     (accept_func, seed): (&Accept, u64),

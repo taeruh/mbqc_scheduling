@@ -1,10 +1,18 @@
 /*!
 Search for the optimal initialization-measurement paths. This module has nothing to do
-with pauli tracking anymore, except that we take the [DependencyGraph] as input.
+with pauli tracking anymore, except that we take the a reference to [PartialOrderGraph] as
+input.
+
+[PartialOrderGraph]: pauli_tracker::tracker::frames::induced_order::PartialOrderGraph
 */
 
 // the logic of the path search is basically described in the documentation of the
 // schedule module; here I'm basically just multithreading it
+//
+// to understand this code, first look at the example in the scheduler module, then at the
+// single-threaded non-probablistic search here, then at the single-threaded probabilistic
+// here, then at the according threaded versions in [threaded]; they are all very similar
+// and I don't want to repeat myself in the comments
 
 use std::{cmp, collections::HashMap, time::Duration};
 
@@ -15,27 +23,34 @@ use rand::{
 use rand_pcg::Pcg64;
 
 use crate::{
-    interface::{Path, RefPartialOrderGraph},
+    interface::Path,
     probabilistic::{Accept, AcceptBox},
     scheduler::{
-        space::Graph,
-        time::{DependencyBuffer, Partitioner, PathGenerator},
+        space::{Graph, RefSpacialGraph},
+        time::{DependencyBuffer, Partitioner, PathGenerator, RefPartialOrderGraph},
         tree::{Focus, FocusIterator, Step, Sweep},
         Partition, Scheduler,
     },
     timer::Timer,
 };
 
-mod threaded;
-pub type SpacialGraph = Vec<Vec<usize>>;
-pub type RefSpacialGraph = [Vec<usize>];
+pub type Steps = Vec<Vec<usize>>;
 
+mod threaded;
+
+/// The **trivial** time-optimal schedule. Regarding the parameters, cf.
+/// [interface::run](crate::interface::run).
+// PERF: This function can be clearly optimized: currently we are using the full Scheduler
+// with manual scheduling, however, since we know the measurement steps are just the
+// layers in the time_order DAG, we could just use space::Graph directly and feed in the
+// layers to calculate the memory usage.
 pub fn get_time_optimal(
-    spacial_graph: &RefSpacialGraph,
-    time_ordering: &RefPartialOrderGraph,
+    spacial_graph: RefSpacialGraph,
+    time_ordering: RefPartialOrderGraph,
 ) -> Vec<Path> {
+    // more efficient data structure for the input such that referencing it is fairly
+    // cheap
     let mut dependency_buffer = DependencyBuffer::new(spacial_graph.len());
-    // let graph_buffer = GraphBuffer::from_sparse(spacial_graph);
     let graph_buffer = spacial_graph;
 
     let mut scheduler = Scheduler::<Vec<usize>>::new(
@@ -46,6 +61,7 @@ pub fn get_time_optimal(
     let mut path = Vec::new();
     let mut max_memory = 0;
 
+    // greedily measuring as much as possible
     while !scheduler.time().measurable().is_empty() {
         let measurable_set = scheduler.time().measurable().clone();
         scheduler.focus_inplace(&measurable_set).expect(
@@ -62,12 +78,14 @@ pub fn get_time_optimal(
     }]
 }
 
-type OnePath = Vec<Vec<usize>>;
 type MappedPaths = HashMap<usize, (usize, Vec<Vec<usize>>)>;
 
+/// Perform a depth-first search through the tree that is (dynamically) spanned through
+/// the possible patterns for time and/or space optimality. Regarding the parameters, cf.
+/// [interface::run](crate::interface::run).
 pub fn search(
-    spacial_graph: &RefSpacialGraph,
-    time_ordering: &RefPartialOrderGraph,
+    spacial_graph: RefSpacialGraph,
+    time_ordering: RefPartialOrderGraph,
     timeout: Option<Duration>,
     nthreads: u16,
     probabilistic: Option<(AcceptBox, Option<u64>)>,
@@ -98,14 +116,17 @@ pub fn search(
         threaded::search(nthreads, num_bits, scheduler, task_bound, probabilistic, &timer)
     };
 
+    // we don't want all results: let's say we have the results A and B, where time(A) <
+    // time(B) and also space(A) < space(B), then we can discard B
     let mut filtered_results = HashMap::new();
-    let mut best_memory = vec![usize::MAX; num_bits + 1];
-    for i in 0..best_memory.len() {
+    // in the following array, the time cost is the index and the memory cost is the value
+    let mut best_memory_per_time_cost = vec![usize::MAX; num_bits + 1];
+    for i in 0..best_memory_per_time_cost.len() {
         if let Some((mem, _)) = results.get(&i) {
-            let m = best_memory[i];
+            let m = best_memory_per_time_cost[i];
             if *mem < m {
                 filtered_results.insert(i, results.get(&i).unwrap().clone());
-                for m in best_memory[i..].iter_mut() {
+                for m in best_memory_per_time_cost[i..].iter_mut() {
                     *m = *mem;
                 }
             }
@@ -129,6 +150,7 @@ fn do_search(
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
     let mut current_path = Vec::new();
+    // in the following array, the time cost is the index and the memory cost is the value
     let mut best_memory = vec![usize::MAX; num_bits + 1];
     while let Some(step) = scheduler.next() {
         match step {
@@ -151,10 +173,7 @@ fn do_search(
 }
 
 #[inline]
-fn minimum_path_length(
-    time: &PathGenerator<Partitioner>,
-    current_path: &OnePath,
-) -> usize {
+fn minimum_path_length(time: &PathGenerator<Partitioner>, current_path: &Steps) -> usize {
     if time.at_leaf().is_some() {
         current_path.len() + 1
     } else if time.has_unmeasureable() {
@@ -169,7 +188,7 @@ fn forward(
     measure: Vec<usize>,
     scheduler: &mut Sweep<Scheduler<Partitioner>>,
     best_memory: &[usize],
-    current_path: &mut OnePath,
+    current_path: &mut Steps,
 ) -> bool {
     let current = scheduler.current();
     let space = current.space();
@@ -188,7 +207,7 @@ fn forward(
 #[inline]
 fn backward(
     leaf: Option<usize>,
-    current_path: &mut OnePath,
+    current_path: &mut Steps,
     best_memory: &mut [usize],
     results: &mut MappedPaths,
 ) {
@@ -202,6 +221,8 @@ fn backward(
     current_path.pop();
 }
 
+// basically the same as do_search, but on each forward step, we probabilistic decide
+// whether we do this step/node or skip in in our possible-paths-tree
 fn do_probabilistic_search(
     mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
     num_bits: usize,
@@ -262,7 +283,7 @@ fn probabilistic_forward(
     measure: Vec<usize>,
     scheduler: &mut Sweep<Scheduler<Partitioner>>,
     best_memory: &[usize],
-    current_path: &mut OnePath,
+    current_path: &mut Steps,
     last_cur_mem: usize,
     last_max_mem: usize,
     rng: &mut impl rand::Rng,

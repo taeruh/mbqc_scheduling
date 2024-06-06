@@ -15,7 +15,9 @@ use hashbrown::HashMap;
 use thiserror::Error;
 
 use super::tree::Focus;
-use crate::search::RefSpacialGraph;
+
+pub type SpacialGraph = Vec<Vec<usize>>;
+pub type RefSpacialGraph<'l> = &'l [Vec<usize>];
 
 /// A single node, containing the state of the qubit and the edges to other qubits. The
 /// edges are usually owned by a [GraphBuffer].
@@ -127,7 +129,7 @@ impl GraphBuffer {
 
 impl<'l> Graph<'l> {
     /// Create a freshly initialized graph from a `graph_buffer`.
-    pub fn new(graph_buffer: &'l RefSpacialGraph) -> Self {
+    pub fn new(graph_buffer: RefSpacialGraph<'l>) -> Self {
         Self {
             nodes: graph_buffer
                 .iter()

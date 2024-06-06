@@ -1,24 +1,34 @@
+/*!
+Main interface to run the search algorithms.
+*/
+
 use std::{error, fmt, fs, fs::File, io, path, time::Duration};
 
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-pub use crate::search::SpacialGraph;
-use crate::{
-    probabilistic::AcceptFunc,
-    search::{self, RefSpacialGraph},
+use crate::{probabilistic::AcceptFunc, scheduler::space::SpacialGraph, search};
+pub use crate::{
+    scheduler::{space::RefSpacialGraph, time::RefPartialOrderGraph},
+    search::Steps,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+/// Description of a measurement pattern/path/schedule
+// Pattern would be a better name, however, we also use Path in the python wrapper, which
+// is published, so we wait until we have to do a breaking change for other reasons there.
 pub struct Path {
+    /// The time cost, i.e., the number of parallel measurement `steps` (it's just
+    /// `steps.len()`).
     pub time: usize,
+    /// The space cost, i.e., the maximum number of qubits that have been in memory at a
+    /// certain point in time.
     pub space: usize,
-    pub steps: Vec<Vec<usize>>,
+    /// The measurement pattern, consisting of a list of parallel measurement steps.
+    pub steps: Steps,
 }
 
-pub type RefPartialOrderGraph = [Vec<(usize, Vec<usize>)>];
-
-/// Searching for optimal initialization-measurement paths.
+/// Searching for optimal initialization-measurement [Path]s.
 ///
 /// # Arguments
 ///
@@ -59,9 +69,8 @@ pub type RefPartialOrderGraph = [Vec<(usize, Vec<usize>)>];
 /// Note that the algorithm always first tries the more time optimal patterns, however,
 /// whether they are accepted can be controlled with the `probabilistic` accept function.
 pub fn run(
-    spacial_graph: &RefSpacialGraph,
-    // time_ordering: PartialOrderGraph,
-    time_ordering: &RefPartialOrderGraph,
+    spacial_graph: RefSpacialGraph,
+    time_ordering: RefPartialOrderGraph,
     do_search: bool,
     timeout: Option<Duration>,
     nthreads: u16,
