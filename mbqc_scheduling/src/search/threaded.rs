@@ -11,12 +11,7 @@
 // (We also lock the results, but I don't think this is a problem, because it is not often
 // updated)
 
-use std::{
-    cmp::Ordering,
-    collections::HashMap,
-    ops::Deref,
-    sync::{Arc, Mutex},
-};
+use std::{cmp::Ordering, collections::HashMap, ops::Deref, sync::Mutex};
 
 use rand::{distributions::Uniform, Rng, SeedableRng};
 use rand_pcg::Pcg64;
@@ -47,8 +42,8 @@ pub fn search(
 ) -> MappedPaths {
     let mut pool = Pool::new(nthreads as u32);
 
-    let best_memory = Arc::new(Mutex::new(vec![usize::MAX; num_bits + 1]));
-    let results: Arc<Mutex<MappedPaths>> = Arc::new(Mutex::new(HashMap::new()));
+    let best_memory = Mutex::new(vec![usize::MAX; num_bits + 1]);
+    let results: Mutex<MappedPaths> = Mutex::new(HashMap::new());
     let mut probabilistic = match probabilistic {
         Some((ref func, seed)) => Some((
             func.deref(),
@@ -69,8 +64,8 @@ pub fn search(
         // the accept_func; but maybe it is actually good to not do it, because this
         // increases the probability that we get at least some results
         while let Some((scheduler_focused, init_measure)) = scheduler.next_and_focus() {
-            let best_memory = best_memory.clone();
-            let results = results.clone();
+            let best_memory = &best_memory;
+            let results = &results;
             let probabilistic = match probabilistic {
                 Some((func, ref mut rng)) => Some((func, rng.gen())),
                 None => None,
@@ -92,24 +87,25 @@ pub fn search(
             }
         }
 
-        // remaining search tasks; note that this one takes ownership of best_memory
-        let results = results.clone();
+        // remaining search tasks
+        let results = &results;
         let probabilistic = match probabilistic {
             Some((func, ref mut rng)) => Some((func, rng.gen())),
             None => None,
         };
+        let best_memory = &best_memory;
         scope.execute(move || {
             task(best_memory, results, scheduler, -1, None, timer, probabilistic)
         });
     });
 
-    Arc::into_inner(results).unwrap().into_inner().unwrap()
+    results.into_inner().unwrap()
 }
 
 #[allow(clippy::too_many_arguments)]
 fn task(
-    best_memory: Arc<Mutex<Vec<usize>>>,
-    results: Arc<Mutex<MappedPaths>>,
+    best_memory: &Mutex<Vec<usize>>,
+    results: &Mutex<MappedPaths>,
     scheduler: Scheduler<Partitioner>,
     ntasks: i64,
     measure: Option<Vec<usize>>,
@@ -128,12 +124,12 @@ fn task(
         do_probabilistic_search(
             scheduler.into_iter(),
             measure.map(|e| vec![e]),
-            &best_memory,
+            best_memory,
             timer,
             probabilistic,
         )
     } else {
-        do_search(scheduler.into_iter(), measure.map(|e| vec![e]), &best_memory, timer)
+        do_search(scheduler.into_iter(), measure.map(|e| vec![e]), best_memory, timer)
     };
 
     tracing::debug!("DONE: results {:?}; best_memory {:?}", new_results, this_best_mem,);
@@ -163,7 +159,7 @@ fn task(
 
 #[inline]
 fn update(
-    best_memory: &Arc<Mutex<Vec<usize>>>,
+    best_memory: &Mutex<Vec<usize>>,
     this_best_mem: &mut [usize],
     update_counter: &mut usize,
     timer: &Timer,
@@ -191,7 +187,7 @@ fn update(
 fn do_search(
     mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
     init_path: Option<Steps>,
-    best_memory: &Arc<Mutex<Vec<usize>>>,
+    best_memory: &Mutex<Vec<usize>>,
     timer: &Timer,
 ) -> (MappedPaths, Vec<usize>) {
     let mut results = HashMap::new();
@@ -246,7 +242,7 @@ fn do_search(
 fn do_probabilistic_search(
     mut scheduler: Sweep<Scheduler<Partition<Vec<usize>>>>,
     init_path: Option<Steps>,
-    best_memory: &Arc<Mutex<Vec<usize>>>,
+    best_memory: &Mutex<Vec<usize>>,
     timer: &Timer,
     (accept_func, seed): (&Accept, u64),
 ) -> (MappedPaths, Vec<usize>) {
