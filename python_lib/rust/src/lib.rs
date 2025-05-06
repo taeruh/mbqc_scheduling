@@ -1,12 +1,12 @@
-use std::{mem, time::Duration};
+use std::{ffi::CString, mem, time::Duration};
 
 use lib::interface::{self};
-use pauli_tracker_pyo3::{frames::PartialOrderGraph, Module};
+use pauli_tracker_pyo3::{Module, frames::PartialOrderGraph};
 use probabilistic::AcceptFunc;
 use pyo3::{
+    Bound, PyAny, PyErr, PyRef, PyResult, Python,
     exceptions::{PyValueError, PyWarning},
-    types::PyModule,
-    PyAny, PyErr, PyRef, PyResult, Python,
+    types::{PyAnyMethods, PyModule, PyModuleMethods},
 };
 use serde::{Deserialize, Serialize};
 
@@ -219,7 +219,7 @@ fn run(
     // -> hacky fix: use pyany and check whether it is an instance of PartialOrderGraph
     // (then it comes from this lib) - then we can take it by reference, otherwise we try
     // to access the `into_py_graph` method and extract it (which clones)
-    time_order: &PyAny,
+    time_order: Bound<'_, PyAny>,
     do_search: bool,
     timeout: Option<u32>,
     nthreads: u16,
@@ -230,7 +230,9 @@ fn run(
     if let Some((AcceptFunc(AcceptFuncBase::Custom(_)), _)) = probabilistic {
         if nthreads > 1 {
             return Err(PyValueError::new_err(
-                "multi-threading with a custom Python callback is not supported",
+                r"
+    multi-threading with a custom Python callback is not supported; set `nthreads=1` or do
+    not use a custom callback",
             ));
         }
     }
@@ -244,8 +246,9 @@ fn run(
         Python::with_gil(|py| {
             PyErr::warn(
                 py,
-                py.get_type::<PyWarning>(),
-                r"
+                &py.get_type::<PyWarning>(),
+                &CString::new(
+                    r"
     calling mbqc_scheduling.run with a time_order that is not of the type
     `PartialOrderGraph' defined in the mbqc_scheduling package; trying to get the graph
     via the 'into_py_graph' method; consider wrapping `time_order` into the correct type
@@ -253,6 +256,7 @@ fn run(
     pauli_tracker package, replace `time_order` with
     `mbqc_scheduling.PartialOrderGraph(time_order.(take_)into_py_graphs())` - in that
     case, consider creating the `time_order` with `get_py_order` instead of `get_order`",
+                )?,
                 0,
             )?;
             PyResult::Ok(())
@@ -275,7 +279,7 @@ fn run(
 mod probabilistic;
 
 #[pyo3::pymodule]
-fn _lib(py: Python, module: &PyModule) -> PyResult<()> {
+fn _lib(py: Python, module: Bound<'_, PyModule>) -> PyResult<()> {
     let module = Module {
         pymodule: module,
         path: "mbqc_scheduling._lib".to_string(),
@@ -286,7 +290,7 @@ fn _lib(py: Python, module: &PyModule) -> PyResult<()> {
     module.pymodule.add_class::<Path>()?;
     module
         .pymodule
-        .add_function(pyo3::wrap_pyfunction!(run, module.pymodule)?)?;
+        .add_function(pyo3::wrap_pyfunction!(run, &module.pymodule)?)?;
     probabilistic::add_module(py, &module)?;
     Ok(())
 }

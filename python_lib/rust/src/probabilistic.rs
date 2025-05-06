@@ -1,5 +1,7 @@
 use lib::probabilistic;
-use pyo3::{exceptions::PyValueError, PyObject, PyResult, Python};
+use pyo3::{
+    PyObject, PyResult, Python, exceptions::PyValueError, types::PyModuleMethods,
+};
 
 use crate::Module;
 
@@ -87,7 +89,7 @@ impl AcceptFunc {
                 AcceptFuncBase::ParametrizedHeavyside { param: param.0 }
             },
             "Custom" => AcceptFuncBase::Custom(match custom_func {
-                Some(f) => f.clone(),
+                Some(f) => f,
                 None => {
                     return Err(PyValueError::new_err(
                         "kind is Custom but custom_func is None",

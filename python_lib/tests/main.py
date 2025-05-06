@@ -16,16 +16,16 @@ def main():
         graph,
         time_order,
         do_search=True,
-        nthreads=10,
+        nthreads=1,
         # probabilistic=(AcceptFunc(), None),
-        # probabilistic=(AcceptFunc(kind="Custom", custom_func=custom), None),
-        probabilistic=(
-            AcceptFunc(
-                kind="ParametrizedHeavyside",
-                heavyside_parameters=HeavysideParameters(0, 2, 1, 1, 3, 1),
-            ),
-            None,
-        ),
+        probabilistic=(AcceptFunc(kind="Custom", custom_func=custom), None),
+        # probabilistic=(
+        #     AcceptFunc(
+        #         kind="ParametrizedHeavyside",
+        #         heavyside_parameters=HeavysideParameters(0, 2, 1, 1, 3, 1),
+        #     ),
+        #     None,
+        # ),
     ).into_py_paths()
     for path in paths:
         print(f"time: {path.time}, space: {path.space}, steps: {path.steps}")
