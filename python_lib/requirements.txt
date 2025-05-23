@@ -8,11 +8,12 @@ imagesize==1.4.1
 Jinja2==3.1.6
 MarkupSafe==2.1.5
 maturin==1.4.0
+mbqc_scheduling @ file:///tmp/.tmpkEdOo0/mbqc_scheduling-0.1.1a1-cp313-cp313-linux_x86_64.whl#sha256=15f48674b220bc44da9ba2bcee4bf983934b78ff65d6b08046ddd1926dedf808
 packaging==23.2
 pauli_tracker==0.1.0
 Pygments==2.17.2
 requests==2.32.2
-setuptools==70.0.0
+setuptools==80.8.0
 snowballstemmer==2.2.0
 Sphinx==7.2.6
 sphinx-autodoc-typehints==1.25.3
