@@ -1,15 +1,15 @@
 use std::time::{Duration, Instant};
 
 use bitvec::vec::BitVec;
-use mbqc_scheduling::{interface, probabilistic::AcceptFunc, search::SpacialGraph};
+use mbqc_scheduling::{interface, probabilistic::AcceptFunc};
 use pauli_tracker::{
     collection::{Base, Iterable, NaiveVector},
     pauli::PauliStack,
     tracker::frames::induced_order::{self, PartialOrderGraph},
 };
 use rand::{
-    distributions::{Distribution, Uniform},
     Rng,
+    distributions::{Distribution, Uniform},
 };
 use serde::Serialize;
 
@@ -229,7 +229,7 @@ impl Density for DensityEnum {
     }
 }
 
-fn get_graph(density: impl Density, size: usize, rng: &mut impl Rng) -> SpacialGraph {
+fn get_graph(density: impl Density, size: usize, rng: &mut impl Rng) -> Vec<Vec<usize>> {
     if size == 0 {
         return vec![];
     }

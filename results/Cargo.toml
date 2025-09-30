@@ -14,7 +14,7 @@ rand_pcg = { version = "0.3.1", default-features = false }
 bitvec = { version = "1.0.1", default-features = false }
 serde = { version = "1.0.196", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.113", default-features = false }
-tracing-subscriber = { version = "0.3.18", default-features = false, features = [
+tracing-subscriber = { version = "0.3.20", default-features = false, features = [
   "ansi",
   "fmt",
 ] }
