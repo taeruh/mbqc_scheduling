@@ -5,11 +5,14 @@ Main interface to run the search algorithms.
 use std::{error, fmt, fs, fs::File, io, path, time::Duration};
 
 use pauli_tracker::tracker::frames::induced_order::PartialOrderGraph;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
-use crate::{probabilistic::AcceptFunc, scheduler::space::SpacialGraph, search};
+use crate::{probabilistic::AcceptFunc, search};
 pub use crate::{
-    scheduler::{space::RefSpacialGraph, time::RefPartialOrderGraph},
+    scheduler::{
+        space::{RefSpacialGraph, SpacialGraph},
+        time::RefPartialOrderGraph,
+    },
     search::Steps,
 };
 

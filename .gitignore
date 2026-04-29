@@ -12,6 +12,7 @@ _autosummary
 !results/Cargo.lock
 
 # personal development config and caches
+.python-version
 .tmux-session
 Session.vim
 .task.mk

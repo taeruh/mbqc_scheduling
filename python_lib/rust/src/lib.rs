@@ -15,6 +15,14 @@ use self::probabilistic::AcceptFuncBase;
 #[pyo3::pyclass(subclass)]
 /// A list of neighbors for each node, describing the graph obtained from running the
 /// stabilizer simulator (and transforming it into a graph).
+///
+/// **Constructor:**
+///
+/// Args:
+///     graph (list[list[int]]): The graph to create the SpacialGraph from.
+///
+/// Returns:
+///     SpacialGraph:
 pub struct SpacialGraph(pub interface::SpacialGraph);
 
 #[pyo3::pymethods]
@@ -23,16 +31,6 @@ impl SpacialGraph {
     fn __new__(graph: interface::SpacialGraph) -> Self {
         Self(graph)
     }
-
-    /// Create a new SpacialGraph.
-    ///
-    /// Args:
-    ///     graph (list[list[int]]): The graph to create the SpacialGraph from.
-    ///
-    /// Returns:
-    ///     SpacialGraph:
-    #[pyo3(text_signature = "(self, graph)")]
-    fn __init__(&self, _graph: interface::SpacialGraph) {}
 
     #[doc = pauli_tracker_pyo3::transform!()]
     ///
@@ -54,9 +52,17 @@ impl SpacialGraph {
 
 pauli_tracker_pyo3::serde!(SpacialGraph);
 
-#[pyo3::pyclass(subclass)]
+#[pyo3::pyclass(subclass,from_py_object)]
 /// Opaque Rust object. The information returned from the scheduling algorithm (`run`)
 /// describing valid initalization-measurement paths.
+///
+/// **Constructor:**
+///
+/// Args:
+///    paths (list[Path]): The paths to create the Paths object from.
+///
+/// Returns:
+///     Paths:
 #[derive(Clone)]
 pub struct Paths(pub Vec<interface::Path>);
 
@@ -72,15 +78,6 @@ impl Paths {
         )
     }
 
-    /// Create a new Paths object.
-    ///
-    /// Args:
-    ///    paths (list[Path]): The paths to create the Paths object from.
-    ///
-    /// Returns:
-    ///     Paths:
-    #[pyo3(text_signature = "(self, paths)")]
-    fn __init__(&self, _paths: Vec<Path>) {}
 
     #[doc = pauli_tracker_pyo3::transform!()]
     ///
@@ -112,8 +109,18 @@ impl Paths {
 
 pauli_tracker_pyo3::serde!(Paths);
 
-#[pyo3::pyclass(subclass)]
+#[pyo3::pyclass(subclass,from_py_object)]
 /// The information describing a valid initalization-measurement path.
+///
+/// **Constructor:**
+///
+/// Args:
+///     time (int): :attr:`time`
+///     space (int): :attr:`space`
+///     steps (list[list[int]]): :attr:`steps`
+///
+/// Returns:
+///     Path:
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Path {
     #[pyo3(get)]
@@ -136,17 +143,6 @@ impl Path {
         Self { time, space, steps }
     }
 
-    /// Create a new Path object.
-    ///
-    /// Args:
-    ///     time (int): :attr:`time`
-    ///     space (int): :attr:`space`
-    ///     steps (list[list[int]]): :attr:`steps`
-    ///
-    /// Returns:
-    ///     Path:
-    #[pyo3(text_signature = "(self, time, space, steps)")]
-    fn __init__(&self, _time: usize, _space: usize, _steps: Vec<Vec<usize>>) {}
 }
 
 pauli_tracker_pyo3::serde!(Path, plain);
@@ -243,7 +239,7 @@ fn run(
         _by_ref = time_order.extract()?;
         &_by_ref.0
     } else {
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             PyErr::warn(
                 py,
                 &py.get_type::<PyWarning>(),

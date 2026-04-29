@@ -1,11 +1,23 @@
 use lib::probabilistic;
 use pyo3::{
-    PyObject, PyResult, Python, exceptions::PyValueError, types::PyModuleMethods,
+    Py, PyAny, PyResult, Python, exceptions::PyValueError, types::PyModuleMethods,
 };
 
 use crate::Module;
 
-#[pyo3::pyclass(subclass)]
+// #[pyo3(text_signature = "(self, cutoff, lin_num_total_nodes_exp, \
+//                          exp_num_total_nodes_exp, exp_num_remaining_nodes_exp, \
+//                          exp_diff_exp, exp_num_measured_nodes_exp)")]
+
+#[pyo3::pyclass(subclass,from_py_object)]
+/// **Constructor:**
+/// Args:
+///     cutoff (float)
+///     lin_num_total_nodes_exp (int)
+///     exp_num_total_nodes_exp (int)
+///     exp_num_remaining_nodes_exp (int)
+///     exp_diff_exp (int)
+///     exp_num_measured_nodes_exp (int)
 #[derive(Clone)]
 pub struct HeavysideParameters(probabilistic::HeavysideParameters);
 
@@ -29,20 +41,6 @@ impl HeavysideParameters {
             exp_num_measured_nodes_exp,
         })
     }
-
-    #[pyo3(text_signature = "(self, cutoff, lin_num_total_nodes_exp, \
-                             exp_num_total_nodes_exp, exp_num_remaining_nodes_exp, \
-                             exp_diff_exp, exp_num_measured_nodes_exp)")]
-    fn __init__(
-        &self,
-        _cutoff: f64,
-        _lin_num_total_nodes_exp: i32,
-        _exp_num_total_nodes_exp: i32,
-        _exp_num_remaining_nodes_exp: i32,
-        _exp_diff_exp: i32,
-        _exp_num_measured_nodes_exp: i32,
-    ) {
-    }
 }
 
 // since the original probabilistic::AcceptFunc cannot implement Clone
@@ -52,12 +50,22 @@ pub enum AcceptFuncBase {
     ParametrizedHeavyside {
         param: probabilistic::HeavysideParameters,
     },
-    Custom(PyObject),
+    Custom(Py<PyAny>),
 }
 
-#[pyo3::pyclass(subclass)]
+#[pyo3::pyclass(subclass,from_py_object)]
 /// Compare the corresponding documentation in the `mbqc_scheduling crate
 /// <https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling>`_.
+///
+/// **Constructor:**
+///
+/// Args:
+///     kind (String): The kind of AcceptFunc to create; possible values are:
+///         "BuiltinHeavyside", "ParamBuiltinHeavyside", "Custom".
+///     heavyside_parameters (Optional[HeavysideParameters]): The
+///         parameters for the ParametrizedHeavyside AcceptFunc (if kind =
+///         "ParametrizedBasic").
+///     custom_func (callable): The custom AcceptFunc (if kind = "Custom").
 #[derive(Clone)]
 pub struct AcceptFunc(pub AcceptFuncBase);
 
@@ -72,7 +80,7 @@ impl AcceptFunc {
     fn __new__(
         kind: String,
         heavyside_parameters: Option<HeavysideParameters>,
-        custom_func: Option<PyObject>,
+        custom_func: Option<Py<PyAny>>,
     ) -> PyResult<Self> {
         Ok(Self(match kind.as_str() {
             "BuiltinHeavyside" => AcceptFuncBase::BuiltinHeavyside,
@@ -99,25 +107,6 @@ impl AcceptFunc {
             _ => return Err(PyValueError::new_err(format!("invalid kind {kind}"))),
         }))
     }
-
-    /// Create a new AcceptFunc.
-    ///
-    /// Args:
-    ///     kind (String): The kind of AcceptFunc to create; possible values are:
-    ///         "BuiltinHeavyside", "ParamBuiltinHeavyside", "Custom".
-    ///     heavyside_parameters (Optional[HeavysideParameters]): The
-    ///         parameters for the ParametrizedHeavyside AcceptFunc (if kind =
-    ///         "ParametrizedBasic").
-    ///     custom_func (callable): The custom AcceptFunc (if kind = "Custom").
-    #[pyo3(text_signature = "(self, kind='BuiltinLinearSpace', \
-                             heavyside_parameters=None, custom_func=None)")]
-    fn __init__(
-        &self,
-        _kind: String,
-        _heavyside_parameters: Option<HeavysideParameters>,
-        _custom_func: Option<PyObject>,
-    ) {
-    }
 }
 
 impl AcceptFunc {
@@ -138,7 +127,7 @@ impl AcceptFunc {
                       num_remaining_nodes: f64,
                       num_total_nodes: f64|
                       -> f64 {
-                    Python::with_gil(|py| -> PyResult<f64> {
+                    Python::attach(|py| -> PyResult<f64> {
                         func.call(
                             py,
                             (
