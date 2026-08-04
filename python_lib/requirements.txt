@@ -12,7 +12,7 @@ packaging==23.2
 pauli_tracker==0.1.0
 Pygments==2.20.0
 requests==2.33.1
-setuptools==80.8.0
+setuptools==83.0.0
 snowballstemmer==2.2.0
 Sphinx==7.2.6
 sphinx-autodoc-typehints==1.25.3
