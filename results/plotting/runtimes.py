@@ -73,8 +73,8 @@ def appendix():
     densities.xticks(acs[1], -0.06)
     densities.yticks(acs[1], -0.1)
 
-    utils.subplotlabel(acs[0], "a", -0.10, 1.05)
-    utils.subplotlabel(acs[1], "b", -0.10, 1.05)
+    utils.subplotlabel(acs[0], "a", -0.17, 1.05)
+    utils.subplotlabel(acs[1], "b", -0.20, 1.05)
 
     fig.colorbar(
         im,
@@ -86,7 +86,7 @@ def appendix():
     handles, labels = acs[0].get_legend_handles_labels()
     acs[0].legend(handles, labels, loc="upper left", labelspacing=0.25)
 
-    plt.subplots_adjust(top=0.93, bottom=0.11, left=0.072, right=0.962)
+    plt.subplots_adjust(top=0.92, bottom=0.14, left=0.092, right=0.952)
     plt.savefig(f"output/runtime_appendix-{numnodes}.pdf")
 
 

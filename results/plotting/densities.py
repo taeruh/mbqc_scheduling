@@ -54,13 +54,13 @@ def density():
         acs[i].grid(False)
         acs[i].set_xticks([])
         acs[i].set_yticks([])
-        utils.subplotlabel(acs[i], figlabels[i], -0.045, 1.035)
+        utils.subplotlabel(acs[i], figlabels[i], -0.055, 1.045)
         if i > 1:
             acs[i].set_xlabel(xlabel, labelpad=16)
-            xticks(acs[i], -0.06)
+            xticks(acs[i], -0.07)
         if i % 2 == 0:
             acs[i].set_ylabel(ylabel, labelpad=20)
-            yticks(acs[i], -0.08)
+            yticks(acs[i], -0.10)
         if i == 1:
             acs[i].set_title("space optimal (approx)")
             rowlabel(
@@ -81,9 +81,9 @@ def density():
     )
     cac.grid(False)
     # cac.set_xlabel(r"time cost \hspace{2.5em}|\hspace{2.5em} space cost", labelpad=1)
-    cac.set_xlabel(r"Time cost \& space cost (cf. Def. 7)", labelpad=1)
+    cac.set_xlabel(r"Time cost \& space cost (cf. Def. 4.4.2)", labelpad=1)
 
-    plt.subplots_adjust(top=0.97, bottom=0.05, left=0.064, right=0.882)
+    plt.subplots_adjust(top=0.97, bottom=0.07, left=0.074, right=0.840)
     plt.savefig(f"output/density-{numnodes}.pdf")
 
 

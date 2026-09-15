@@ -74,13 +74,13 @@ def main():
     acs[0].set_ylabel(ytlabel)
     acs[1].set_ylabel(yslabel)
 
-    utils.subplotlabel(acs[0], "a")
-    utils.subplotlabel(acs[1], "b", x=-0.11)
+    utils.subplotlabel(acs[0], "a", y = 1.02)
+    utils.subplotlabel(acs[1], "b", x=-0.11, y = 1.02)
 
     handles, leg_labels = acs[0].get_legend_handles_labels()
     acs[0].legend(handles, leg_labels, loc="upper left", labelspacing=0.25)
 
-    plt.subplots_adjust(top=0.96, bottom=0.09, left=0.060, right=0.99)
+    plt.subplots_adjust(top=0.95, bottom=0.12, left=0.070, right=0.99)
     plt.savefig(f"output/nodes_main.pdf")
 
 
